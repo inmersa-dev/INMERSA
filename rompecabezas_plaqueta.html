@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rompecabezas – Plaqueta</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0A1628;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 22px 14px 40px;
+      user-select: none;
+    }
+
+    header { text-align: center; margin-bottom: 18px; }
+
+    header h1 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: #00C9A7;
+      text-shadow: 0 0 22px rgba(0,201,167,0.35);
+      letter-spacing: 0.4px;
+    }
+
+    header p { font-size: 0.9rem; color: #7a99b0; margin-top: 5px; }
+
+    #topbar {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .chip {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(0,201,167,0.22);
+      border-radius: 999px;
+      padding: 6px 18px;
+      font-size: 0.88rem;
+      color: #a8c0d0;
+    }
+
+    .chip span { color: #00C9A7; font-weight: 700; margin-left: 4px; }
+
+    #btn-reset {
+      background: transparent;
+      border: 2px solid #00C9A7;
+      color: #00C9A7;
+      border-radius: 999px;
+      padding: 7px 22px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.18s, color 0.18s, transform 0.15s;
+      letter-spacing: 0.4px;
+    }
+
+    #btn-reset:hover { background: #00C9A7; color: #0A1628; transform: scale(1.05); }
+
+    #game {
+      display: flex;
+      gap: 30px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .panel-label {
+      text-align: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      color: #4a6880;
+      margin-bottom: 10px;
+    }
+
+    #board-wrap { display: flex; flex-direction: column; align-items: center; }
+
+    #board {
+      display: grid;
+      grid-template-columns: repeat(3, var(--pw));
+      grid-template-rows: repeat(4, var(--ph));
+      gap: 3px;
+      background: rgba(0,201,167,0.08);
+      border: 2px solid rgba(0,201,167,0.25);
+      border-radius: 14px;
+      padding: 6px;
+    }
+
+    .slot {
+      width: var(--pw);
+      height: var(--ph);
+      border-radius: 7px;
+      border: 2px dashed rgba(0,201,167,0.25);
+      background: rgba(255,255,255,0.03);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      color: rgba(0,201,167,0.3);
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slot.drag-over { border-color: #00C9A7; background: rgba(0,201,167,0.12); }
+    .slot.filled    { border: 2px solid transparent; background: none; cursor: default; }
+
+    #pool-wrap { display: flex; flex-direction: column; align-items: center; }
+
+    #pool {
+      display: grid;
+      grid-template-columns: repeat(3, var(--pw));
+      gap: 6px;
+      background: rgba(255,255,255,0.03);
+      border: 2px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 10px;
+      min-height: calc(4 * var(--ph) + 6px * 3 + 20px);
+      align-content: start;
+    }
+
+    .piece {
+      width: var(--pw);
+      height: var(--ph);
+      border-radius: 7px;
+      background-image: url('plaqueta.png');
+      background-size: calc(3 * var(--pw)) calc(4 * var(--ph));
+      cursor: grab;
+      border: 2px solid rgba(0,201,167,0.3);
+      box-shadow: 0 3px 12px rgba(0,0,0,0.4);
+      transition: transform 0.12s, box-shadow 0.12s, border-color 0.15s;
+      flex-shrink: 0;
+      touch-action: none;
+    }
+
+    .piece:active { cursor: grabbing; }
+
+    .piece:hover:not(.locked) {
+      transform: scale(1.06);
+      border-color: #00C9A7;
+      box-shadow: 0 6px 20px rgba(0,201,167,0.3);
+    }
+
+    .piece.locked { cursor: default; border-color: rgba(0,201,167,0.5); }
+
+    #ghost {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      border-radius: 8px;
+      opacity: 0.88;
+      box-shadow: 0 10px 36px rgba(0,0,0,0.6), 0 0 0 2px #00C9A7;
+      background-image: url('plaqueta.png');
+      display: none;
+      transform: scale(1.1);
+    }
+
+    @keyframes snapFlash {
+      0%   { box-shadow: 0 0 0 3px #00C9A7, 0 0 18px rgba(0,201,167,0.7); }
+      60%  { box-shadow: 0 0 0 6px rgba(0,201,167,0.4); }
+      100% { box-shadow: none; }
+    }
+
+    .piece.snap { animation: snapFlash 0.5s ease forwards; }
+
+    @keyframes errShake {
+      0%,100% { transform: translateX(0); }
+      20%,60% { transform: translateX(-6px); }
+      40%,80% { transform: translateX(6px); }
+    }
+
+    .piece.error { animation: errShake 0.35s ease; border-color: #ff5252 !important; }
+
+    #ref-wrap { display: flex; flex-direction: column; align-items: center; }
+
+    #ref-img {
+      width: calc(3 * var(--pw) + 12px);
+      border-radius: 12px;
+      border: 2px solid rgba(0,201,167,0.35);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      opacity: 0.8;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+
+    #ref-img:hover { opacity: 1; transform: scale(1.03); }
+    #ref-hint { font-size: 0.7rem; color: #4a6880; margin-top: 6px; letter-spacing: 0.5px; }
+
+    /* Bonus overlay */
+    #bonus-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(10,22,40,0.92);
+      backdrop-filter: blur(10px);
+      z-index: 600;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #bonus-overlay.show { display: flex; }
+
+    .bonus-box {
+      background: linear-gradient(140deg, #0e2540, #112038);
+      border: 2px solid #00C9A7;
+      border-radius: 26px;
+      padding: 40px 48px;
+      text-align: center;
+      max-width: 480px;
+      width: 92%;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.7), 0 0 40px rgba(0,201,167,0.2);
+      animation: popIn 0.45s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    .bonus-box .bonus-icon { font-size: 2.8rem; margin-bottom: 8px; }
+
+    .bonus-badge {
+      display: inline-block;
+      background: rgba(0,201,167,0.15);
+      border: 1px solid #00C9A7;
+      color: #00C9A7;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      border-radius: 999px;
+      padding: 4px 16px;
+      margin-bottom: 14px;
+    }
+
+    .bonus-box h2 {
+      font-size: 1.15rem;
+      color: #fff;
+      font-weight: 700;
+      margin-bottom: 22px;
+      line-height: 1.5;
+    }
+
+    .options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+
+    .opt-btn {
+      background: rgba(255,255,255,0.05);
+      border: 2px solid rgba(0,201,167,0.25);
+      border-radius: 12px;
+      color: #e0eaf2;
+      font-size: 0.98rem;
+      font-weight: 600;
+      padding: 12px 18px;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.18s, border-color 0.18s, transform 0.12s;
+    }
+
+    .opt-btn:hover:not(:disabled) {
+      background: rgba(0,201,167,0.12);
+      border-color: #00C9A7;
+      transform: translateX(4px);
+    }
+
+    .opt-btn.correct { background: rgba(0,201,167,0.2); border-color: #00C9A7; color: #00C9A7; }
+    .opt-btn.wrong   { background: rgba(255,82,82,0.15); border-color: #ff5252; color: #ff7070; }
+    .opt-btn:disabled { cursor: default; }
+
+    #bonus-feedback {
+      font-size: 1rem;
+      font-weight: 700;
+      border-radius: 10px;
+      padding: 10px 16px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    #bonus-feedback.success {
+      background: rgba(0,201,167,0.15);
+      border: 1px solid #00C9A7;
+      color: #00C9A7;
+      display: block;
+    }
+
+    #bonus-feedback.fail {
+      background: rgba(255,82,82,0.12);
+      border: 1px solid #ff5252;
+      color: #ff7070;
+      display: block;
+    }
+
+    #btn-bonus-continue {
+      background: #00C9A7;
+      color: #0A1628;
+      border: none;
+      border-radius: 999px;
+      padding: 12px 36px;
+      font-size: 0.98rem;
+      font-weight: 900;
+      cursor: pointer;
+      display: none;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    #btn-bonus-continue:hover { transform: scale(1.05); box-shadow: 0 6px 22px rgba(0,201,167,0.4); }
+
+    /* Win overlay */
+    #win-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(10,22,40,0.9);
+      backdrop-filter: blur(10px);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #win-overlay.show { display: flex; }
+
+    .win-box {
+      background: linear-gradient(140deg, #0e2540, #0b3d30);
+      border: 2px solid #00C9A7;
+      border-radius: 26px;
+      padding: 46px 54px;
+      text-align: center;
+      max-width: 440px;
+      width: 90%;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.7), 0 0 50px rgba(0,201,167,0.2);
+      animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.65); opacity: 0; }
+      to   { transform: scale(1);    opacity: 1; }
+    }
+
+    .win-box .icon { font-size: 3.8rem; margin-bottom: 10px; }
+    .win-box h2 { font-size: 1.85rem; color: #00C9A7; font-weight: 900; margin-bottom: 8px; }
+    .win-box p  { color: #90afc0; font-size: 1rem; line-height: 1.55; margin-bottom: 6px; }
+
+    .win-stats { display: flex; gap: 20px; justify-content: center; margin: 22px 0; }
+
+    .win-stat {
+      background: rgba(0,201,167,0.1);
+      border: 1px solid rgba(0,201,167,0.3);
+      border-radius: 14px;
+      padding: 12px 22px;
+    }
+
+    .win-stat .val { font-size: 2rem; font-weight: 900; color: #fff; display: block; }
+    .win-stat .lbl { font-size: 0.75rem; color: #607d8b; letter-spacing: 0.5px; }
+
+    #btn-win-reset {
+      background: #00C9A7;
+      color: #0A1628;
+      border: none;
+      border-radius: 999px;
+      padding: 14px 40px;
+      font-size: 1rem;
+      font-weight: 900;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    #btn-win-reset:hover { transform: scale(1.06); box-shadow: 0 8px 28px rgba(0,201,167,0.45); }
+
+    #confetti-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 499;
+      display: none;
+    }
+
+    @media (max-width: 600px) {
+      :root { --pw: 88px; --ph: 88px; }
+      header h1 { font-size: 1.35rem; }
+      #game { gap: 18px; }
+      .win-box { padding: 32px 20px; }
+      .bonus-box { padding: 30px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+<div id="ghost"></div>
+
+<header>
+  <h1>🔬 Rompecabezas: Plaqueta</h1>
+  <p>Arrastra las piezas hacia su posición correcta en el tablero.</p>
+</header>
+
+<div id="topbar">
+  <div class="chip">Piezas colocadas <span id="placed-count">0</span> / 12</div>
+  <div class="chip">Intentos <span id="attempts-count">0</span></div>
+  <button id="btn-reset">↺ Reiniciar</button>
+</div>
+
+<div id="game">
+  <div id="board-wrap">
+    <div class="panel-label">Tablero</div>
+    <div id="board"></div>
+  </div>
+  <div id="pool-wrap">
+    <div class="panel-label">Piezas</div>
+    <div id="pool"></div>
+  </div>
+  <div id="ref-wrap">
+    <div class="panel-label">Referencia</div>
+    <img id="ref-img" src="plaqueta.png" alt="Imagen completa de la plaqueta" />
+    <span id="ref-hint">Imagen completa</span>
+  </div>
+</div>
+
+<!-- Bonus overlay -->
+<div id="bonus-overlay">
+  <div class="bonus-box">
+    <div class="bonus-icon">⭐</div>
+    <div class="bonus-badge">Pregunta Bonus · +50 pts</div>
+    <h2>¿Cuál es la función principal de las plaquetas?</h2>
+    <div class="options">
+      <button class="opt-btn" data-key="A">A) Transportar oxígeno en la sangre</button>
+      <button class="opt-btn" data-key="B">B) Combatir infecciones y virus</button>
+      <button class="opt-btn" data-key="C">C) Producir glóbulos rojos</button>
+      <button class="opt-btn" data-key="D">D) Ayudar en la coagulación de la sangre</button>
+    </div>
+    <div id="bonus-feedback"></div>
+    <button id="btn-bonus-continue">Continuar →</button>
+  </div>
+</div>
+
+<!-- Win overlay -->
+<div id="win-overlay">
+  <div class="win-box">
+    <div class="icon">🏆</div>
+    <h2>¡Rompecabezas completado!</h2>
+    <p>Armaste correctamente la imagen de la <strong>Plaqueta</strong>,<br>
+       la célula que ayuda a coagular la sangre y detener hemorragias.</p>
+    <div class="win-stats">
+      <div class="win-stat">
+        <span class="val" id="win-time">—</span>
+        <span class="lbl">Tiempo</span>
+      </div>
+      <div class="win-stat">
+        <span class="val" id="win-attempts">—</span>
+        <span class="lbl">Intentos</span>
+      </div>
+      <div class="win-stat">
+        <span class="val" id="win-score">—</span>
+        <span class="lbl">Puntuación</span>
+      </div>
+    </div>
+    <button id="btn-win-reset">🔄 Jugar de nuevo</button>
+  </div>
+</div>
+
+<script>
+  const COLS = 3, ROWS = 4, TOTAL = COLS * ROWS;
+  const PW = 100, PH = 100;
+  document.documentElement.style.setProperty('--pw', PW + 'px');
+  document.documentElement.style.setProperty('--ph', PH + 'px');
+
+  let placed = 0, attempts = 0, startTime = null, bonusPoints = 0, elapsedSecs = 0;
+
+  const board         = document.getElementById('board');
+  const pool          = document.getElementById('pool');
+  const ghost         = document.getElementById('ghost');
+  const placedCount   = document.getElementById('placed-count');
+  const attemptsEl    = document.getElementById('attempts-count');
+  const winOverlay    = document.getElementById('win-overlay');
+  const confCanvas    = document.getElementById('confetti-canvas');
+  const bonusOverlay  = document.getElementById('bonus-overlay');
+  const bonusFeedback = document.getElementById('bonus-feedback');
+  const btnContinue   = document.getElementById('btn-bonus-continue');
+
+  let dragPiece = null, dragId = null, offX = 0, offY = 0;
+
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function fmtTime(s) {
+    return `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
+  }
+
+  function buildBoard() {
+    board.innerHTML = '';
+    for (let i = 0; i < TOTAL; i++) {
+      const slot = document.createElement('div');
+      slot.className = 'slot';
+      slot.dataset.index = i;
+      const num = document.createElement('span');
+      num.textContent = i + 1;
+      slot.appendChild(num);
+      board.appendChild(slot);
+    }
+  }
+
+  function buildPool() {
+    pool.innerHTML = '';
+    shuffle([...Array(TOTAL).keys()]).forEach(id => pool.appendChild(createPiece(id)));
+  }
+
+  function createPiece(id) {
+    const col = id % COLS, row = Math.floor(id / COLS);
+    const piece = document.createElement('div');
+    piece.className = 'piece';
+    piece.dataset.id = id;
+    piece.style.backgroundPosition = `-${col * PW}px -${row * PH}px`;
+    piece.style.backgroundSize = `${COLS * PW}px ${ROWS * PH}px`;
+    piece.addEventListener('mousedown',  onPieceMouseDown);
+    piece.addEventListener('touchstart', onTouchStart, { passive: false });
+    piece.addEventListener('touchmove',  onTouchMove,  { passive: false });
+    piece.addEventListener('touchend',   onTouchEnd);
+    return piece;
+  }
+
+  function onPieceMouseDown(e) {
+    if (e.button !== 0) return;
+    startDragVisual(e.currentTarget, e.clientX, e.clientY);
+  }
+
+  function startDragVisual(piece, cx, cy) {
+    const rect = piece.getBoundingClientRect();
+    offX = cx - rect.left; offY = cy - rect.top;
+    dragPiece = piece;
+    dragId = parseInt(piece.dataset.id);
+    const col = dragId % COLS, row = Math.floor(dragId / COLS);
+    ghost.style.width  = PW + 'px';
+    ghost.style.height = PH + 'px';
+    ghost.style.backgroundSize = `${COLS * PW}px ${ROWS * PH}px`;
+    ghost.style.backgroundPosition = `-${col * PW}px -${row * PH}px`;
+    ghost.style.display = 'block';
+    ghost.style.left = (cx - offX) + 'px';
+    ghost.style.top  = (cy - offY) + 'px';
+    piece.style.opacity = '0';
+    if (!startTime) startTime = Date.now();
+  }
+
+  document.addEventListener('mousemove', e => {
+    if (!dragPiece || ghost.style.display === 'none') return;
+    ghost.style.left = (e.clientX - offX) + 'px';
+    ghost.style.top  = (e.clientY - offY) + 'px';
+    highlightSlot(e.clientX, e.clientY);
+  });
+
+  document.addEventListener('mouseup', e => {
+    if (!dragPiece || ghost.style.display === 'none') return;
+    ghost.style.display = 'none';
+    clearHighlights();
+    const slot = slotUnder(e.clientX, e.clientY);
+    if (slot && !slot.classList.contains('filled')) tryPlace(dragPiece, dragId, slot, parseInt(slot.dataset.index));
+    else dragPiece.style.opacity = '1';
+    dragPiece = null; dragId = null;
+  });
+
+  function onTouchStart(e) {
+    e.preventDefault();
+    const t = e.touches[0];
+    startDragVisual(e.currentTarget, t.clientX, t.clientY);
+  }
+
+  function onTouchMove(e) {
+    e.preventDefault();
+    if (!dragPiece) return;
+    const t = e.touches[0];
+    ghost.style.left = (t.clientX - offX) + 'px';
+    ghost.style.top  = (t.clientY - offY) + 'px';
+    highlightSlot(t.clientX, t.clientY);
+  }
+
+  function onTouchEnd(e) {
+    if (!dragPiece) return;
+    ghost.style.display = 'none';
+    clearHighlights();
+    const t = e.changedTouches[0];
+    const slot = slotUnder(t.clientX, t.clientY);
+    if (slot && !slot.classList.contains('filled')) tryPlace(dragPiece, dragId, slot, parseInt(slot.dataset.index));
+    else dragPiece.style.opacity = '1';
+    dragPiece = null; dragId = null;
+  }
+
+  function slotUnder(cx, cy) {
+    for (const s of board.querySelectorAll('.slot:not(.filled)')) {
+      const r = s.getBoundingClientRect();
+      if (cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom) return s;
+    }
+    return null;
+  }
+
+  function highlightSlot(cx, cy) {
+    clearHighlights();
+    const s = slotUnder(cx, cy);
+    if (s) s.classList.add('drag-over');
+  }
+
+  function clearHighlights() {
+    board.querySelectorAll('.slot.drag-over').forEach(s => s.classList.remove('drag-over'));
+  }
+
+  function tryPlace(piece, pid, slot, slotIndex) {
+    attempts++;
+    attemptsEl.textContent = attempts;
+    if (pid === slotIndex) {
+      piece.style.opacity = '1';
+      piece.classList.remove('error');
+      piece.classList.add('locked');
+      slot.innerHTML = '';
+      slot.classList.add('filled');
+      slot.appendChild(piece);
+      void piece.offsetWidth;
+      piece.classList.add('snap');
+      piece.addEventListener('animationend', () => piece.classList.remove('snap'), { once: true });
+      placed++;
+      placedCount.textContent = placed;
+      if (placed === TOTAL) onWin();
+    } else {
+      piece.style.opacity = '1';
+      piece.classList.remove('error');
+      void piece.offsetWidth;
+      piece.classList.add('error');
+      piece.addEventListener('animationend', () => piece.classList.remove('error'), { once: true });
+    }
+  }
+
+  function onWin() {
+    ghost.style.display = 'none';
+    dragPiece = null; dragId = null;
+    document.querySelectorAll('.piece').forEach(p => p.style.opacity = '1');
+    clearHighlights();
+    elapsedSecs = startTime ? Math.floor((Date.now() - startTime) / 1000) : 0;
+    bonusPoints = 0;
+    bonusFeedback.className = '';
+    bonusFeedback.textContent = '';
+    bonusFeedback.style.display = 'none';
+    btnContinue.style.display = 'none';
+    document.querySelectorAll('.opt-btn').forEach(b => {
+      b.disabled = false;
+      b.classList.remove('correct', 'wrong');
+    });
+    bonusOverlay.classList.add('show');
+  }
+
+  // Respuesta correcta: D) Ayudar en la coagulación
+  document.querySelectorAll('.opt-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.opt-btn').forEach(b => b.disabled = true);
+      if (btn.dataset.key === 'D') {
+        btn.classList.add('correct');
+        bonusPoints = 50;
+        bonusFeedback.textContent = '⭐ ¡Excelente, ganaste 50 puntos extra!';
+        bonusFeedback.className = 'success';
+      } else {
+        btn.classList.add('wrong');
+        document.querySelector('.opt-btn[data-key="D"]').classList.add('correct');
+        bonusFeedback.textContent = '❌ Incorrecto. La respuesta correcta es D) Ayudar en la coagulación de la sangre.';
+        bonusFeedback.className = 'fail';
+      }
+      bonusFeedback.style.display = 'block';
+      btnContinue.style.display = 'inline-block';
+    });
+  });
+
+  btnContinue.addEventListener('click', () => {
+    bonusOverlay.classList.remove('show');
+    document.getElementById('win-time').textContent     = fmtTime(elapsedSecs);
+    document.getElementById('win-attempts').textContent = attempts;
+    document.getElementById('win-score').textContent    = (placed * 10 + bonusPoints) + ' pts';
+    winOverlay.classList.add('show');
+    startConfetti();
+  });
+
+  function startConfetti() {
+    confCanvas.style.display = 'block';
+    confCanvas.width  = window.innerWidth;
+    confCanvas.height = window.innerHeight;
+    const ctx = confCanvas.getContext('2d');
+    const colors = ['#00C9A7','#00e8c8','#fff','#ffdd57','#ff6b6b','#74b9ff'];
+    const particles = Array.from({ length: 90 }, () => ({
+      x: Math.random() * confCanvas.width,
+      y: Math.random() * -confCanvas.height,
+      w: 8 + Math.random() * 8, h: 5 + Math.random() * 5,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rot: Math.random() * Math.PI * 2,
+      vx: (Math.random() - 0.5) * 2.5, vy: 2.5 + Math.random() * 3,
+      vr: (Math.random() - 0.5) * 0.15,
+    }));
+    let frame = 0;
+    function draw() {
+      ctx.clearRect(0, 0, confCanvas.width, confCanvas.height);
+      particles.forEach(p => {
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+        ctx.fillStyle = p.color; ctx.globalAlpha = 0.85;
+        ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+        ctx.restore();
+        p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+        if (p.y > confCanvas.height + 20) { p.y = -20; p.x = Math.random() * confCanvas.width; }
+      });
+      if (++frame < 240) requestAnimationFrame(draw);
+      else { ctx.clearRect(0, 0, confCanvas.width, confCanvas.height); confCanvas.style.display = 'none'; }
+    }
+    draw();
+  }
+
+  function reset() {
+    placed = attempts = bonusPoints = elapsedSecs = 0;
+    startTime = null;
+    placedCount.textContent = attemptsEl.textContent = '0';
+    winOverlay.classList.remove('show');
+    bonusOverlay.classList.remove('show');
+    ghost.style.display = 'none';
+    confCanvas.style.display = 'none';
+    dragPiece = null; dragId = null;
+    buildBoard(); buildPool();
+  }
+
+  document.getElementById('btn-reset').addEventListener('click', reset);
+  document.getElementById('btn-win-reset').addEventListener('click', reset);
+  window.addEventListener('resize', () => {
+    confCanvas.width = window.innerWidth;
+    confCanvas.height = window.innerHeight;
+  });
+
+  reset();
+</script>
+</body>
+</html>
