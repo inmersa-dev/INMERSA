@@ -620,9 +620,6 @@
       num.textContent = i + 1;
       slot.appendChild(num);
 
-      slot.addEventListener('dragover',  onSlotDragOver);
-      slot.addEventListener('dragleave', onSlotDragLeave);
-      slot.addEventListener('drop',      onSlotDrop);
       board.appendChild(slot);
     }
   }
@@ -642,57 +639,14 @@
     piece.dataset.id = id;
     piece.style.backgroundPosition = `-${col * PW}px -${row * PH}px`;
     piece.style.backgroundSize = `${COLS * PW}px ${ROWS * PH}px`;
-    piece.draggable = true;
-
     // Mouse events
     piece.addEventListener('mousedown',  onPieceMouseDown);
-    // HTML5 drag (fallback / desktop)
-    piece.addEventListener('dragstart',  onDragStart);
-    piece.addEventListener('dragend',    onDragEnd);
     // Touch events
     piece.addEventListener('touchstart', onTouchStart, { passive: false });
     piece.addEventListener('touchmove',  onTouchMove,  { passive: false });
     piece.addEventListener('touchend',   onTouchEnd);
 
     return piece;
-  }
-
-  // ── HTML5 Drag & Drop ────────────────────────────────────────────────────
-  function onDragStart(e) {
-    dragPiece = e.currentTarget;
-    dragId    = parseInt(dragPiece.dataset.id);
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', dragId);
-    setTimeout(() => { if (dragPiece) dragPiece.style.opacity = '0.35'; }, 0);
-    if (!startTime) beginTimer();
-  }
-
-  function onDragEnd(e) {
-    if (dragPiece) dragPiece.style.opacity = '1';
-    dragPiece = null;
-    dragId    = null;
-  }
-
-  function onSlotDragOver(e) {
-    e.preventDefault();
-    if (!e.currentTarget.classList.contains('filled'))
-      e.currentTarget.classList.add('drag-over');
-  }
-
-  function onSlotDragLeave(e) {
-    e.currentTarget.classList.remove('drag-over');
-  }
-
-  function onSlotDrop(e) {
-    e.preventDefault();
-    e.currentTarget.classList.remove('drag-over');
-    const slot      = e.currentTarget;
-    const slotIndex = parseInt(slot.dataset.index);
-    const pid       = parseInt(e.dataTransfer.getData('text/plain'));
-    if (slot.classList.contains('filled')) return;
-    const piece = document.querySelector(`.piece[data-id="${pid}"]`);
-    if (!piece) return;
-    tryPlace(piece, pid, slot, slotIndex);
   }
 
   // ── Custom mouse drag (for visual ghost) ────────────────────────────────
@@ -717,7 +671,7 @@
     ghost.style.backgroundPosition = `-${col * PW}px -${row * PH}px`;
     ghost.style.display = 'block';
     moveGhost(cx, cy);
-    piece.style.opacity = '0.25';
+    piece.style.opacity = '0';
     if (!startTime) beginTimer();
   }
 
