@@ -336,12 +336,144 @@
       letter-spacing: 0.5px;
     }
 
+    /* Bonus question overlay */
+    #bonus-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(10,22,40,0.92);
+      backdrop-filter: blur(10px);
+      z-index: 600;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #bonus-overlay.show { display: flex; }
+
+    .bonus-box {
+      background: linear-gradient(140deg, #0e2540, #112038);
+      border: 2px solid #00C9A7;
+      border-radius: 26px;
+      padding: 40px 48px;
+      text-align: center;
+      max-width: 480px;
+      width: 92%;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.7), 0 0 40px rgba(0,201,167,0.2);
+      animation: popIn 0.45s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    .bonus-box .bonus-icon { font-size: 2.8rem; margin-bottom: 8px; }
+
+    .bonus-badge {
+      display: inline-block;
+      background: rgba(0,201,167,0.15);
+      border: 1px solid #00C9A7;
+      color: #00C9A7;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      border-radius: 999px;
+      padding: 4px 16px;
+      margin-bottom: 14px;
+    }
+
+    .bonus-box h2 {
+      font-size: 1.15rem;
+      color: #fff;
+      font-weight: 700;
+      margin-bottom: 22px;
+      line-height: 1.5;
+    }
+
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .opt-btn {
+      background: rgba(255,255,255,0.05);
+      border: 2px solid rgba(0,201,167,0.25);
+      border-radius: 12px;
+      color: #e0eaf2;
+      font-size: 0.98rem;
+      font-weight: 600;
+      padding: 12px 18px;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.18s, border-color 0.18s, transform 0.12s;
+    }
+
+    .opt-btn:hover:not(:disabled) {
+      background: rgba(0,201,167,0.12);
+      border-color: #00C9A7;
+      transform: translateX(4px);
+    }
+
+    .opt-btn.correct {
+      background: rgba(0,201,167,0.2);
+      border-color: #00C9A7;
+      color: #00C9A7;
+    }
+
+    .opt-btn.wrong {
+      background: rgba(255,82,82,0.15);
+      border-color: #ff5252;
+      color: #ff7070;
+    }
+
+    .opt-btn:disabled { cursor: default; }
+
+    #bonus-feedback {
+      font-size: 1rem;
+      font-weight: 700;
+      border-radius: 10px;
+      padding: 10px 16px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    #bonus-feedback.success {
+      background: rgba(0,201,167,0.15);
+      border: 1px solid #00C9A7;
+      color: #00C9A7;
+      display: block;
+    }
+
+    #bonus-feedback.fail {
+      background: rgba(255,82,82,0.12);
+      border: 1px solid #ff5252;
+      color: #ff7070;
+      display: block;
+    }
+
+    #btn-bonus-continue {
+      background: #00C9A7;
+      color: #0A1628;
+      border: none;
+      border-radius: 999px;
+      padding: 12px 36px;
+      font-size: 0.98rem;
+      font-weight: 900;
+      cursor: pointer;
+      display: none;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    #btn-bonus-continue:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 22px rgba(0,201,167,0.4);
+    }
+
     /* Responsive */
     @media (max-width: 600px) {
       :root { --pw: 88px; --ph: 88px; }
       header h1 { font-size: 1.35rem; }
       #game { gap: 18px; }
       .win-box { padding: 32px 20px; }
+      .bonus-box { padding: 30px 20px; }
     }
   </style>
 </head>
@@ -378,6 +510,23 @@
   </div>
 </div>
 
+<!-- Bonus question overlay -->
+<div id="bonus-overlay">
+  <div class="bonus-box">
+    <div class="bonus-icon">⭐</div>
+    <div class="bonus-badge">Pregunta Bonus · +50 pts</div>
+    <h2>¿Con qué otro nombre se conocen los eritrocitos?</h2>
+    <div class="options">
+      <button class="opt-btn" data-key="A">A) Glóbulos blancos</button>
+      <button class="opt-btn" data-key="B">B) Glóbulos rojos</button>
+      <button class="opt-btn" data-key="C">C) Vasos sanguíneos</button>
+      <button class="opt-btn" data-key="D">D) Plaquetas</button>
+    </div>
+    <div id="bonus-feedback"></div>
+    <button id="btn-bonus-continue">Continuar →</button>
+  </div>
+</div>
+
 <!-- Win overlay -->
 <div id="win-overlay">
   <div class="win-box">
@@ -393,6 +542,10 @@
       <div class="win-stat">
         <span class="val" id="win-attempts">—</span>
         <span class="lbl">Intentos</span>
+      </div>
+      <div class="win-stat">
+        <span class="val" id="win-score">—</span>
+        <span class="lbl">Puntuación</span>
       </div>
     </div>
     <button id="btn-win-reset">🔄 Jugar de nuevo</button>
@@ -426,6 +579,12 @@
   const btnReset     = document.getElementById('btn-reset');
   const btnWinReset  = document.getElementById('btn-win-reset');
   const confCanvas   = document.getElementById('confetti-canvas');
+  const bonusOverlay = document.getElementById('bonus-overlay');
+  const bonusFeedback= document.getElementById('bonus-feedback');
+  const btnContinue  = document.getElementById('btn-bonus-continue');
+
+  let bonusPoints = 0;
+  let elapsedSecs = 0;
 
   // ── Drag state ──────────────────────────────────────────────────────────
   let dragPiece  = null;   // element being dragged
@@ -671,11 +830,51 @@
     startTime = Date.now();
   }
 
-  // ── Win ──────────────────────────────────────────────────────────────────
+  // ── Win → show bonus first ────────────────────────────────────────────────
   function onWin() {
-    const elapsed = startTime ? Math.floor((Date.now() - startTime) / 1000) : 0;
-    winTime.textContent     = fmtTime(elapsed);
+    elapsedSecs = startTime ? Math.floor((Date.now() - startTime) / 1000) : 0;
+    bonusPoints = 0;
+    bonusFeedback.className = '';
+    bonusFeedback.textContent = '';
+    bonusFeedback.style.display = 'none';
+    btnContinue.style.display = 'none';
+    document.querySelectorAll('.opt-btn').forEach(b => {
+      b.disabled = false;
+      b.classList.remove('correct', 'wrong');
+    });
+    bonusOverlay.classList.add('show');
+  }
+
+  // ── Bonus answer logic ────────────────────────────────────────────────────
+  document.querySelectorAll('.opt-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.opt-btn').forEach(b => b.disabled = true);
+      if (btn.dataset.key === 'B') {
+        btn.classList.add('correct');
+        bonusPoints = 50;
+        bonusFeedback.textContent = '⭐ ¡Excelente, ganaste 50 puntos extra!';
+        bonusFeedback.className = 'success';
+      } else {
+        btn.classList.add('wrong');
+        document.querySelector('.opt-btn[data-key="B"]').classList.add('correct');
+        bonusFeedback.textContent = '❌ Incorrecto. La respuesta correcta es B) Glóbulos rojos.';
+        bonusFeedback.className = 'fail';
+      }
+      bonusFeedback.style.display = 'block';
+      btnContinue.style.display = 'inline-block';
+    });
+  });
+
+  btnContinue.addEventListener('click', () => {
+    bonusOverlay.classList.remove('show');
+    showWin();
+  });
+
+  function showWin() {
+    winTime.textContent     = fmtTime(elapsedSecs);
     winAttempts.textContent = attempts;
+    const baseScore = Math.max(0, placed * 10);
+    document.getElementById('win-score').textContent = (baseScore + bonusPoints) + ' pts';
     winOverlay.classList.add('show');
     startConfetti();
   }
@@ -729,8 +928,11 @@
   function reset() {
     placed = attempts = 0;
     startTime = null;
+    bonusPoints = 0;
+    elapsedSecs = 0;
     placedCount.textContent = attemptsEl.textContent = '0';
     winOverlay.classList.remove('show');
+    bonusOverlay.classList.remove('show');
     ghost.style.display = 'none';
     confCanvas.style.display = 'none';
     dragPiece = null;
