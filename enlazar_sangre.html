@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enlazar Componentes de la Sangre</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0A1628;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    header h1 {
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: #00C9A7;
+      letter-spacing: 0.5px;
+      text-shadow: 0 0 20px rgba(0,201,167,0.35);
+    }
+
+    header p {
+      font-size: 0.95rem;
+      color: #a0b4c8;
+      margin-top: 6px;
+    }
+
+    /* Score bar */
+    #scorebar {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 22px;
+    }
+
+    .score-chip {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(0,201,167,0.25);
+      border-radius: 999px;
+      padding: 6px 18px;
+      font-size: 0.9rem;
+      color: #c8dce8;
+    }
+
+    .score-chip span {
+      color: #00C9A7;
+      font-weight: 700;
+      margin-left: 4px;
+    }
+
+    /* Board */
+    #board {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px 40px;
+      width: 100%;
+      max-width: 780px;
+      align-items: start;
+    }
+
+    .column-header {
+      text-align: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #607d8b;
+      margin-bottom: 4px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+
+    #col-terms, #col-images {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Term cards */
+    .term-card {
+      background: rgba(255,255,255,0.05);
+      border: 2px solid rgba(0,201,167,0.2);
+      border-radius: 12px;
+      padding: 14px 20px;
+      cursor: pointer;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #e8f4fc;
+      transition: transform 0.15s, border-color 0.2s, background 0.2s, box-shadow 0.2s;
+      user-select: none;
+      text-align: center;
+      letter-spacing: 0.3px;
+    }
+
+    .term-card:hover:not(.matched):not(.disabled) {
+      border-color: #00C9A7;
+      background: rgba(0,201,167,0.1);
+      transform: translateX(4px);
+      box-shadow: 0 4px 18px rgba(0,201,167,0.2);
+    }
+
+    .term-card.selected {
+      border-color: #00C9A7;
+      background: rgba(0,201,167,0.18);
+      box-shadow: 0 0 0 3px rgba(0,201,167,0.3);
+      transform: translateX(4px);
+    }
+
+    /* Image cards */
+    .img-card {
+      background: rgba(255,255,255,0.04);
+      border: 2px solid rgba(0,201,167,0.15);
+      border-radius: 14px;
+      padding: 10px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      transition: transform 0.15s, border-color 0.2s, background 0.2s, box-shadow 0.2s;
+      user-select: none;
+      min-height: 100px;
+      justify-content: center;
+    }
+
+    .img-card img {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      border-radius: 8px;
+      pointer-events: none;
+    }
+
+    .img-card .img-label {
+      font-size: 0.72rem;
+      color: #607d8b;
+      letter-spacing: 0.5px;
+    }
+
+    .img-card:hover:not(.matched):not(.disabled) {
+      border-color: #00C9A7;
+      background: rgba(0,201,167,0.08);
+      transform: translateX(-4px);
+      box-shadow: 0 4px 18px rgba(0,201,167,0.15);
+    }
+
+    .img-card.selected {
+      border-color: #00C9A7;
+      background: rgba(0,201,167,0.15);
+      box-shadow: 0 0 0 3px rgba(0,201,167,0.3);
+      transform: translateX(-4px);
+    }
+
+    /* Matched state */
+    .term-card.matched, .img-card.matched {
+      border-color: #00C9A7;
+      background: rgba(0,201,167,0.15);
+      cursor: default;
+      animation: matchFade 0.6s ease forwards;
+    }
+
+    @keyframes matchFade {
+      0%   { opacity: 1; transform: scale(1); }
+      40%  { opacity: 1; transform: scale(1.04); background: rgba(0,201,167,0.35); }
+      100% { opacity: 0; transform: scale(0.92); pointer-events: none; }
+    }
+
+    /* Error state */
+    .term-card.error, .img-card.error {
+      border-color: #ff5252;
+      background: rgba(255,82,82,0.15);
+      animation: shake 0.42s cubic-bezier(.36,.07,.19,.97) both;
+    }
+
+    @keyframes shake {
+      10%, 90%  { transform: translateX(-3px); }
+      20%, 80%  { transform: translateX(5px); }
+      30%, 50%, 70% { transform: translateX(-5px); }
+      40%, 60%  { transform: translateX(5px); }
+      100% { transform: translateX(0); }
+    }
+
+    /* Disabled (matched & gone) */
+    .term-card.gone, .img-card.gone {
+      visibility: hidden;
+      pointer-events: none;
+      height: 0;
+      padding: 0;
+      margin: 0;
+      border: none;
+      overflow: hidden;
+      transition: height 0.4s 0.6s, padding 0.4s 0.6s, margin 0.4s 0.6s;
+    }
+
+    /* Connector line canvas */
+    #connector-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    /* Win overlay */
+    #win-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(10,22,40,0.88);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #win-overlay.show { display: flex; }
+
+    .win-box {
+      background: linear-gradient(135deg, #0f2540, #0d3d2e);
+      border: 2px solid #00C9A7;
+      border-radius: 24px;
+      padding: 44px 52px;
+      text-align: center;
+      max-width: 440px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(0,201,167,0.25);
+      animation: popIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.7); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+
+    .win-box .trophy { font-size: 3.5rem; margin-bottom: 12px; }
+
+    .win-box h2 {
+      font-size: 1.8rem;
+      color: #00C9A7;
+      margin-bottom: 8px;
+      font-weight: 800;
+    }
+
+    .win-box p {
+      font-size: 1rem;
+      color: #a0b4c8;
+      margin-bottom: 6px;
+      line-height: 1.5;
+    }
+
+    .win-score {
+      font-size: 2.6rem;
+      font-weight: 900;
+      color: #fff;
+      margin: 18px 0 6px;
+    }
+
+    .win-score small {
+      font-size: 1rem;
+      color: #607d8b;
+      font-weight: 400;
+    }
+
+    .win-grade {
+      font-size: 1.1rem;
+      color: #00C9A7;
+      font-weight: 700;
+      margin-bottom: 28px;
+    }
+
+    #btn-restart {
+      background: #00C9A7;
+      color: #0A1628;
+      border: none;
+      border-radius: 999px;
+      padding: 13px 36px;
+      font-size: 1rem;
+      font-weight: 800;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    #btn-restart:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 24px rgba(0,201,167,0.4);
+    }
+
+    /* Hint banner */
+    #hint {
+      font-size: 0.88rem;
+      color: #607d8b;
+      text-align: center;
+      margin-top: 18px;
+      max-width: 500px;
+    }
+
+    /* Responsive */
+    @media (max-width: 540px) {
+      header h1 { font-size: 1.4rem; }
+      #board { gap: 12px 20px; }
+      .term-card { font-size: 0.92rem; padding: 11px 12px; }
+      .img-card img { width: 62px; height: 62px; }
+      .win-box { padding: 32px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="connector-canvas"></canvas>
+
+<header>
+  <h1>🩸 Enlazar Componentes de la Sangre</h1>
+  <p>Haz clic en un término y luego en la imagen que le corresponde.</p>
+</header>
+
+<div id="scorebar">
+  <div class="score-chip">Aciertos <span id="hits">0</span></div>
+  <div class="score-chip">Errores <span id="misses">0</span></div>
+  <div class="score-chip">Pares restantes <span id="remaining">5</span></div>
+</div>
+
+<div id="board">
+  <div class="column-header" style="grid-column:1">Términos</div>
+  <div class="column-header" style="grid-column:2">Imágenes</div>
+
+  <div id="col-terms"></div>
+  <div id="col-images"></div>
+</div>
+
+<p id="hint">Selecciona un término → luego su imagen correspondiente</p>
+
+<div id="win-overlay">
+  <div class="win-box">
+    <div class="trophy">🏆</div>
+    <h2>¡Excelente trabajo!</h2>
+    <p>Completaste todos los pares de<br><strong>componentes de la sangre</strong>.</p>
+    <div class="win-score" id="win-score-val">— / —</div>
+    <div class="win-grade" id="win-grade"></div>
+    <p id="win-feedback"></p>
+    <br>
+    <button id="btn-restart">🔄 Jugar de nuevo</button>
+  </div>
+</div>
+
+<script>
+  // ── Data ────────────────────────────────────────────────────────────────
+  const DATA = [
+    { id: 'plasma',      label: 'Plasma',      img: 'plasma.png'      },
+    { id: 'hemoglobina', label: 'Hemoglobina', img: 'hemoglobina.png' },
+    { id: 'eritrocito',  label: 'Eritrocito',  img: 'eritrocito.png'  },
+    { id: 'leucocito',   label: 'Leucocito',   img: 'leucocito.png'   },
+    { id: 'plaqueta',    label: 'Plaqueta',    img: 'plaqueta.png'    },
+  ];
+
+  // ── State ────────────────────────────────────────────────────────────────
+  let selectedTerm = null;   // id of selected term card
+  let selectedImg  = null;   // id of selected img card
+  let hits    = 0;
+  let misses  = 0;
+  let matched = new Set();
+  let locked  = false;       // prevents clicks during animations
+
+  // ── DOM refs ─────────────────────────────────────────────────────────────
+  const colTerms    = document.getElementById('col-terms');
+  const colImages   = document.getElementById('col-images');
+  const hitsEl      = document.getElementById('hits');
+  const missesEl    = document.getElementById('misses');
+  const remainingEl = document.getElementById('remaining');
+  const winOverlay  = document.getElementById('win-overlay');
+  const winScore    = document.getElementById('win-score-val');
+  const winGrade    = document.getElementById('win-grade');
+  const winFeedback = document.getElementById('win-feedback');
+  const btnRestart  = document.getElementById('btn-restart');
+  const canvas      = document.getElementById('connector-canvas');
+  const ctx         = canvas.getContext('2d');
+
+  // ── Shuffle helper ───────────────────────────────────────────────────────
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  // ── Build board ──────────────────────────────────────────────────────────
+  function buildBoard() {
+    colTerms.innerHTML = '';
+    colImages.innerHTML = '';
+
+    const shuffledTerms  = shuffle(DATA);
+    const shuffledImages = shuffle(DATA);
+
+    shuffledTerms.forEach(d => {
+      const card = document.createElement('div');
+      card.className = 'term-card';
+      card.dataset.id = d.id;
+      card.textContent = d.label;
+      card.addEventListener('click', () => onTermClick(d.id));
+      colTerms.appendChild(card);
+    });
+
+    shuffledImages.forEach(d => {
+      const card = document.createElement('div');
+      card.className = 'img-card';
+      card.dataset.id = d.id;
+
+      const img = document.createElement('img');
+      img.src = d.img;
+      img.alt = d.label;
+
+      // Fallback placeholder if image not found
+      img.onerror = () => {
+        img.style.display = 'none';
+        const placeholder = document.createElement('div');
+        placeholder.style.cssText = `
+          width:80px;height:80px;border-radius:10px;
+          background:rgba(0,201,167,0.12);
+          border:2px dashed rgba(0,201,167,0.4);
+          display:flex;align-items:center;justify-content:center;
+          font-size:0.65rem;color:#00C9A7;text-align:center;padding:6px;
+          font-weight:600;line-height:1.3;
+        `;
+        placeholder.textContent = d.label;
+        card.insertBefore(placeholder, img);
+      };
+
+      const lbl = document.createElement('div');
+      lbl.className = 'img-label';
+      lbl.textContent = '?';
+
+      card.appendChild(img);
+      card.appendChild(lbl);
+      card.addEventListener('click', () => onImgClick(d.id));
+      colImages.appendChild(card);
+    });
+  }
+
+  // ── Click handlers ────────────────────────────────────────────────────────
+  function onTermClick(id) {
+    if (locked || matched.has(id)) return;
+
+    // If same term clicked → deselect
+    if (selectedTerm === id) {
+      clearTermSelection();
+      selectedTerm = null;
+      clearLine();
+      return;
+    }
+
+    clearTermSelection();
+    selectedTerm = id;
+    getTermEl(id).classList.add('selected');
+
+    if (selectedImg !== null) evaluate();
+    else drawLine();
+  }
+
+  function onImgClick(id) {
+    if (locked || matched.has(id)) return;
+
+    // If same img clicked → deselect
+    if (selectedImg === id) {
+      clearImgSelection();
+      selectedImg = null;
+      clearLine();
+      return;
+    }
+
+    clearImgSelection();
+    selectedImg = id;
+    getImgEl(id).classList.add('selected');
+
+    if (selectedTerm !== null) evaluate();
+    else drawLine();
+  }
+
+  // ── Evaluate match ────────────────────────────────────────────────────────
+  function evaluate() {
+    locked = true;
+    const tEl = getTermEl(selectedTerm);
+    const iEl = getImgEl(selectedImg);
+
+    clearLine();
+
+    if (selectedTerm === selectedImg) {
+      // ✅ Correct
+      hits++;
+      matched.add(selectedTerm);
+      hitsEl.textContent = hits;
+      remainingEl.textContent = 5 - matched.size;
+
+      tEl.classList.remove('selected');
+      iEl.classList.remove('selected');
+      tEl.classList.add('matched');
+      iEl.classList.add('matched');
+
+      flashLine(tEl, iEl, '#00C9A7');
+
+      const t = selectedTerm;
+      selectedTerm = null;
+      selectedImg  = null;
+
+      setTimeout(() => {
+        const te = getTermEl(t);
+        const ie = getImgEl(t);
+        if (te) te.classList.add('gone');
+        if (ie) ie.classList.add('gone');
+        locked = false;
+        if (matched.size === DATA.length) showWin();
+      }, 700);
+
+    } else {
+      // ❌ Incorrect
+      misses++;
+      missesEl.textContent = misses;
+
+      tEl.classList.remove('selected');
+      iEl.classList.remove('selected');
+      tEl.classList.add('error');
+      iEl.classList.add('error');
+
+      flashLine(tEl, iEl, '#ff5252');
+
+      selectedTerm = null;
+      selectedImg  = null;
+
+      setTimeout(() => {
+        tEl.classList.remove('error');
+        iEl.classList.remove('error');
+        locked = false;
+      }, 600);
+    }
+  }
+
+  // ── Selection helpers ─────────────────────────────────────────────────────
+  function clearTermSelection() {
+    document.querySelectorAll('.term-card.selected').forEach(el => el.classList.remove('selected'));
+  }
+
+  function clearImgSelection() {
+    document.querySelectorAll('.img-card.selected').forEach(el => el.classList.remove('selected'));
+  }
+
+  function getTermEl(id) {
+    return document.querySelector(`.term-card[data-id="${id}"]`);
+  }
+
+  function getImgEl(id) {
+    return document.querySelector(`.img-card[data-id="${id}"]`);
+  }
+
+  // ── Canvas connector line ─────────────────────────────────────────────────
+  function resizeCanvas() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  function clearLine() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  function cardCenter(el) {
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  }
+
+  function drawLine() {
+    clearLine();
+    const tEl = selectedTerm ? getTermEl(selectedTerm) : null;
+    const iEl = selectedImg  ? getImgEl(selectedImg)   : null;
+    if (!tEl && !iEl) return;
+
+    // Draw a subtle pulse dot on the selected card
+    const el = tEl || iEl;
+    const c  = cardCenter(el);
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, 7, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0,201,167,0.5)';
+    ctx.fill();
+  }
+
+  function flashLine(elA, elB, color) {
+    resizeCanvas();
+    const a = cardCenter(elA);
+    const b = cardCenter(elB);
+    let alpha = 0.85;
+
+    function frame() {
+      clearLine();
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = color;
+      ctx.lineWidth   = 3;
+      ctx.lineCap     = 'round';
+      ctx.setLineDash([8, 5]);
+      ctx.shadowColor = color;
+      ctx.shadowBlur  = 12;
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+      // Dots at endpoints
+      [a, b].forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+      });
+      ctx.restore();
+      alpha -= 0.05;
+      if (alpha > 0) requestAnimationFrame(frame);
+      else clearLine();
+    }
+    frame();
+  }
+
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  // ── Win screen ────────────────────────────────────────────────────────────
+  function showWin() {
+    const total   = hits + misses;
+    const pct     = Math.round((hits / total) * 100);
+    const score   = Math.max(0, hits * 20 - misses * 5);
+    let grade, feedback;
+
+    if (misses === 0) {
+      grade    = '⭐ ¡Perfecto! 100 / 100';
+      feedback = '¡Increíble! No cometiste ningún error. ¡Eres un experto en hematología!';
+    } else if (pct >= 80) {
+      grade    = '✅ ¡Muy bien! Nivel avanzado';
+      feedback = 'Excelente desempeño. Repasa los componentes que fallaste y serás un experto.';
+    } else if (pct >= 60) {
+      grade    = '📚 Bien. Sigue practicando';
+      feedback = 'Vas por buen camino. Revisa las imágenes de los componentes y vuelve a intentarlo.';
+    } else {
+      grade    = '💪 Sigue intentándolo';
+      feedback = 'No te rindas. Estudia los componentes de la sangre y vuelve a jugar.';
+    }
+
+    winScore.innerHTML    = `${score} <small>pts</small>`;
+    winGrade.textContent  = grade;
+    winFeedback.textContent = feedback;
+    winOverlay.classList.add('show');
+  }
+
+  // ── Restart ───────────────────────────────────────────────────────────────
+  function restart() {
+    hits = misses = 0;
+    matched.clear();
+    selectedTerm = selectedImg = null;
+    locked = false;
+    hitsEl.textContent = missesEl.textContent = '0';
+    remainingEl.textContent = '5';
+    winOverlay.classList.remove('show');
+    clearLine();
+    buildBoard();
+  }
+
+  btnRestart.addEventListener('click', restart);
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  buildBoard();
+</script>
+</body>
+</html>
