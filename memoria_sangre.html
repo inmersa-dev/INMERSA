@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Memoria – Componentes de la Sangre</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0A1628;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 48px;
+      user-select: none;
+    }
+
+    header { text-align: center; margin-bottom: 20px; }
+
+    header h1 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: #00C9A7;
+      text-shadow: 0 0 22px rgba(0,201,167,0.35);
+      letter-spacing: 0.4px;
+    }
+
+    header p { font-size: 0.9rem; color: #7a99b0; margin-top: 6px; }
+
+    /* Top bar */
+    #topbar {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .chip {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(0,201,167,0.22);
+      border-radius: 999px;
+      padding: 6px 18px;
+      font-size: 0.88rem;
+      color: #a8c0d0;
+    }
+
+    .chip span { color: #00C9A7; font-weight: 700; margin-left: 4px; }
+
+    #btn-reset {
+      background: transparent;
+      border: 2px solid #00C9A7;
+      color: #00C9A7;
+      border-radius: 999px;
+      padding: 7px 22px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.18s, color 0.18s, transform 0.15s;
+    }
+
+    #btn-reset:hover { background: #00C9A7; color: #0A1628; transform: scale(1.05); }
+
+    /* Card grid */
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(5, 130px);
+      gap: 14px;
+      justify-content: center;
+    }
+
+    /* Card */
+    .card {
+      width: 130px;
+      height: 155px;
+      perspective: 800px;
+      cursor: pointer;
+    }
+
+    .card-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .card.flipped .card-inner,
+    .card.matched .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .card-front, .card-back {
+      position: absolute;
+      inset: 0;
+      border-radius: 14px;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+
+    /* Back face – teal */
+    .card-back {
+      background: linear-gradient(135deg, #00C9A7, #00a88a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid rgba(255,255,255,0.15);
+      box-shadow: 0 4px 18px rgba(0,0,0,0.4);
+    }
+
+    .card-back svg {
+      width: 48px;
+      height: 48px;
+      opacity: 0.35;
+    }
+
+    /* Front face */
+    .card-front {
+      background: #0f2035;
+      border: 2px solid rgba(0,201,167,0.25);
+      transform: rotateY(180deg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.4);
+    }
+
+    .card-front img {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      border-radius: 8px;
+    }
+
+    .card-front .card-label {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #e8f4fc;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    /* Text-only card front */
+    .card-front.text-card {
+      background: linear-gradient(135deg, #0f2035, #0d2d1e);
+    }
+
+    .card-front.text-card .card-label {
+      font-size: 1.1rem;
+      color: #00C9A7;
+    }
+
+    /* Matched state */
+    .card.matched .card-front {
+      border-color: #00C9A7;
+      background: linear-gradient(135deg, #0d2d1e, #0a3020);
+      box-shadow: 0 0 0 2px #00C9A7, 0 4px 20px rgba(0,201,167,0.25);
+      animation: matchPop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    @keyframes matchPop {
+      0%   { transform: rotateY(180deg) scale(0.9); }
+      60%  { transform: rotateY(180deg) scale(1.06); }
+      100% { transform: rotateY(180deg) scale(1); }
+    }
+
+    /* Wrong shake */
+    .card.wrong .card-inner {
+      animation: wrongShake 0.4s ease;
+    }
+
+    @keyframes wrongShake {
+      0%,100% { transform: rotateY(180deg) translateX(0); }
+      25%     { transform: rotateY(180deg) translateX(-6px); }
+      75%     { transform: rotateY(180deg) translateX(6px); }
+    }
+
+    /* Bonus overlay */
+    #bonus-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(10,22,40,0.92);
+      backdrop-filter: blur(10px);
+      z-index: 600;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #bonus-overlay.show { display: flex; }
+
+    .bonus-box {
+      background: linear-gradient(140deg, #0e2540, #112038);
+      border: 2px solid #00C9A7;
+      border-radius: 26px;
+      padding: 42px 50px;
+      text-align: center;
+      max-width: 500px;
+      width: 92%;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.7), 0 0 40px rgba(0,201,167,0.2);
+      animation: popIn 0.45s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    .bonus-icon { font-size: 2.8rem; margin-bottom: 8px; }
+
+    .bonus-badge {
+      display: inline-block;
+      background: rgba(0,201,167,0.15);
+      border: 1px solid #00C9A7;
+      color: #00C9A7;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      border-radius: 999px;
+      padding: 4px 16px;
+      margin-bottom: 14px;
+    }
+
+    .bonus-box h2 {
+      font-size: 1.1rem;
+      color: #fff;
+      font-weight: 700;
+      margin-bottom: 22px;
+      line-height: 1.55;
+    }
+
+    .options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+
+    .opt-btn {
+      background: rgba(255,255,255,0.05);
+      border: 2px solid rgba(0,201,167,0.25);
+      border-radius: 12px;
+      color: #e0eaf2;
+      font-size: 0.98rem;
+      font-weight: 600;
+      padding: 12px 18px;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.18s, border-color 0.18s, transform 0.12s;
+    }
+
+    .opt-btn:hover:not(:disabled) {
+      background: rgba(0,201,167,0.12);
+      border-color: #00C9A7;
+      transform: translateX(4px);
+    }
+
+    .opt-btn.correct { background: rgba(0,201,167,0.2); border-color: #00C9A7; color: #00C9A7; }
+    .opt-btn.wrong   { background: rgba(255,82,82,0.15); border-color: #ff5252; color: #ff7070; }
+    .opt-btn:disabled { cursor: default; }
+
+    #bonus-feedback {
+      font-size: 1rem;
+      font-weight: 700;
+      border-radius: 10px;
+      padding: 10px 16px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    #bonus-feedback.success { background: rgba(0,201,167,0.15); border: 1px solid #00C9A7; color: #00C9A7; display: block; }
+    #bonus-feedback.fail    { background: rgba(255,82,82,0.12); border: 1px solid #ff5252; color: #ff7070; display: block; }
+
+    #btn-bonus-continue {
+      background: #00C9A7;
+      color: #0A1628;
+      border: none;
+      border-radius: 999px;
+      padding: 12px 36px;
+      font-size: 0.98rem;
+      font-weight: 900;
+      cursor: pointer;
+      display: none;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    #btn-bonus-continue:hover { transform: scale(1.05); box-shadow: 0 6px 22px rgba(0,201,167,0.4); }
+
+    /* Win overlay */
+    #win-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(10,22,40,0.9);
+      backdrop-filter: blur(10px);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #win-overlay.show { display: flex; }
+
+    .win-box {
+      background: linear-gradient(140deg, #0e2540, #0b3d30);
+      border: 2px solid #00C9A7;
+      border-radius: 26px;
+      padding: 46px 54px;
+      text-align: center;
+      max-width: 440px;
+      width: 90%;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.7), 0 0 50px rgba(0,201,167,0.2);
+      animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.65); opacity: 0; }
+      to   { transform: scale(1);    opacity: 1; }
+    }
+
+    .win-box .win-icon { font-size: 3.8rem; margin-bottom: 10px; }
+    .win-box h2 { font-size: 1.85rem; color: #00C9A7; font-weight: 900; margin-bottom: 8px; }
+    .win-box p  { color: #90afc0; font-size: 1rem; line-height: 1.55; margin-bottom: 6px; }
+
+    .win-stats { display: flex; gap: 16px; justify-content: center; margin: 22px 0; flex-wrap: wrap; }
+
+    .win-stat {
+      background: rgba(0,201,167,0.1);
+      border: 1px solid rgba(0,201,167,0.3);
+      border-radius: 14px;
+      padding: 12px 20px;
+    }
+
+    .win-stat .val { font-size: 1.9rem; font-weight: 900; color: #fff; display: block; }
+    .win-stat .lbl { font-size: 0.72rem; color: #607d8b; letter-spacing: 0.5px; }
+
+    #btn-win-reset {
+      background: #00C9A7;
+      color: #0A1628;
+      border: none;
+      border-radius: 999px;
+      padding: 14px 40px;
+      font-size: 1rem;
+      font-weight: 900;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    #btn-win-reset:hover { transform: scale(1.06); box-shadow: 0 8px 28px rgba(0,201,167,0.45); }
+
+    #confetti-canvas {
+      position: fixed; inset: 0;
+      pointer-events: none;
+      z-index: 499;
+      display: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 720px) {
+      #grid { grid-template-columns: repeat(4, 110px); gap: 10px; }
+      .card  { width: 110px; height: 135px; }
+      .card-front img { width: 64px; height: 64px; }
+      .card-front .card-label { font-size: 0.88rem; }
+    }
+
+    @media (max-width: 500px) {
+      #grid { grid-template-columns: repeat(3, 100px); gap: 8px; }
+      .card  { width: 100px; height: 125px; }
+      .card-front img { width: 56px; height: 56px; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<header>
+  <h1>🧬 Memoria: Componentes de la Sangre</h1>
+  <p>Encuentra los pares correctos: imagen + nombre del componente.</p>
+</header>
+
+<div id="topbar">
+  <div class="chip">Pares encontrados <span id="pairs-count">0</span> / 5</div>
+  <div class="chip">Intentos <span id="attempts-count">0</span></div>
+  <button id="btn-reset">↺ Reiniciar</button>
+</div>
+
+<div id="grid"></div>
+
+<!-- Bonus overlay -->
+<div id="bonus-overlay">
+  <div class="bonus-box">
+    <div class="bonus-icon">⭐</div>
+    <div class="bonus-badge">Pregunta Bonus · +50 pts</div>
+    <h2>¿Qué componente de la sangre representa<br>el 55% del volumen sanguíneo?</h2>
+    <div class="options">
+      <button class="opt-btn" data-key="A">A) Eritrocito</button>
+      <button class="opt-btn" data-key="B">B) Leucocito</button>
+      <button class="opt-btn" data-key="C">C) Plasma</button>
+      <button class="opt-btn" data-key="D">D) Plaqueta</button>
+    </div>
+    <div id="bonus-feedback"></div>
+    <button id="btn-bonus-continue">Continuar →</button>
+  </div>
+</div>
+
+<!-- Win overlay -->
+<div id="win-overlay">
+  <div class="win-box">
+    <div class="win-icon">🏆</div>
+    <h2>¡Memoria completada!</h2>
+    <p>Encontraste todos los pares de<br><strong>componentes de la sangre</strong>.</p>
+    <div class="win-stats">
+      <div class="win-stat">
+        <span class="val" id="win-time">—</span>
+        <span class="lbl">Tiempo</span>
+      </div>
+      <div class="win-stat">
+        <span class="val" id="win-attempts">—</span>
+        <span class="lbl">Intentos</span>
+      </div>
+      <div class="win-stat">
+        <span class="val" id="win-score">—</span>
+        <span class="lbl">Puntuación</span>
+      </div>
+    </div>
+    <button id="btn-win-reset">🔄 Jugar de nuevo</button>
+  </div>
+</div>
+
+<script>
+  // ── Data ─────────────────────────────────────────────────────────────────
+  const PAIRS = [
+    { id: 'eritrocito',  img: 'eritrocito.png',  label: 'Eritrocito'  },
+    { id: 'leucocito',   img: 'leucocito.png',   label: 'Leucocito'   },
+    { id: 'plaqueta',    img: 'plaqueta.png',     label: 'Plaqueta'    },
+    { id: 'hemoglobina', img: 'hemoglobina.png',  label: 'Hemoglobina' },
+    { id: 'plasma',      img: 'plasma.png',       label: 'Plasma'      },
+  ];
+
+  // ── State ─────────────────────────────────────────────────────────────────
+  let flipped    = [];   // currently face-up (unmatched) cards
+  let matched    = 0;
+  let attempts   = 0;
+  let locked     = false;
+  let startTime  = null;
+  let bonusPoints = 0;
+  let elapsedSecs = 0;
+
+  // ── DOM ───────────────────────────────────────────────────────────────────
+  const grid          = document.getElementById('grid');
+  const pairsCount    = document.getElementById('pairs-count');
+  const attemptsEl    = document.getElementById('attempts-count');
+  const bonusOverlay  = document.getElementById('bonus-overlay');
+  const bonusFeedback = document.getElementById('bonus-feedback');
+  const btnContinue   = document.getElementById('btn-bonus-continue');
+  const winOverlay    = document.getElementById('win-overlay');
+  const confCanvas    = document.getElementById('confetti-canvas');
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function fmtTime(s) {
+    return `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
+  }
+
+  // ── Build grid ────────────────────────────────────────────────────────────
+  function buildGrid() {
+    grid.innerHTML = '';
+
+    // Create one image card + one text card per pair, then shuffle all 10
+    const cards = [];
+    PAIRS.forEach(p => {
+      cards.push({ pairId: p.id, type: 'image', img: p.img,   label: p.label });
+      cards.push({ pairId: p.id, type: 'text',  img: null,    label: p.label });
+    });
+
+    shuffle(cards).forEach((data, idx) => {
+      grid.appendChild(createCard(data, idx));
+    });
+  }
+
+  function createCard(data, idx) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.pairId = data.pairId;
+    card.dataset.type   = data.type;
+    card.dataset.idx    = idx;
+
+    // Back
+    const back = document.createElement('div');
+    back.className = 'card-back';
+    back.innerHTML = `
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="24" cy="24" r="20" stroke="white" stroke-width="2.5"/>
+        <path d="M24 14 C18 14 14 18 14 24 C14 30 18 34 24 34 C30 34 34 30 34 24 C34 18 30 14 24 14Z"
+              stroke="white" stroke-width="2" fill="none"/>
+        <circle cx="24" cy="24" r="4" fill="white"/>
+      </svg>`;
+
+    // Front
+    const front = document.createElement('div');
+    if (data.type === 'image') {
+      front.className = 'card-front';
+      const img = document.createElement('img');
+      img.src = data.img;
+      img.alt = data.label;
+      const lbl = document.createElement('div');
+      lbl.className = 'card-label';
+      lbl.textContent = '?';
+      front.appendChild(img);
+      front.appendChild(lbl);
+    } else {
+      front.className = 'card-front text-card';
+      const lbl = document.createElement('div');
+      lbl.className = 'card-label';
+      lbl.textContent = data.label;
+      front.appendChild(lbl);
+    }
+
+    const inner = document.createElement('div');
+    inner.className = 'card-inner';
+    inner.appendChild(back);
+    inner.appendChild(front);
+    card.appendChild(inner);
+
+    card.addEventListener('click', () => onCardClick(card));
+    return card;
+  }
+
+  // ── Card click ────────────────────────────────────────────────────────────
+  function onCardClick(card) {
+    if (locked) return;
+    if (card.classList.contains('flipped')) return;
+    if (card.classList.contains('matched')) return;
+    if (flipped.length === 2) return;
+
+    if (!startTime) startTime = Date.now();
+
+    card.classList.add('flipped');
+    flipped.push(card);
+
+    if (flipped.length === 2) {
+      attempts++;
+      attemptsEl.textContent = attempts;
+      locked = true;
+      setTimeout(evaluate, 900);
+    }
+  }
+
+  function evaluate() {
+    const [a, b] = flipped;
+    const sameId   = a.dataset.pairId === b.dataset.pairId;
+    const diffType = a.dataset.type   !== b.dataset.type;
+
+    if (sameId && diffType) {
+      // ✅ Match
+      a.classList.add('matched');
+      b.classList.add('matched');
+      matched++;
+      pairsCount.textContent = matched;
+      if (matched === PAIRS.length) {
+        setTimeout(onWin, 500);
+      }
+    } else {
+      // ❌ No match
+      a.classList.add('wrong');
+      b.classList.add('wrong');
+      setTimeout(() => {
+        a.classList.remove('flipped', 'wrong');
+        b.classList.remove('flipped', 'wrong');
+      }, 600);
+    }
+
+    flipped = [];
+    locked  = false;
+  }
+
+  // ── Win → bonus first ─────────────────────────────────────────────────────
+  function onWin() {
+    elapsedSecs = startTime ? Math.floor((Date.now() - startTime) / 1000) : 0;
+    bonusPoints = 0;
+    bonusFeedback.className = '';
+    bonusFeedback.textContent = '';
+    bonusFeedback.style.display = 'none';
+    btnContinue.style.display = 'none';
+    document.querySelectorAll('.opt-btn').forEach(b => {
+      b.disabled = false;
+      b.classList.remove('correct', 'wrong');
+    });
+    bonusOverlay.classList.add('show');
+  }
+
+  // Respuesta correcta: C) Plasma
+  document.querySelectorAll('.opt-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.opt-btn').forEach(b => b.disabled = true);
+      if (btn.dataset.key === 'C') {
+        btn.classList.add('correct');
+        bonusPoints = 50;
+        bonusFeedback.textContent = '⭐ ¡Excelente, ganaste 50 puntos extra!';
+        bonusFeedback.className = 'success';
+      } else {
+        btn.classList.add('wrong');
+        document.querySelector('.opt-btn[data-key="C"]').classList.add('correct');
+        bonusFeedback.textContent = '❌ Incorrecto. La respuesta correcta es C) Plasma.';
+        bonusFeedback.className = 'fail';
+      }
+      bonusFeedback.style.display = 'block';
+      btnContinue.style.display = 'inline-block';
+    });
+  });
+
+  btnContinue.addEventListener('click', () => {
+    bonusOverlay.classList.remove('show');
+    const baseScore = Math.max(0, PAIRS.length * 20 - (attempts - PAIRS.length) * 3);
+    document.getElementById('win-time').textContent     = fmtTime(elapsedSecs);
+    document.getElementById('win-attempts').textContent = attempts;
+    document.getElementById('win-score').textContent    = (baseScore + bonusPoints) + ' pts';
+    winOverlay.classList.add('show');
+    startConfetti();
+  });
+
+  // ── Confetti ──────────────────────────────────────────────────────────────
+  function startConfetti() {
+    confCanvas.style.display = 'block';
+    confCanvas.width  = window.innerWidth;
+    confCanvas.height = window.innerHeight;
+    const ctx = confCanvas.getContext('2d');
+    const colors = ['#00C9A7','#00e8c8','#fff','#ffdd57','#ff6b6b','#74b9ff'];
+    const particles = Array.from({ length: 90 }, () => ({
+      x: Math.random() * confCanvas.width,
+      y: Math.random() * -confCanvas.height,
+      w: 8 + Math.random() * 8, h: 5 + Math.random() * 5,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rot: Math.random() * Math.PI * 2,
+      vx: (Math.random() - 0.5) * 2.5, vy: 2.5 + Math.random() * 3,
+      vr: (Math.random() - 0.5) * 0.15,
+    }));
+    let frame = 0;
+    function draw() {
+      ctx.clearRect(0, 0, confCanvas.width, confCanvas.height);
+      particles.forEach(p => {
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+        ctx.fillStyle = p.color; ctx.globalAlpha = 0.85;
+        ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+        ctx.restore();
+        p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+        if (p.y > confCanvas.height + 20) { p.y = -20; p.x = Math.random() * confCanvas.width; }
+      });
+      if (++frame < 240) requestAnimationFrame(draw);
+      else { ctx.clearRect(0, 0, confCanvas.width, confCanvas.height); confCanvas.style.display = 'none'; }
+    }
+    draw();
+  }
+
+  // ── Reset ─────────────────────────────────────────────────────────────────
+  function reset() {
+    flipped = [];
+    matched = attempts = bonusPoints = elapsedSecs = 0;
+    locked = false;
+    startTime = null;
+    pairsCount.textContent = attemptsEl.textContent = '0';
+    bonusOverlay.classList.remove('show');
+    winOverlay.classList.remove('show');
+    confCanvas.style.display = 'none';
+    buildGrid();
+  }
+
+  document.getElementById('btn-reset').addEventListener('click', reset);
+  document.getElementById('btn-win-reset').addEventListener('click', reset);
+  window.addEventListener('resize', () => {
+    confCanvas.width = window.innerWidth;
+    confCanvas.height = window.innerHeight;
+  });
+
+  reset();
+</script>
+</body>
+</html>
