@@ -832,6 +832,13 @@
 
   // ── Win → show bonus first ────────────────────────────────────────────────
   function onWin() {
+    // Force-clean any lingering drag state
+    ghost.style.display = 'none';
+    dragPiece = null;
+    dragId = null;
+    document.querySelectorAll('.piece').forEach(p => p.style.opacity = '1');
+    clearSlotHighlights();
+
     elapsedSecs = startTime ? Math.floor((Date.now() - startTime) / 1000) : 0;
     bonusPoints = 0;
     bonusFeedback.className = '';
