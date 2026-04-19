@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ahorcado Biológico – Enfermedades de la Sangre</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════
+   RESET & VARIABLES
+═══════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:       #0a1628;
+  --card:     #0f2040;
+  --card2:    #112244;
+  --card3:    #0d1e38;
+  --accent:   #00d4ff;
+  --teal:     #00b4cc;
+  --green:    #22c55e;
+  --yellow:   #f59e0b;
+  --red:      #ef4444;
+  --text:     #e2f0ff;
+  --muted:    #7a9cc0;
+  --border:   #1a3a5c;
+  --gold:     #fbbf24;
+  --radius:   12px;
+  --radius-s: 8px;
+}
+body{
+  font-family:'Nunito',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+  background-image:
+    radial-gradient(ellipse at 15% 50%,rgba(0,180,204,.07) 0%,transparent 60%),
+    radial-gradient(ellipse at 85% 20%,rgba(0,153,204,.05) 0%,transparent 50%);
+  user-select:none;-webkit-user-select:none;
+}
+
+/* ═══════════════════════════════════════════
+   WATERMARKS
+═══════════════════════════════════════════ */
+#wm{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+#wm img{position:absolute;opacity:.05;filter:blur(1.5px) grayscale(30%);pointer-events:none}
+
+/* ═══════════════════════════════════════════
+   TOP BAR
+═══════════════════════════════════════════ */
+#topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 20px;background:var(--card);
+  border-bottom:1px solid var(--border);
+  flex-wrap:wrap;gap:10px;position:relative;z-index:2;
+}
+#title-area{display:flex;flex-direction:column}
+#game-title{
+  font-size:1.35rem;font-weight:900;color:var(--accent);
+  text-transform:uppercase;letter-spacing:1px;
+  display:flex;align-items:center;gap:8px;
+}
+#game-sub{font-size:.7rem;color:var(--muted);margin-top:2px}
+#palabra-area{text-align:center;flex:1}
+#pal-label{font-size:.62rem;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:3px}
+#pal-tag{
+  font-size:.78rem;color:var(--text);font-weight:700;
+  background:rgba(0,180,204,.12);padding:4px 14px;
+  border-radius:20px;border:1px solid rgba(0,180,204,.25);
+  display:inline-block;
+}
+#stats-area{display:flex;align-items:center;gap:12px}
+.sbox{
+  display:flex;flex-direction:column;align-items:center;
+  background:var(--card3);padding:5px 14px;
+  border-radius:var(--radius-s);border:1px solid var(--border);
+}
+.sbox-lbl{font-size:.58rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted)}
+.sbox-val{font-size:1.05rem;font-weight:900;color:var(--accent)}
+
+/* ═══════════════════════════════════════════
+   MAIN LAYOUT  3-column
+═══════════════════════════════════════════ */
+#layout{
+  display:grid;
+  grid-template-columns:260px 1fr 280px;
+  gap:14px;
+  padding:14px 20px;
+  max-width:1380px;
+  margin:0 auto;
+  position:relative;z-index:1;
+}
+
+/* ═══════════════════════════════════════════
+   LEFT COL
+═══════════════════════════════════════════ */
+#left-col{display:flex;flex-direction:column;gap:12px}
+
+/* Cardiac Monitor */
+#monitor{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:14px;
+  position:relative;overflow:hidden;
+}
+#mon-label{
+  font-size:.58rem;text-transform:uppercase;letter-spacing:2px;
+  color:var(--accent);margin-bottom:8px;
+  display:flex;align-items:center;gap:6px;
+}
+#mon-label::before{
+  content:'';width:8px;height:8px;
+  background:var(--green);border-radius:50%;
+  box-shadow:0 0 6px var(--green);
+  animation:blink 1s infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+#ecg-cv{
+  width:100%;height:60px;
+  background:#040f1e;border-radius:var(--radius-s);
+  border:1px solid #0a2040;margin-bottom:10px;display:block;
+}
+#health-pct{
+  font-size:1.9rem;font-weight:900;text-align:center;
+  color:var(--green);transition:color .5s;line-height:1;
+}
+#health-pct-lbl{
+  text-align:center;font-size:.63rem;color:var(--muted);margin-bottom:7px;
+}
+#hbar-bg{
+  background:#040f1e;border-radius:20px;height:11px;
+  border:1px solid var(--border);overflow:hidden;margin-bottom:8px;
+}
+#hbar-fill{
+  height:100%;border-radius:20px;background:var(--green);
+  transition:width .5s ease,background .5s ease;width:100%;
+}
+#patient{
+  text-align:center;padding:6px 0;font-size:2.6rem;
+  transition:filter .5s,opacity .5s;
+}
+#patient.weak{filter:saturate(.2) brightness(.75);opacity:.75}
+#patient.crit{filter:saturate(0) brightness(.5);opacity:.55;animation:shake .45s infinite}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+#mon-msg{
+  font-size:.66rem;color:var(--muted);text-align:center;
+  line-height:1.4;font-style:italic;padding:5px 8px;
+  background:rgba(0,0,0,.2);border-radius:var(--radius-s);margin-top:4px;
+}
+@keyframes flash-red{0%,100%{background:var(--card)}50%{background:rgba(239,68,68,.18)}}
+#monitor.flash{animation:flash-red .4s}
+
+/* Registro */
+#registro{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:12px;
+}
+.panel-hdr{
+  font-size:.58rem;text-transform:uppercase;letter-spacing:2px;
+  color:var(--accent);margin-bottom:10px;
+  display:flex;align-items:center;gap:5px;
+}
+.reg-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05);
+  font-size:.77rem;
+}
+.reg-row:last-child{border:none}
+.reg-key{color:var(--muted)}
+.reg-val{font-weight:800;font-size:.82rem}
+
+/* ═══════════════════════════════════════════
+   CENTER COL
+═══════════════════════════════════════════ */
+#center-col{display:flex;flex-direction:column;align-items:center;gap:14px}
+
+/* Word display */
+#word-area{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:22px 18px 18px;
+  width:100%;text-align:center;
+}
+#word-tiles{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+.tile{
+  width:46px;height:54px;
+  background:var(--card3);border:2px solid var(--border);
+  border-radius:var(--radius-s);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.45rem;font-weight:900;color:var(--text);
+  transition:all .3s;
+}
+.tile.revealed{
+  background:rgba(34,197,94,.15);border-color:var(--green);
+  color:var(--green);animation:pop .3s ease;
+}
+.tile.bad{
+  background:rgba(239,68,68,.15);border-color:var(--red);
+  color:#f87171;
+}
+@keyframes pop{0%{transform:scale(.8);opacity:0}60%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+@keyframes pulse-g{0%{box-shadow:0 0 0 0 rgba(34,197,94,.7)}70%{box-shadow:0 0 0 10px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+.tile.pulse{animation:pulse-g .6s}
+#word-sub{
+  font-size:.7rem;color:var(--muted);text-align:center;
+  margin-top:8px;font-style:italic;
+}
+
+/* Keyboard */
+#kbd-area{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:14px 16px;width:100%;
+}
+#kbd-lbl{
+  font-size:.58rem;text-transform:uppercase;letter-spacing:2px;
+  color:var(--accent);margin-bottom:10px;text-align:center;
+}
+#kbd-rows{display:flex;flex-direction:column;gap:5px;align-items:center}
+.kbd-row{display:flex;gap:5px}
+.kbtn{
+  width:42px;height:42px;
+  background:var(--card3);border:1.5px solid var(--border);
+  border-radius:var(--radius-s);color:var(--text);
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:.88rem;
+  cursor:pointer;transition:all .15s;text-transform:uppercase;
+}
+.kbtn:hover:not(:disabled){
+  background:rgba(0,212,255,.15);border-color:var(--accent);
+  transform:translateY(-1px);
+}
+.kbtn:disabled{cursor:not-allowed;opacity:.45}
+.kbtn.hit{background:rgba(34,197,94,.3);border-color:var(--green);color:var(--green)}
+.kbtn.miss{background:rgba(239,68,68,.15);border-color:var(--red);color:#f87171}
+
+/* ═══════════════════════════════════════════
+   RIGHT COL
+═══════════════════════════════════════════ */
+#right-col{display:flex;flex-direction:column;gap:12px}
+
+/* Disease list */
+#disease-list{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:12px;
+}
+.dis-item{
+  display:flex;align-items:center;gap:9px;
+  padding:6px 8px;border-radius:var(--radius-s);
+  margin-bottom:4px;font-size:.8rem;
+  border:1px solid transparent;transition:all .3s;
+  cursor:default;
+}
+.dis-item:last-child{margin-bottom:0}
+.dis-item.locked{opacity:.4}
+.dis-item.active{
+  background:rgba(0,180,204,.12);
+  border-color:rgba(0,180,204,.35);
+  color:var(--accent);font-weight:800;
+}
+.dis-item.won{color:var(--green)}
+.dis-item.lost{color:#f87171}
+.dis-icon{font-size:1rem;flex-shrink:0;width:22px;text-align:center}
+.dis-name{font-weight:700;flex:1;font-size:.78rem}
+.dis-status{font-size:.9rem;flex-shrink:0}
+
+/* Letras probadas */
+#letras-box{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:12px;
+}
+#chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{
+  width:26px;height:26px;border-radius:5px;
+  background:var(--card3);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.68rem;font-weight:800;color:var(--muted);
+  transition:all .3s;
+}
+.chip.hit{background:rgba(34,197,94,.3);border-color:var(--green);color:var(--green)}
+.chip.miss{background:rgba(239,68,68,.15);border-color:var(--red);color:#f87171}
+
+/* Pista clínica */
+#pista-box{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:12px;flex:1;
+}
+#pista-body{
+  font-size:.82rem;color:var(--text);line-height:1.55;
+  background:rgba(0,0,0,.22);border-radius:var(--radius-s);
+  padding:10px 12px;min-height:55px;font-style:italic;
+  border-left:3px solid var(--accent);
+}
+
+/* ═══════════════════════════════════════════
+   WORD-RESULT OVERLAY
+═══════════════════════════════════════════ */
+#wr-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.78);z-index:100;
+  align-items:center;justify-content:center;
+  animation:fadeIn .3s;
+}
+#wr-overlay.show{display:flex}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+#wr-box{
+  background:var(--card);border:2px solid var(--border);
+  border-radius:20px;padding:30px 34px;
+  text-align:center;max-width:440px;width:90%;
+  animation:slideUp .4s cubic-bezier(.34,1.56,.64,1);
+  position:relative;overflow:hidden;
+}
+@keyframes slideUp{from{transform:translateY(40px) scale(.9);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+#wr-disease-icon{font-size:3.2rem;margin-bottom:8px}
+#wr-title{font-size:1.8rem;font-weight:900;margin-bottom:6px}
+#wr-title.win{color:var(--green)} #wr-title.lose{color:var(--red)}
+#wr-word{
+  font-size:1.6rem;font-weight:900;letter-spacing:4px;
+  font-family:monospace;margin:10px 0;
+}
+#wr-word.win{color:var(--green)} #wr-word.lose{color:#f87171}
+#wr-def{
+  font-size:.83rem;color:var(--muted);line-height:1.5;
+  margin:8px 0 6px;
+}
+#wr-fact{
+  font-size:.78rem;background:rgba(0,180,204,.08);
+  border:1px solid rgba(0,180,204,.2);border-radius:var(--radius-s);
+  padding:8px 12px;color:var(--text);line-height:1.45;
+  margin-bottom:16px;
+}
+#wr-fact::before{content:'💡 ';font-style:normal}
+#btn-continue{
+  padding:12px 32px;
+  background:linear-gradient(135deg,var(--teal),var(--accent));
+  border:none;border-radius:var(--radius);color:#fff;
+  font-family:'Nunito',sans-serif;font-weight:900;font-size:1rem;
+  cursor:pointer;transition:all .2s;
+}
+#btn-continue:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,180,204,.4)}
+
+/* ═══════════════════════════════════════════
+   FINAL OVERLAY
+═══════════════════════════════════════════ */
+#final-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.82);z-index:110;
+  align-items:center;justify-content:center;
+}
+#final-overlay.show{display:flex}
+#final-box{
+  background:var(--card);border:2px solid var(--border);
+  border-radius:20px;padding:30px 36px;
+  text-align:center;max-width:460px;width:90%;
+  animation:slideUp .4s cubic-bezier(.34,1.56,.64,1);
+}
+#final-emoji{font-size:3.5rem;margin-bottom:10px}
+#final-title{font-size:1.7rem;font-weight:900;margin-bottom:6px}
+#final-title.win{color:var(--gold)}
+#final-title.lose{color:var(--red)}
+#final-msg{font-size:.85rem;color:var(--muted);margin-bottom:14px;line-height:1.5}
+#final-score{
+  font-size:1.3rem;font-weight:900;color:var(--gold);margin-bottom:14px;
+}
+#final-list{
+  text-align:left;margin-bottom:16px;
+  max-height:200px;overflow-y:auto;
+}
+.fl-item{
+  display:flex;align-items:center;gap:9px;
+  padding:5px 0;font-size:.82rem;
+  border-bottom:1px solid rgba(255,255,255,.05);
+}
+.fl-item:last-child{border:none}
+.fl-word{font-weight:800}
+.fl-item.won .fl-word{color:var(--green)}
+.fl-item.lost .fl-word{color:#f87171}
+#btn-restart{
+  padding:12px 32px;
+  background:linear-gradient(135deg,var(--teal),var(--accent));
+  border:none;border-radius:var(--radius);color:#fff;
+  font-family:'Nunito',sans-serif;font-weight:900;font-size:1rem;
+  cursor:pointer;transition:all .2s;
+}
+#btn-restart:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,180,204,.4)}
+
+/* ═══════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════ */
+#toast{
+  position:fixed;bottom:28px;left:50%;
+  transform:translateX(-50%) translateY(80px);
+  background:var(--card);border:1px solid var(--border);
+  border-radius:30px;padding:9px 22px;
+  font-size:.84rem;font-weight:700;color:var(--text);
+  z-index:300;transition:transform .4s cubic-bezier(.34,1.56,.64,1),opacity .4s;
+  opacity:0;pointer-events:none;
+}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+#toast.green{border-color:var(--green);color:var(--green)}
+#toast.red{border-color:var(--red);color:var(--red)}
+#toast.yellow{border-color:var(--yellow);color:var(--yellow)}
+
+/* Confetti */
+canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:90}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+@media(max-width:1100px){#layout{grid-template-columns:240px 1fr 260px}}
+@media(max-width:900px){
+  #layout{grid-template-columns:1fr 1fr}
+  #left-col{grid-column:1}
+  #center-col{grid-column:1/3;order:-1}
+  #right-col{grid-column:2}
+}
+@media(max-width:640px){
+  #layout{grid-template-columns:1fr;padding:10px}
+  #left-col,#right-col,#center-col{grid-column:1}
+  .kbtn{width:34px;height:34px;font-size:.8rem}
+  .tile{width:38px;height:46px;font-size:1.2rem}
+}
+
+/* Sparkle anim for stats */
+@keyframes sparkle{0%{transform:scale(1)}50%{transform:scale(1.25) rotate(8deg)}100%{transform:scale(1)}}
+.sparkle{animation:sparkle .35s}
+</style>
+</head>
+<body>
+
+<canvas id="confetti"></canvas>
+
+<!-- Watermarks -->
+<div id="wm">
+  <img src="eritrocito2.png" style="width:180px;top:5%;left:1%;transform:rotate(-12deg)">
+  <img src="leucocito.png"   style="width:150px;top:22%;right:1%;transform:rotate(10deg)">
+  <img src="plaqueta.png"    style="width:130px;bottom:8%;left:2%;transform:rotate(20deg)">
+  <img src="hemoglobina.png" style="width:160px;bottom:5%;right:2%;transform:rotate(-14deg)">
+  <img src="plasma.png"      style="width:120px;top:52%;right:0%;transform:rotate(6deg)">
+  <img src="eritrocito2.png" style="width:120px;top:40%;left:0%;transform:rotate(30deg)">
+</div>
+
+<!-- Word Result Overlay -->
+<div id="wr-overlay">
+  <div id="wr-box">
+    <div id="wr-disease-icon">🩸</div>
+    <div id="wr-title" class="win">¡CORRECTO!</div>
+    <div id="wr-word" class="win">ANEMIA</div>
+    <div id="wr-def"></div>
+    <div id="wr-fact"></div>
+    <button id="btn-continue" onclick="continueGame()">Continuar →</button>
+  </div>
+</div>
+
+<!-- Final Overlay -->
+<div id="final-overlay">
+  <div id="final-box">
+    <div id="final-emoji">🏆</div>
+    <div id="final-title" class="win">¡NIVEL COMPLETADO!</div>
+    <div id="final-msg"></div>
+    <div id="final-score"></div>
+    <div id="final-list"></div>
+    <button id="btn-restart" onclick="restartAll()">Jugar de nuevo ↺</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- ═══ TOP BAR ═══ -->
+<div id="topbar">
+  <div id="title-area">
+    <div id="game-title"><span>🩸</span> AHORCADO BIOLÓGICO</div>
+    <div id="game-sub">Enfermedades de la Sangre · Sistema Circulatorio</div>
+  </div>
+  <div id="palabra-area">
+    <div id="pal-label">ENFERMEDAD</div>
+    <div id="pal-tag">Enfermedad 1 de 8</div>
+  </div>
+  <div id="stats-area">
+    <div class="sbox">
+      <span class="sbox-lbl">⭐ PUNTOS</span>
+      <span class="sbox-val" id="s-pts">0</span>
+    </div>
+    <div class="sbox">
+      <span class="sbox-lbl">✅ ACIERTOS</span>
+      <span class="sbox-val" id="s-ok" style="color:var(--green)">0</span>
+    </div>
+    <div class="sbox">
+      <span class="sbox-lbl">❌ FALLOS</span>
+      <span class="sbox-val" id="s-fail" style="color:var(--red)">0</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MAIN LAYOUT ═══ -->
+<div id="layout">
+
+  <!-- LEFT -->
+  <div id="left-col">
+
+    <div id="monitor">
+      <div id="mon-label">MONITOR CARDÍACO</div>
+      <canvas id="ecg-cv"></canvas>
+      <div id="health-pct">100%</div>
+      <div id="health-pct-lbl">Vitalidad del Paciente</div>
+      <div id="hbar-bg"><div id="hbar-fill"></div></div>
+      <div id="patient">🧑‍⚕️</div>
+      <div id="mon-msg">Cada error debilita al paciente. ¡Adivina antes de que sea tarde!</div>
+    </div>
+
+    <div id="registro">
+      <div class="panel-hdr">📋 REGISTRO MÉDICO</div>
+      <div class="reg-row">
+        <span class="reg-key">Letras correctas</span>
+        <span class="reg-val" id="reg-c" style="color:var(--green)">—</span>
+      </div>
+      <div class="reg-row">
+        <span class="reg-key">Letras incorrectas</span>
+        <span class="reg-val" id="reg-i" style="color:var(--red)">—</span>
+      </div>
+      <div class="reg-row">
+        <span class="reg-key">Palabras resueltas</span>
+        <span class="reg-val" id="reg-p" style="color:var(--gold)">0 / 8</span>
+      </div>
+      <div class="reg-row">
+        <span class="reg-key">Vitalidad</span>
+        <span class="reg-val" id="reg-v" style="color:var(--green)">100%</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CENTER -->
+  <div id="center-col">
+
+    <div id="word-area">
+      <div id="word-tiles"></div>
+      <div id="word-sub"></div>
+    </div>
+
+    <div id="kbd-area">
+      <div id="kbd-lbl">ELIGE UNA LETRA</div>
+      <div id="kbd-rows"></div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT -->
+  <div id="right-col">
+
+    <div id="disease-list">
+      <div class="panel-hdr">🗂️ ENFERMEDADES</div>
+      <div id="dis-items"></div>
+    </div>
+
+    <div id="letras-box">
+      <div class="panel-hdr">🔤 LETRAS PROBADAS</div>
+      <div id="chips"></div>
+    </div>
+
+    <div id="pista-box">
+      <div class="panel-hdr">🔬 PISTA CLÍNICA</div>
+      <div id="pista-body">Cargando definición clínica…</div>
+    </div>
+
+  </div>
+
+</div><!-- /layout -->
+
+<script>
+/* ════════════════════════════════════════
+   WORD DATA
+════════════════════════════════════════ */
+const WORDS = [
+  {
+    word: 'ANEMIA',
+    icon: '🩸',
+    def:  'Déficit de glóbulos rojos o hemoglobina que reduce el transporte de oxígeno a los tejidos.',
+    fact: 'Afecta a más de 1,620 millones de personas en el mundo según la OMS.',
+  },
+  {
+    word: 'POLICITEMIA',
+    icon: '🔴',
+    def:  'Producción excesiva de glóbulos rojos que aumenta la viscosidad de la sangre.',
+    fact: 'El exceso de eritrocitos puede elevar el riesgo de coágulos y accidentes cerebrovasculares.',
+  },
+  {
+    word: 'TALASEMIA',
+    icon: '🧬',
+    def:  'Producción anormal de hemoglobina causada por un defecto genético hereditario.',
+    fact: 'Es una de las enfermedades hereditarias más frecuentes a nivel mundial.',
+  },
+  {
+    word: 'LEUCEMIA',
+    icon: '🦠',
+    def:  'Producción descontrolada de glóbulos blancos anormales originada en la médula ósea.',
+    fact: 'Es el tipo de cáncer más común en niños y adolescentes menores de 15 años.',
+  },
+  {
+    word: 'LEUCOPENIA',
+    icon: '🛡️',
+    def:  'Reducción del número de leucocitos que debilita significativamente el sistema inmunológico.',
+    fact: 'Un conteo normal de leucocitos oscila entre 4,500 y 11,000 células por microlitro.',
+  },
+  {
+    word: 'HEMOFILIA',
+    icon: '💉',
+    def:  'Dificultad para coagular la sangre debido a la ausencia o deficiencia de factores de coagulación.',
+    fact: 'La hemofilia A afecta principalmente a varones porque está ligada al cromosoma X.',
+  },
+  {
+    word: 'TROMBOCITOPENIA',
+    icon: '🩹',
+    def:  'Déficit de plaquetas en la sangre que impide una coagulación normal ante lesiones.',
+    fact: 'El rango normal de plaquetas es de 150,000 a 400,000 por microlitro de sangre.',
+  },
+  {
+    word: 'SEPSIS',
+    icon: '⚠️',
+    def:  'Respuesta inflamatoria sistémica ante una infección generalizada que pone en riesgo la vida.',
+    fact: 'Provoca más muertes anuales que el cáncer de mama, pulmón y próstata combinados.',
+  },
+];
+
+const MAX_WRONG = 6;
+const ALPHABET  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+const KBD_ROWS  = [
+  ['Q','W','E','R','T','Y','U','I','O','P'],
+  ['A','S','D','F','G','H','J','K','L'],
+  ['Z','X','C','V','B','N','M'],
+];
+
+/* ════════════════════════════════════════
+   GAME STATE
+════════════════════════════════════════ */
+let wordIdx    = 0;
+let guessed    = new Set();   // correct letters
+let wrongSet   = new Set();   // wrong letters
+let results    = [];          // 'won'|'lost' per word
+let points     = 0;
+let wordActive = false;
+
+/* ════════════════════════════════════════
+   ECG ENGINE  (Gaussian buffer approach)
+════════════════════════════════════════ */
+const ECG_N = 200;
+const ECG_CYCLE = (() => {
+  const c = new Float32Array(ECG_N);
+  for (let i = 0; i < ECG_N; i++) {
+    const t = i / ECG_N;
+    const g = (ct, sg) => Math.exp(-0.5 * ((t - ct) / sg) ** 2);
+    c[i] = .13*g(.14,.025) - .08*g(.30,.010) + 1.0*g(.33,.011)
+          - .20*g(.385,.010) + .28*g(.56,.058);
+  }
+  return c;
+})();
+
+const ECG_STATES = [
+  {amp:42, noise:1.0,  color:'#22c55e', bpm:72,  status:'RITMO NORMAL'},
+  {amp:36, noise:2.5,  color:'#22c55e', bpm:64,  status:'RITMO NORMAL'},
+  {amp:29, noise:5.0,  color:'#7be850', bpm:55,  status:'RITMO IRREGULAR'},
+  {amp:21, noise:8.0,  color:'#f5c518', bpm:46,  status:'BRADICARDIA'},
+  {amp:13, noise:11.5, color:'#f09030', bpm:36,  status:'CRÍTICO'},
+  {amp:6,  noise:14.0, color:'#ff5555', bpm:22,  status:'ESTADO CRÍTICO'},
+  {amp:0,  noise:2.0,  color:'#ff1a1a', bpm:0,   status:'ASISTOLIA'},
+];
+
+let ecgCanvas, ecgCtx, ecgW, ecgH;
+let ecgBuf = [];
+let cycleT  = 0;
+let rafId   = null;
+let flashT  = 0, flashRGB = [0,0,0];
+
+function initECG() {
+  ecgCanvas = document.getElementById('ecg-cv');
+  ecgCtx    = ecgCanvas.getContext('2d');
+
+  function resize() {
+    ecgW = ecgCanvas.offsetWidth;
+    ecgH = ecgCanvas.offsetHeight || 60;
+    ecgCanvas.width  = ecgW;
+    ecgCanvas.height = ecgH;
+    ecgBuf = new Array(ecgW).fill(ecgH / 2);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+}
+
+function ecgNextY() {
+  const st = ECG_STATES[Math.min(wrongSet.size, MAX_WRONG)];
+  if (st.amp === 0) {
+    cycleT += 0.5;
+    return ecgH * 0.5 + (Math.random() - 0.5) * st.noise;
+  }
+  const sample = ECG_CYCLE[Math.floor(cycleT) % ECG_N];
+  cycleT += 3.6;
+  return ecgH * 0.5 - sample * st.amp + (Math.random() - 0.5) * st.noise;
+}
+
+function drawECG() {
+  const nw = wrongSet.size;
+  const st = ECG_STATES[Math.min(nw, MAX_WRONG)];
+  const ctx = ecgCtx;
+
+  ctx.fillStyle = '#040f1e';
+  ctx.fillRect(0, 0, ecgW, ecgH);
+
+  // grid
+  ctx.strokeStyle = 'rgba(0,130,60,.15)';
+  ctx.lineWidth   = .5;
+  for (let x = 0; x < ecgW; x += 20) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,ecgH); ctx.stroke(); }
+  for (let y = 0; y < ecgH; y += 10) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(ecgW,y); ctx.stroke(); }
+
+  // glow
+  ctx.shadowColor = st.color;
+  ctx.shadowBlur  = 5;
+  ctx.strokeStyle = st.color;
+  ctx.lineWidth   = 2;
+  ctx.lineJoin    = 'round';
+  ctx.beginPath();
+  ecgBuf.forEach((y, x) => x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y));
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // scan edge glow
+  const grd = ctx.createLinearGradient(ecgW - 24, 0, ecgW, 0);
+  grd.addColorStop(0, 'transparent');
+  grd.addColorStop(1, 'rgba(255,255,255,.06)');
+  ctx.fillStyle = grd;
+  ctx.fillRect(ecgW - 24, 0, 24, ecgH);
+
+  // flash overlay
+  if (flashT > 0) {
+    ctx.fillStyle = `rgba(${flashRGB[0]},${flashRGB[1]},${flashRGB[2]},${(flashT * .35).toFixed(2)})`;
+    ctx.fillRect(0, 0, ecgW, ecgH);
+    flashT = Math.max(0, flashT - .07);
+  }
+
+  // asystole text
+  if (nw >= MAX_WRONG) {
+    ctx.fillStyle  = '#ff1a1a';
+    ctx.font       = 'bold 13px monospace';
+    ctx.textAlign  = 'center';
+    ctx.shadowColor = '#ff1a1a'; ctx.shadowBlur = 8;
+    ctx.fillText('── ASISTOLIA ──', ecgW / 2, ecgH * .42);
+    ctx.font      = '10px monospace';
+    ctx.fillStyle = '#ff5555';
+    ctx.shadowBlur = 0;
+    ctx.fillText('SEÑAL CARDÍACA PERDIDA', ecgW / 2, ecgH * .68);
+    ctx.textAlign = 'left';
+  }
+
+  // BPM label (inside monitor-msg or bpm display — we update health UI below)
+  updateHealthUI(false); // silent update
+}
+
+function ecgTick() {
+  for (let i = 0; i < 2; i++) { ecgBuf.push(ecgNextY()); ecgBuf.shift(); }
+  drawECG();
+  rafId = requestAnimationFrame(ecgTick);
+}
+
+function triggerFlash(r, g, b) { flashT = 1; flashRGB = [r, g, b]; }
+
+/* ════════════════════════════════════════
+   HEALTH UI
+════════════════════════════════════════ */
+function updateHealthUI(animate = true) {
+  const pct = Math.max(0, Math.round(100 - (wrongSet.size / MAX_WRONG) * 100));
+  document.getElementById('health-pct').textContent = pct + '%';
+  document.getElementById('hbar-fill').style.width  = pct + '%';
+  document.getElementById('reg-v').textContent       = pct + '%';
+
+  const fill  = document.getElementById('hbar-fill');
+  const hpct  = document.getElementById('health-pct');
+  const regV  = document.getElementById('reg-v');
+  const pat   = document.getElementById('patient');
+
+  if (pct > 60) {
+    fill.style.background = 'var(--green)';
+    hpct.style.color = regV.style.color = 'var(--green)';
+    if (animate) { pat.className = ''; pat.textContent = '🧑‍⚕️'; }
+  } else if (pct > 30) {
+    fill.style.background = 'var(--yellow)';
+    hpct.style.color = regV.style.color = 'var(--yellow)';
+    if (animate) { pat.className = 'weak'; pat.textContent = '😟'; }
+  } else {
+    fill.style.background = 'var(--red)';
+    hpct.style.color = regV.style.color = 'var(--red)';
+    if (animate) { pat.className = 'crit'; pat.textContent = '😰'; }
+  }
+
+  // ECG status line
+  const st = ECG_STATES[Math.min(wrongSet.size, MAX_WRONG)];
+  document.getElementById('mon-msg').textContent =
+    (st.bpm ? st.bpm + ' BPM  ·  ' : '') + st.status;
+  document.getElementById('mon-msg').style.color =
+    wrongSet.size >= MAX_WRONG ? '#ff5555' : 'var(--muted)';
+}
+
+/* ════════════════════════════════════════
+   BUILD UI
+════════════════════════════════════════ */
+function buildKeyboard() {
+  const rows = document.getElementById('kbd-rows');
+  rows.innerHTML = '';
+  KBD_ROWS.forEach(row => {
+    const div = document.createElement('div');
+    div.className = 'kbd-row';
+    row.forEach(ch => {
+      const b = document.createElement('button');
+      b.className = 'kbtn'; b.id = 'kbtn-' + ch; b.textContent = ch;
+      b.onclick = () => guessLetter(ch);
+      div.appendChild(b);
+    });
+    rows.appendChild(div);
+  });
+}
+
+function resetKeyboard() {
+  KBD_ROWS.flat().forEach(ch => {
+    const b = document.getElementById('kbtn-' + ch);
+    if (b) { b.className = 'kbtn'; b.disabled = false; }
+  });
+}
+
+function buildChips() {
+  const g = document.getElementById('chips');
+  g.innerHTML = '';
+  ALPHABET.forEach(ch => {
+    const c = document.createElement('div');
+    c.className = 'chip'; c.id = 'chip-' + ch; c.textContent = ch;
+    g.appendChild(c);
+  });
+}
+
+function resetChips() {
+  ALPHABET.forEach(ch => {
+    const c = document.getElementById('chip-' + ch);
+    if (c) c.className = 'chip';
+  });
+}
+
+function buildDiseaseList() {
+  const box = document.getElementById('dis-items');
+  box.innerHTML = '';
+  WORDS.forEach((w, i) => {
+    const d = document.createElement('div');
+    d.className = 'dis-item locked'; d.id = 'dis-' + i;
+    d.innerHTML = `<span class="dis-icon">${w.icon}</span>
+                   <span class="dis-name">${w.word}</span>
+                   <span class="dis-status" id="dis-st-${i}">🔒</span>`;
+    box.appendChild(d);
+  });
+}
+
+function updateDiseaseList() {
+  WORDS.forEach((w, i) => {
+    const item = document.getElementById('dis-' + i);
+    const st   = document.getElementById('dis-st-' + i);
+    if (!item) return;
+    item.className = 'dis-item';
+    if (i < wordIdx) {
+      item.classList.add(results[i] === 'won' ? 'won' : 'lost');
+      st.textContent = results[i] === 'won' ? '✅' : '❌';
+    } else if (i === wordIdx) {
+      item.classList.add('active');
+      st.textContent = '▶';
+    } else {
+      item.classList.add('locked');
+      st.textContent = '🔒';
+    }
+  });
+}
+
+/* ════════════════════════════════════════
+   WORD TILES
+════════════════════════════════════════ */
+function renderWordTiles() {
+  const word = WORDS[wordIdx].word;
+  const box  = document.getElementById('word-tiles');
+  box.innerHTML = '';
+  word.split('').forEach(ch => {
+    const t = document.createElement('div');
+    t.className = 'tile';
+    if (guessed.has(ch)) { t.textContent = ch; t.classList.add('revealed'); }
+    box.appendChild(t);
+  });
+}
+
+function revealLetter(ch) {
+  const word  = WORDS[wordIdx].word;
+  const tiles = document.getElementById('word-tiles').children;
+  word.split('').forEach((c, i) => {
+    if (c === ch) {
+      tiles[i].textContent = ch;
+      tiles[i].classList.add('revealed', 'pulse');
+      setTimeout(() => tiles[i].classList.remove('pulse'), 600);
+    }
+  });
+}
+
+function revealAll(bad = false) {
+  const word  = WORDS[wordIdx].word;
+  const tiles = document.getElementById('word-tiles').children;
+  word.split('').forEach((c, i) => {
+    if (!guessed.has(c)) {
+      tiles[i].textContent = c;
+      tiles[i].classList.add(bad ? 'bad' : 'revealed');
+    }
+  });
+}
+
+/* ════════════════════════════════════════
+   REGISTRO
+════════════════════════════════════════ */
+function updateRegistro() {
+  const cList = [...guessed].join(', ') || '—';
+  const iList = [...wrongSet].join(', ') || '—';
+  const ok    = results.filter(r => r === 'won').length;
+  document.getElementById('reg-c').textContent = cList;
+  document.getElementById('reg-i').textContent = iList;
+  document.getElementById('reg-p').textContent = ok + ' / 8';
+}
+
+/* ════════════════════════════════════════
+   STATS BAR
+════════════════════════════════════════ */
+function updateStats() {
+  const ok   = results.filter(r => r === 'won').length;
+  const fail = results.filter(r => r === 'lost').length;
+  const el   = document.getElementById('s-pts');
+  el.textContent = points;
+  el.classList.add('sparkle');
+  setTimeout(() => el.classList.remove('sparkle'), 350);
+  document.getElementById('s-ok').textContent   = ok;
+  document.getElementById('s-fail').textContent = fail;
+}
+
+/* ════════════════════════════════════════
+   LOAD WORD
+════════════════════════════════════════ */
+function loadWord(idx) {
+  wordIdx    = idx;
+  guessed    = new Set();
+  wrongSet   = new Set();
+  wordActive = true;
+
+  const w = WORDS[idx];
+
+  // Top bar tag
+  document.getElementById('pal-tag').textContent = `${w.icon} Enfermedad ${idx + 1} de 8`;
+
+  // Clue
+  document.getElementById('pista-body').textContent = w.def;
+
+  // Word sub
+  document.getElementById('word-sub').textContent = `Longitud: ${w.word.length} letras`;
+
+  // Monitor reset
+  document.getElementById('patient').className = '';
+  document.getElementById('patient').textContent = '🧑‍⚕️';
+
+  renderWordTiles();
+  resetKeyboard();
+  resetChips();
+  updateHealthUI();
+  updateRegistro();
+  updateDiseaseList();
+}
+
+/* ════════════════════════════════════════
+   GUESS
+════════════════════════════════════════ */
+function guessLetter(ch) {
+  if (!wordActive) return;
+  if (guessed.has(ch) || wrongSet.has(ch)) return;
+
+  const word = WORDS[wordIdx].word;
+  const kbtn = document.getElementById('kbtn-' + ch);
+  const chip = document.getElementById('chip-' + ch);
+
+  if (word.includes(ch)) {
+    guessed.add(ch);
+    revealLetter(ch);
+    if (kbtn) { kbtn.classList.add('hit'); kbtn.disabled = true; }
+    if (chip) chip.className = 'chip hit';
+    triggerFlash(0, 180, 80);
+    points += 100;
+    updateStats();
+    updateRegistro();
+    showToast('✅ +100 pts', 'green');
+
+    // Win check
+    if (word.split('').every(c => guessed.has(c))) {
+      wordActive = false;
+      points += 400;
+      updateStats();
+      setTimeout(() => showWordResult(true), 700);
+    }
+  } else {
+    wrongSet.add(ch);
+    if (kbtn) { kbtn.classList.add('miss'); kbtn.disabled = true; }
+    if (chip) chip.className = 'chip miss';
+    triggerFlash(200, 20, 20);
+    points = Math.max(0, points - 30);
+    updateStats();
+    updateRegistro();
+
+    // Flash monitor
+    const mon = document.getElementById('monitor');
+    mon.classList.remove('flash'); void mon.offsetWidth; mon.classList.add('flash');
+    setTimeout(() => mon.classList.remove('flash'), 400);
+
+    updateHealthUI();
+    showToast('❌ −30 pts', 'red');
+
+    if (wrongSet.size >= MAX_WRONG) {
+      wordActive = false;
+      setTimeout(() => {
+        revealAll(true);
+        setTimeout(() => showWordResult(false), 600);
+      }, 800);
+    }
+  }
+}
+
+/* ════════════════════════════════════════
+   WORD RESULT OVERLAY
+════════════════════════════════════════ */
+function showWordResult(won) {
+  const w = WORDS[wordIdx];
+  results.push(won ? 'won' : 'lost');
+  updateDiseaseList();
+  updateStats();
+
+  document.getElementById('wr-disease-icon').textContent = w.icon;
+  document.getElementById('wr-title').textContent = won ? '¡CORRECTO!' : 'SEÑAL PERDIDA';
+  document.getElementById('wr-title').className   = won ? 'win' : 'lose';
+  document.getElementById('wr-word').textContent  = w.word;
+  document.getElementById('wr-word').className    = won ? 'win' : '';
+  document.getElementById('wr-def').textContent   = w.def;
+  document.getElementById('wr-fact').textContent  = w.fact;
+
+  document.getElementById('wr-overlay').classList.add('show');
+}
+
+function continueGame() {
+  document.getElementById('wr-overlay').classList.remove('show');
+  const next = wordIdx + 1;
+  if (next >= WORDS.length) {
+    showFinalScreen();
+  } else {
+    loadWord(next);
+  }
+}
+
+/* ════════════════════════════════════════
+   FINAL SCREEN
+════════════════════════════════════════ */
+function showFinalScreen() {
+  const ok    = results.filter(r => r === 'won').length;
+  const allOk = ok === WORDS.length;
+
+  document.getElementById('final-emoji').textContent = allOk ? '🏆' : '💪';
+  document.getElementById('final-title').textContent = allOk ? '¡NIVEL COMPLETADO!' : `${ok}/8 CORRECTAS`;
+  document.getElementById('final-title').className   = allOk ? 'win' : 'lose';
+  document.getElementById('final-msg').textContent   = allOk
+    ? '¡Dominas todas las enfermedades de la sangre! Estás listo para el siguiente nivel.'
+    : 'Buen esfuerzo. Repasa las enfermedades marcadas en rojo e inténtalo de nuevo.';
+  document.getElementById('final-score').textContent = `⭐ ${points} puntos`;
+
+  const list = document.getElementById('final-list');
+  list.innerHTML = '';
+  WORDS.forEach((w, i) => {
+    const r   = results[i] || 'lost';
+    const div = document.createElement('div');
+    div.className = 'fl-item ' + r;
+    div.innerHTML = `<span>${r === 'won' ? '✅' : '❌'}</span>
+                     <span style="font-size:1rem">${w.icon}</span>
+                     <span class="fl-word">${w.word}</span>`;
+    list.appendChild(div);
+  });
+
+  document.getElementById('final-overlay').classList.add('show');
+  if (allOk) launchConfetti();
+}
+
+function restartAll() {
+  document.getElementById('final-overlay').classList.remove('show');
+  results = [];
+  points  = 0;
+  stopConfetti();
+  updateStats();
+  buildDiseaseList();
+  loadWord(0);
+}
+
+/* ════════════════════════════════════════
+   KEYBOARD (desktop)
+════════════════════════════════════════ */
+document.addEventListener('keydown', e => {
+  if (!wordActive) return;
+  if (e.key.length === 1 && /[a-zA-Z]/.test(e.key)) {
+    e.preventDefault();
+    guessLetter(e.key.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+  }
+});
+
+/* ════════════════════════════════════════
+   TOAST
+════════════════════════════════════════ */
+let toastTmr = null;
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  if (toastTmr) clearTimeout(toastTmr);
+  t.textContent = msg;
+  t.className = 'show ' + type;
+  toastTmr = setTimeout(() => { t.className = ''; }, 2200);
+}
+
+/* ════════════════════════════════════════
+   CONFETTI
+════════════════════════════════════════ */
+let confRaf = null;
+function launchConfetti() {
+  const cv = document.getElementById('confetti');
+  const cx = cv.getContext('2d');
+  cv.width = innerWidth; cv.height = innerHeight;
+  const ps = Array.from({length:130}, () => ({
+    x: Math.random() * cv.width,
+    y: Math.random() * -cv.height * .6,
+    w: 7 + Math.random() * 8, h: 4 + Math.random() * 5,
+    color: ['#22c55e','#00d4ff','#fbbf24','#ef4444','#fff','#a78bfa'][Math.floor(Math.random()*6)],
+    vel: 2 + Math.random() * 4,
+    angle: Math.random() * 360,
+    spin: (Math.random() - .5) * 6,
+  }));
+  (function draw() {
+    cx.clearRect(0, 0, cv.width, cv.height);
+    ps.forEach(p => {
+      cx.save(); cx.translate(p.x + p.w/2, p.y + p.h/2); cx.rotate(p.angle * Math.PI / 180);
+      cx.fillStyle = p.color; cx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+      cx.restore(); p.y += p.vel; p.angle += p.spin;
+      if (p.y > cv.height) p.y = -20;
+    });
+    confRaf = requestAnimationFrame(draw);
+  })();
+}
+function stopConfetti() {
+  if (confRaf) { cancelAnimationFrame(confRaf); confRaf = null; }
+  const cv = document.getElementById('confetti');
+  cv.getContext('2d').clearRect(0, 0, cv.width, cv.height);
+}
+
+/* ════════════════════════════════════════
+   INIT
+════════════════════════════════════════ */
+buildKeyboard();
+buildChips();
+buildDiseaseList();
+initECG();
+loadWord(0);
+ecgTick();
+</script>
+</body>
+</html>
