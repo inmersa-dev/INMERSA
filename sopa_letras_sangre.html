@@ -97,12 +97,23 @@ h1{text-align:center;color:#00C9A7;margin-bottom:8px;font-size:1.3rem;letter-spa
 .cell.err{animation:errFlash .45s ease}
 
 /* Overlays */
-.overlay{position:fixed;inset:0;background:rgba(10,22,40,.93);display:flex;align-items:center;justify-content:center;z-index:500}
+.overlay{position:fixed;inset:0;background:rgba(10,22,40,.96);display:flex;align-items:center;justify-content:center;z-index:500;overflow-y:auto;padding:16px}
 .overlay.hidden{display:none}
-.overlay-box{background:#112240;border:2px solid #00C9A7;border-radius:16px;padding:30px 32px;max-width:440px;width:92%;text-align:center}
-.overlay-box h2{color:#00C9A7;font-size:1.35rem;margin-bottom:14px}
-.overlay-box p{color:#fff;font-size:.95rem;line-height:1.65;margin-bottom:22px}
+.overlay-box{background:#112240;border:2px solid #00C9A7;border-radius:16px;padding:26px 28px;max-width:480px;width:100%;text-align:center}
+.overlay-box h2{color:#00C9A7;font-size:1.3rem;margin-bottom:10px}
+.overlay-box p{color:#fff;font-size:.92rem;line-height:1.6;margin-bottom:16px}
 #play-again-btn{background:#00C9A7;color:#000;border:none;padding:11px 28px;border-radius:8px;cursor:pointer;font-size:.95rem;font-weight:bold;font-family:inherit}
+
+/* Intro overlay */
+#intro-overlay .overlay-box{text-align:left;max-width:500px}
+#intro-overlay h2{text-align:center;font-size:1.25rem;margin-bottom:6px}
+#intro-overlay .intro-subtitle{text-align:center;color:#aaa;font-size:.88rem;margin-bottom:16px;font-style:italic}
+#intro-overlay .intro-warning{text-align:center;background:#0d1d3a;border:1px solid #00C9A7;border-radius:8px;padding:10px 14px;color:#00C9A7;font-size:.88rem;margin-bottom:18px;line-height:1.5}
+.disease-preview{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid #1a3560}
+.disease-preview:last-child{border-bottom:none}
+.dp-name{color:#00C9A7;font-weight:bold;font-size:.88rem;min-width:155px;flex-shrink:0}
+.dp-def{color:#ccc;font-size:.8rem;line-height:1.4}
+#start-btn{display:block;width:100%;margin-top:18px;background:#00C9A7;color:#000;border:none;padding:12px;border-radius:8px;cursor:pointer;font-size:1rem;font-weight:bold;font-family:inherit;letter-spacing:.5px}
 
 canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:499}
 
@@ -122,6 +133,19 @@ canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:499}
   <img src="hemoglobina.png" style="width:160px;bottom:4%;right:3%;transform:rotate(-14deg)">
   <img src="plasma.png"      style="width:130px;top:50%;right:1%;transform:rotate(8deg)">
   <img src="eritrocito2.png" style="width:100px;bottom:20%;left:40%;transform:rotate(30deg)">
+</div>
+
+<!-- Intro overlay -->
+<div id="intro-overlay" class="overlay">
+  <div class="overlay-box">
+    <h2>🩸 Enfermedades de la Sangre</h2>
+    <p class="intro-subtitle">Antes de comenzar, familiarízate con estas enfermedades</p>
+    <div class="intro-warning">
+      📌 <strong>Memorízalas bien</strong> — las necesitarás en los próximos niveles
+    </div>
+    <div id="disease-preview-list"></div>
+    <button id="start-btn" onclick="startGame()">¡Listo, a buscarlas! 🔍</button>
+  </div>
 </div>
 
 <!-- Win overlay -->
@@ -454,9 +478,25 @@ function stopConfetti(){
     .clearRect(0,0,innerWidth,innerHeight);
 }
 
+/* ── Intro ── */
+function buildIntro(){
+  const list=document.getElementById('disease-preview-list');
+  DISEASES.forEach(d=>{
+    const row=document.createElement('div');
+    row.className='disease-preview';
+    row.innerHTML=`<div class="dp-name">${d.word}</div><div class="dp-def">${d.def}</div>`;
+    list.appendChild(row);
+  });
+}
+
+function startGame(){
+  document.getElementById('intro-overlay').classList.add('hidden');
+}
+
 /* ── Init ── */
 initGrid();
 buildTable();
+buildIntro();
 showDisease(false);
 </script>
 </body>
