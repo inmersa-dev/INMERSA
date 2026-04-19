@@ -67,6 +67,9 @@ canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:499}
 </head>
 <body>
 <canvas id="confetti"></canvas>
+<!-- Input oculto para teclado móvil -->
+<input id="kb" type="text" autocomplete="off" autocorrect="off" autocapitalize="characters"
+  style="position:fixed;opacity:0;width:1px;height:1px;top:0;left:0;pointer-events:none;z-index:-1;font-size:16px">
 
 <!-- Watermark background -->
 <div id="watermarks">
@@ -242,12 +245,72 @@ function buildClues(){
   });
 }
 
+/* ── Teclado móvil ── */
+const kb=document.getElementById('kb');
+
+kb.addEventListener('input',e=>{
+  if(!selWordId) return;
+  // Borrar (móvil)
+  if(e.inputType==='deleteContentBackward'){
+    const cell=cells[key(curR,curC)];
+    if(cell&&cell.entered){
+      cell.entered=''; cell.letEl.textContent='';
+      cell.el.classList.remove('correct','wrong');
+      updateProgress();
+    } else { moveCursor(-1); }
+    updateHighlights();
+    kb.value=''; return;
+  }
+  const data=e.data;
+  if(!data) return;
+  const typed=data.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  processLetter(typed);
+  kb.value='';
+});
+
+kb.addEventListener('keydown',e=>{
+  if(!selWordId) return;
+  if(e.key==='Backspace'){
+    e.preventDefault();
+    const cell=cells[key(curR,curC)];
+    if(cell&&cell.entered){
+      cell.entered=''; cell.letEl.textContent='';
+      cell.el.classList.remove('correct','wrong');
+      updateProgress();
+    } else { moveCursor(-1); }
+    updateHighlights();
+  }
+});
+
+function processLetter(typed){
+  if(!/[A-Z]/.test(typed)) return;
+  const cell=cells[key(curR,curC)];
+  if(!cell) return;
+  const wasCorrect=cell.entered===cell.letter;
+  cell.entered=typed;
+  cell.letEl.textContent=typed;
+  cell.el.classList.remove('correct','wrong');
+  if(typed===cell.letter){
+    cell.el.classList.add('correct');
+  } else {
+    cell.el.classList.add('wrong');
+    if(!wasCorrect) mistakes++;
+    shakeCell(cell.el);
+  }
+  updateProgress();
+  updateWordDone();
+  moveCursor(1);
+  updateHighlights();
+  if(checkAllDone()) onWin();
+}
+
 /* ── Selection ── */
 function selectWord(wordId,startR,startC){
   selWordId=wordId;
   curR=startR; curC=startC;
   updateHighlights();
   updateActiveClue();
+  kb.focus();
 }
 
 function clickCell(r,c){
@@ -308,10 +371,10 @@ function moveCursor(delta){
   }
 }
 
-/* ── Keyboard ── */
+/* ── Keyboard (desktop fallback) ── */
 document.addEventListener('keydown',e=>{
   if(!selWordId) return;
-
+  if(document.activeElement===kb) return; // ya manejado por kb listeners
   if(e.key==='Backspace'){
     e.preventDefault();
     const cell=cells[key(curR,curC)];
@@ -322,38 +385,9 @@ document.addEventListener('keydown',e=>{
     } else { moveCursor(-1); }
     updateHighlights(); return;
   }
-
-  // Arrow keys — change direction or move
-  if(e.key==='ArrowLeft'||e.key==='ArrowRight'||e.key==='ArrowUp'||e.key==='ArrowDown'){
-    e.preventDefault(); return;
-  }
-
   if(e.key.length===1&&/[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]/.test(e.key)){
     e.preventDefault();
-    // Normalize: remove accents, uppercase
-    const typed=e.key.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-    const cell=cells[key(curR,curC)];
-    if(!cell) return;
-
-    const wasCorrect=cell.entered===cell.letter;
-    cell.entered=typed;
-    cell.letEl.textContent=typed;
-    cell.el.classList.remove('correct','wrong');
-
-    if(typed===cell.letter){
-      cell.el.classList.add('correct');
-    } else {
-      cell.el.classList.add('wrong');
-      if(!wasCorrect) mistakes++;
-      shakeCell(cell.el);
-    }
-
-    updateProgress();
-    updateWordDone();
-    moveCursor(1);
-    updateHighlights();
-
-    if(checkAllDone()) onWin();
+    processLetter(e.key.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''));
   }
 });
 
