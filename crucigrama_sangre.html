@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crucigrama – Componentes de la Sangre</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0A1628;color:#fff;font-family:'Segoe UI',sans-serif;min-height:100vh;padding:14px}
+h1{text-align:center;color:#00C9A7;margin-bottom:8px;font-size:1.3rem;letter-spacing:.5px}
+#score-bar{text-align:center;margin-bottom:12px;font-size:.85rem;color:#aaa}
+#score-val{color:#00C9A7;font-weight:bold;font-size:1rem}
+#progress-bar{width:200px;height:6px;background:#112240;border-radius:3px;display:inline-block;vertical-align:middle;margin-left:8px;overflow:hidden}
+#progress-fill{height:100%;background:#00C9A7;width:0%;transition:width .4s}
+
+/* Layout */
+#main{display:flex;gap:20px;justify-content:center;align-items:flex-start;flex-wrap:wrap;position:relative;z-index:1}
+h1,#score-bar{position:relative;z-index:1}
+#grid-wrap{overflow:auto}
+
+/* Grid */
+#grid{display:grid;grid-template-columns:repeat(11,36px);grid-template-rows:repeat(14,36px);gap:2px;background:#0A1628}
+.cell{width:36px;height:36px;background:#fff;border:2px solid #bbb;position:relative;cursor:pointer;display:flex;align-items:center;justify-content:center;user-select:none;transition:background .15s,border-color .15s}
+.cell.empty{background:transparent;border-color:transparent;cursor:default;pointer-events:none}
+.cell-num{position:absolute;top:1px;left:2px;font-size:8px;color:#333;line-height:1;font-weight:bold;pointer-events:none}
+.cell-letter{font-size:1rem;font-weight:bold;color:#111;text-transform:uppercase;pointer-events:none}
+.cell.word-hl{background:#cce8ff;border-color:#5ab4f5}
+.cell.cursor-hl{background:#5ab4f5;border-color:#0277bd}
+.cell.correct{background:#c8e6c9 !important;border-color:#388e3c !important}
+.cell.correct .cell-letter{color:#1b5e20}
+.cell.wrong{background:#ffcdd2 !important;border-color:#c62828 !important}
+.cell.wrong .cell-letter{color:#b71c1c}
+.cell.cursor-hl{background:#5ab4f5 !important;border-color:#0277bd !important}
+.cell.cursor-hl .cell-letter{color:#003}
+
+/* Clue panel */
+#clue-panel{width:290px;min-width:220px;flex-shrink:0}
+#active-clue-box{background:#112240;border:2px solid #00C9A7;border-radius:10px;padding:14px;margin-bottom:14px;min-height:80px}
+#active-clue-num{color:#00C9A7;font-weight:bold;font-size:.95rem;margin-bottom:6px}
+#active-clue-text{color:#fff;font-size:1rem;line-height:1.45}
+.clue-section h3{color:#00C9A7;font-size:.88rem;margin:10px 0 6px;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #1a3560;padding-bottom:3px}
+.clue-item{font-size:.88rem;color:#bbb;padding:5px 7px;border-radius:4px;cursor:pointer;margin-bottom:3px;line-height:1.4;transition:background .15s,color .15s}
+.clue-item:hover{background:#112240;color:#fff}
+.clue-item.active-clue{background:#112240;color:#fff}
+.clue-item.done-clue{color:#00C9A7}
+.clue-item.done-clue.active-clue{color:#00C9A7}
+
+/* Overlays */
+.overlay{position:fixed;inset:0;background:rgba(10,22,40,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:500}
+.overlay.hidden{display:none}
+.overlay-box{background:#112240;border:2px solid #00C9A7;border-radius:16px;padding:28px 32px;max-width:400px;width:90%;text-align:center}
+.overlay-box h2{color:#00C9A7;margin-bottom:12px;font-size:1.3rem}
+.overlay-box p{color:#fff;margin-bottom:18px;font-size:.92rem;line-height:1.45}
+.opt-btn{display:block;width:100%;background:#0d1d3a;border:2px solid #00C9A7;color:#fff;padding:10px 14px;margin:6px 0;border-radius:8px;cursor:pointer;font-size:.88rem;text-align:left;transition:background .18s;font-family:inherit}
+.opt-btn:hover:not(:disabled){background:#1a3560}
+.opt-btn:disabled{cursor:default}
+.opt-btn.correct-ans{background:#00C9A7 !important;color:#000;font-weight:bold}
+.opt-btn.wrong-ans{background:#c62828 !important;border-color:#c62828}
+#win-btn,#play-again-btn{margin-top:14px;background:#00C9A7;color:#000;border:none;padding:11px 28px;border-radius:8px;cursor:pointer;font-size:.95rem;font-weight:bold;font-family:inherit}
+
+canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:499}
+
+/* ── Watermarks ── */
+#watermarks{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+#watermarks img{position:absolute;opacity:.07;filter:blur(1px) grayscale(20%);user-select:none}
+</style>
+</head>
+<body>
+<canvas id="confetti"></canvas>
+
+<!-- Watermark background -->
+<div id="watermarks">
+  <!-- eritrocito -->
+  <img src="eritrocito2.png" style="width:180px;top:5%;left:2%;transform:rotate(-15deg)">
+  <img src="eritrocito2.png" style="width:110px;bottom:8%;right:38%;transform:rotate(20deg)">
+  <!-- leucocito -->
+  <img src="leucocito.png"   style="width:160px;top:18%;right:3%;transform:rotate(10deg)">
+  <img src="leucocito.png"   style="width:90px; bottom:5%;left:42%;transform:rotate(-8deg)">
+  <!-- plaqueta -->
+  <img src="plaqueta.png"    style="width:130px;top:55%;left:1%;transform:rotate(25deg)">
+  <img src="plaqueta.png"    style="width:80px; top:3%; right:40%;transform:rotate(-20deg)">
+  <!-- hemoglobina -->
+  <img src="hemoglobina.png" style="width:150px;bottom:3%;right:2%;transform:rotate(-12deg)">
+  <img src="hemoglobina.png" style="width:100px;top:40%;right:28%;transform:rotate(18deg)">
+  <!-- plasma (círculo de fondo) -->
+  <img src="plasma.png"      style="width:200px;bottom:10%;left:3%;transform:rotate(5deg)">
+  <img src="plasma.png"      style="width:120px;top:10%;left:38%;transform:rotate(-25deg)">
+</div>
+
+<!-- Bonus overlay -->
+<div id="bonus-overlay" class="overlay hidden">
+  <div class="overlay-box">
+    <h2>¡Crucigrama Completado!</h2>
+    <p>Responde la pregunta bonus para puntos extra:<br><strong>¿Cuál de estas células sanguíneas NO tiene núcleo en su forma madura?</strong></p>
+    <button class="opt-btn" onclick="checkBonus(this,'A')">A) Leucocito</button>
+    <button class="opt-btn" onclick="checkBonus(this,'B')">B) Eritrocito</button>
+    <button class="opt-btn" onclick="checkBonus(this,'C')">C) Plaqueta</button>
+    <button class="opt-btn" onclick="checkBonus(this,'D')">D) Hemoglobina</button>
+  </div>
+</div>
+
+<!-- Win overlay -->
+<div id="win-overlay" class="overlay hidden">
+  <div class="overlay-box">
+    <h2>🎉 ¡Excelente!</h2>
+    <p id="win-msg"></p>
+    <button id="play-again-btn" onclick="restartGame()">Jugar de nuevo</button>
+  </div>
+</div>
+
+<h1>Crucigrama: Componentes de la Sangre</h1>
+<div id="score-bar">
+  Puntuación: <span id="score-val">0</span>
+  &nbsp;|&nbsp; Palabras: <span id="words-done">0</span>/7
+  <div id="progress-bar"><div id="progress-fill"></div></div>
+</div>
+
+<div id="main">
+  <div id="grid-wrap"><div id="grid"></div></div>
+  <div id="clue-panel">
+    <div id="active-clue-box">
+      <div id="active-clue-num">Selecciona una celda</div>
+      <div id="active-clue-text">Haz clic en cualquier celda del crucigrama para ver la pista.</div>
+    </div>
+    <div class="clue-section"><h3>Horizontal</h3><div id="across-list"></div></div>
+    <div class="clue-section"><h3>Vertical</h3><div id="down-list"></div></div>
+  </div>
+</div>
+
+<script>
+/*
+Grid layout (14 rows × 11 cols):
+      0    1    2    3    4    5    6    7    8    9   10
+ 0:   .    .    .    .    .   [1P] [2L]  A    S    M    A
+ 1:   .   [3P]  L    A    Q    U    E    T    A    .    .
+ 2:   .    .    .    .    .    .    U    .    .    .    .
+ 3:   .    .    .    .    .    .    C    .    .    .    .
+ 4:  [4H] [5E]  M    O    G    L    O   [6B]  I    N    A
+ 5:   .   [7R]  O    J    O    .    C    L    .    .    .
+ 6:   .    I    .    .    .    .    I    A    .    .    .
+ 7:   .    T    .    .    .    .    T    N    .    .    .
+ 8:   .    R    .    .    .    .    O    C    .    .    .
+ 9:   .    O    .    .    .    .    .    O    .    .    .
+10:   .    C    .    .    .    .    .    .    .    .    .
+11:   .    I    .    .    .    .    .    .    .    .    .
+12:   .    T    .    .    .    .    .    .    .    .    .
+13:   .    O    .    .    .    .    .    .    .    .    .
+
+Intersections verified:
+  (0,6): PLASMA[1]=L, LEUCOCITO[0]=L ✓
+  (1,6): PLAQUETA[5]=E, LEUCOCITO[1]=E ✓
+  (4,1): HEMOGLOBINA[1]=E, ERITROCITO[0]=E ✓
+  (4,6): HEMOGLOBINA[6]=O, LEUCOCITO[4]=O ✓
+  (4,7): HEMOGLOBINA[7]=B, BLANCO[0]=B ✓
+  (5,1): ERITROCITO[1]=R, ROJO[0]=R ✓
+*/
+
+const ROWS=14, COLS=11;
+const WORDS=[
+  {id:1,num:1,word:'PLASMA',     dir:'across',row:0,col:5, clue:'Parte líquida de la sangre que forma el 55% del volumen sanguíneo'},
+  {id:2,num:2,word:'LEUCOCITO',  dir:'down',  row:0,col:6, clue:'Glóbulo blanco que defiende el cuerpo de infecciones'},
+  {id:3,num:3,word:'PLAQUETA',   dir:'across',row:1,col:1, clue:'Fragmento celular que forma coágulos para detener hemorragias'},
+  {id:4,num:4,word:'HEMOGLOBINA',dir:'across',row:4,col:0, clue:'Proteína con hierro que capta el oxígeno en los pulmones'},
+  {id:5,num:5,word:'ERITROCITO', dir:'down',  row:4,col:1, clue:'Glóbulo rojo que transporta oxígeno y nutrientes'},
+  {id:6,num:6,word:'BLANCO',     dir:'down',  row:4,col:7, clue:'Glóbulo ___: otro nombre que reciben los leucocitos'},
+  {id:7,num:7,word:'ROJO',       dir:'across',row:5,col:1, clue:'Glóbulo ___: otro nombre que reciben los eritrocitos'},
+];
+
+// State
+let cells={};       // "r,c" → cell object
+let selWordId=null;
+let curR=-1,curC=-1;
+let mistakes=0;
+let scoreBase=0;
+
+const key=(r,c)=>r+','+c;
+
+function cellsOfWord(w){
+  return Array.from({length:w.word.length},(_,i)=>({
+    r: w.dir==='across'?w.row:w.row+i,
+    c: w.dir==='across'?w.col+i:w.col
+  }));
+}
+
+/* ── Build grid data ── */
+function initCells(){
+  cells={};
+  WORDS.forEach(w=>{
+    cellsOfWord(w).forEach(({r,c},i)=>{
+      const k=key(r,c);
+      if(!cells[k]) cells[k]={r,c,letter:w.word[i],entered:'',wordIds:[],num:0,el:null,letEl:null};
+      if(!cells[k].wordIds.includes(w.id)) cells[k].wordIds.push(w.id);
+    });
+  });
+  WORDS.forEach(w=>{
+    const k=key(w.row,w.col);
+    if(cells[k]) cells[k].num=w.num;
+  });
+}
+
+/* ── Build DOM ── */
+function buildGrid(){
+  const g=document.getElementById('grid');
+  g.innerHTML='';
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      const div=document.createElement('div');
+      const k=key(r,c);
+      const cell=cells[k];
+      if(cell){
+        div.className='cell';
+        if(cell.num){
+          const n=document.createElement('span');
+          n.className='cell-num';
+          n.textContent=cell.num;
+          div.appendChild(n);
+        }
+        const l=document.createElement('span');
+        l.className='cell-letter';
+        div.appendChild(l);
+        cell.el=div; cell.letEl=l;
+        div.addEventListener('click',()=>clickCell(r,c));
+      } else {
+        div.className='cell empty';
+      }
+      g.appendChild(div);
+    }
+  }
+}
+
+function buildClues(){
+  const ac=document.getElementById('across-list');
+  const dn=document.getElementById('down-list');
+  ac.innerHTML=''; dn.innerHTML='';
+  WORDS.forEach(w=>{
+    const d=document.createElement('div');
+    d.className='clue-item';
+    d.id='ci-'+w.id;
+    d.textContent=w.num+'. '+w.clue+' ('+w.word.length+')';
+    d.addEventListener('click',()=>selectWord(w.id,w.row,w.col));
+    (w.dir==='across'?ac:dn).appendChild(d);
+  });
+}
+
+/* ── Selection ── */
+function selectWord(wordId,startR,startC){
+  selWordId=wordId;
+  curR=startR; curC=startC;
+  updateHighlights();
+  updateActiveClue();
+}
+
+function clickCell(r,c){
+  const cell=cells[key(r,c)];
+  if(!cell||!cell.wordIds.length) return;
+
+  if(selWordId&&cell.wordIds.includes(selWordId)){
+    // Same word → move cursor, or toggle if intersection
+    if(curR===r&&curC===c&&cell.wordIds.length>1){
+      const other=cell.wordIds.find(id=>id!==selWordId);
+      selectWord(other,r,c); return;
+    }
+    curR=r; curC=c;
+    updateHighlights(); return;
+  }
+  // Prefer across
+  const preferAcross=cell.wordIds.find(id=>WORDS.find(w=>w.id===id).dir==='across');
+  selectWord(preferAcross||cell.wordIds[0],r,c);
+}
+
+function updateHighlights(){
+  Object.values(cells).forEach(cell=>{
+    if(cell.el){
+      cell.el.classList.remove('word-hl','cursor-hl');
+    }
+  });
+  if(!selWordId) return;
+  const w=WORDS.find(w=>w.id===selWordId);
+  if(!w) return;
+  cellsOfWord(w).forEach(({r,c})=>{
+    const cell=cells[key(r,c)];
+    if(cell&&cell.el){
+      cell.el.classList.add(r===curR&&c===curC?'cursor-hl':'word-hl');
+    }
+  });
+  document.querySelectorAll('.clue-item').forEach(el=>el.classList.remove('active-clue'));
+  const ci=document.getElementById('ci-'+selWordId);
+  if(ci) ci.classList.add('active-clue');
+}
+
+function updateActiveClue(){
+  const w=WORDS.find(w=>w.id===selWordId);
+  if(!w) return;
+  document.getElementById('active-clue-num').textContent=
+    w.num+' '+(w.dir==='across'?'Horizontal':'Vertical')+' — '+w.word.length+' letras';
+  document.getElementById('active-clue-text').textContent=w.clue;
+}
+
+/* ── Cursor movement ── */
+function moveCursor(delta){
+  if(!selWordId) return;
+  const w=WORDS.find(w=>w.id===selWordId);
+  const pos=(w.dir==='across'?curC-w.col:curR-w.row)+delta;
+  if(pos>=0&&pos<w.word.length){
+    curR=w.dir==='across'?w.row:w.row+pos;
+    curC=w.dir==='across'?w.col+pos:w.col;
+    updateHighlights();
+  }
+}
+
+/* ── Keyboard ── */
+document.addEventListener('keydown',e=>{
+  if(!selWordId) return;
+
+  if(e.key==='Backspace'){
+    e.preventDefault();
+    const cell=cells[key(curR,curC)];
+    if(cell&&cell.entered){
+      cell.entered=''; cell.letEl.textContent='';
+      cell.el.classList.remove('correct','wrong');
+      updateProgress();
+    } else { moveCursor(-1); }
+    updateHighlights(); return;
+  }
+
+  // Arrow keys — change direction or move
+  if(e.key==='ArrowLeft'||e.key==='ArrowRight'||e.key==='ArrowUp'||e.key==='ArrowDown'){
+    e.preventDefault(); return;
+  }
+
+  if(e.key.length===1&&/[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]/.test(e.key)){
+    e.preventDefault();
+    // Normalize: remove accents, uppercase
+    const typed=e.key.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    const cell=cells[key(curR,curC)];
+    if(!cell) return;
+
+    const wasCorrect=cell.entered===cell.letter;
+    cell.entered=typed;
+    cell.letEl.textContent=typed;
+    cell.el.classList.remove('correct','wrong');
+
+    if(typed===cell.letter){
+      cell.el.classList.add('correct');
+    } else {
+      cell.el.classList.add('wrong');
+      if(!wasCorrect) mistakes++;
+      shakeCell(cell.el);
+    }
+
+    updateProgress();
+    updateWordDone();
+    moveCursor(1);
+    updateHighlights();
+
+    if(checkAllDone()) onWin();
+  }
+});
+
+function shakeCell(el){
+  el.style.animation='none';
+  void el.offsetWidth;
+  el.style.animation='shk .35s ease';
+}
+
+/* ── Progress ── */
+function updateProgress(){
+  const total=Object.keys(cells).length;
+  const correct=Object.values(cells).filter(c=>c.entered===c.letter).length;
+  const pct=(correct/total*100).toFixed(0);
+  document.getElementById('progress-fill').style.width=pct+'%';
+  const score=Math.max(0,total*5-mistakes*3);
+  document.getElementById('score-val').textContent=score;
+  scoreBase=score;
+}
+
+function updateWordDone(){
+  let done=0;
+  WORDS.forEach(w=>{
+    const finished=cellsOfWord(w).every(({r,c})=>{
+      const cell=cells[key(r,c)];
+      return cell&&cell.entered===cell.letter;
+    });
+    const ci=document.getElementById('ci-'+w.id);
+    if(finished){ if(ci) ci.classList.add('done-clue'); done++; }
+  });
+  document.getElementById('words-done').textContent=done;
+}
+
+function checkAllDone(){
+  return Object.values(cells).every(c=>c.entered===c.letter);
+}
+
+/* ── Win / Bonus ── */
+function onWin(){
+  updateWordDone();
+  setTimeout(()=>{
+    document.getElementById('bonus-overlay').classList.remove('hidden');
+  },700);
+}
+
+function checkBonus(btn,ans){
+  document.querySelectorAll('.opt-btn').forEach(b=>b.disabled=true);
+  const correct=ans==='B';
+  btn.classList.add(correct?'correct-ans':'wrong-ans');
+  if(!correct){
+    document.querySelectorAll('.opt-btn').forEach(b=>{
+      if(b.textContent.startsWith('B)')) b.classList.add('correct-ans');
+    });
+  }
+  const bonus=correct?30:0;
+  const finalScore=scoreBase+bonus;
+  document.getElementById('score-val').textContent=finalScore;
+  setTimeout(()=>{
+    document.getElementById('bonus-overlay').classList.add('hidden');
+    const msg=correct
+      ?`¡Correcto! Los eritrocitos no tienen núcleo para llevar más hemoglobina. Puntuación final: ${finalScore} pts 🎉`
+      :`Incorrecto — la respuesta es B) Eritrocito. Los glóbulos rojos no tienen núcleo. Puntuación: ${finalScore} pts`;
+    document.getElementById('win-msg').textContent=msg;
+    document.getElementById('win-overlay').classList.remove('hidden');
+    launchConfetti();
+  },1400);
+}
+
+function restartGame(){
+  document.getElementById('win-overlay').classList.add('hidden');
+  mistakes=0; scoreBase=0; selWordId=null; curR=-1; curC=-1;
+  document.getElementById('score-val').textContent='0';
+  document.getElementById('words-done').textContent='0';
+  document.getElementById('progress-fill').style.width='0%';
+  document.getElementById('active-clue-num').textContent='Selecciona una celda';
+  document.getElementById('active-clue-text').textContent='Haz clic en cualquier celda del crucigrama para ver la pista.';
+  document.querySelectorAll('.opt-btn').forEach(b=>{ b.disabled=false; b.classList.remove('correct-ans','wrong-ans'); });
+  document.querySelectorAll('.clue-item').forEach(el=>el.classList.remove('done-clue','active-clue'));
+  Object.values(cells).forEach(cell=>{
+    cell.entered='';
+    if(cell.letEl) cell.letEl.textContent='';
+    if(cell.el){ cell.el.classList.remove('correct','wrong','word-hl','cursor-hl'); cell.el.style.animation=''; }
+  });
+  stopConfetti();
+}
+
+/* ── Confetti ── */
+let rafId=null,particles=[];
+function launchConfetti(){
+  const cv=document.getElementById('confetti');
+  const cx=cv.getContext('2d');
+  cv.width=innerWidth; cv.height=innerHeight;
+  particles=Array.from({length:130},()=>({
+    x:Math.random()*cv.width, y:Math.random()*-cv.height*.6,
+    w:6+Math.random()*9, h:4+Math.random()*6,
+    color:['#00C9A7','#FFD700','#FF6B6B','#4fc3f7','#fff','#a78bfa'][Math.floor(Math.random()*6)],
+    vel:2+Math.random()*4, angle:Math.random()*360, spin:(Math.random()-.5)*7
+  }));
+  function draw(){
+    cx.clearRect(0,0,cv.width,cv.height);
+    particles.forEach(p=>{
+      cx.save(); cx.translate(p.x+p.w/2,p.y+p.h/2); cx.rotate(p.angle*Math.PI/180);
+      cx.fillStyle=p.color; cx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+      cx.restore();
+      p.y+=p.vel; p.angle+=p.spin;
+      if(p.y>cv.height) p.y=-20;
+    });
+    rafId=requestAnimationFrame(draw);
+  }
+  draw();
+}
+function stopConfetti(){
+  if(rafId){cancelAnimationFrame(rafId);rafId=null;}
+  const cv=document.getElementById('confetti');
+  cv.getContext('2d').clearRect(0,0,cv.width,cv.height);
+}
+
+/* Shake animation */
+const style=document.createElement('style');
+style.textContent='@keyframes shk{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}';
+document.head.appendChild(style);
+
+/* ── Init ── */
+initCells();
+buildGrid();
+buildClues();
+</script>
+</body>
+</html>
