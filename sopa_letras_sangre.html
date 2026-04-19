@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sopa de Letras – Enfermedades de la Sangre</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:#0A1628;
+  color:#fff;
+  font-family:'Segoe UI',sans-serif;
+  min-height:100vh;
+  padding:14px;
+  user-select:none;
+  -webkit-user-select:none;
+}
+h1{text-align:center;color:#00C9A7;margin-bottom:8px;font-size:1.3rem;letter-spacing:.5px;position:relative;z-index:1}
+
+/* Watermarks */
+#watermarks{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+#watermarks img{position:absolute;opacity:.06;filter:blur(1px);user-select:none;pointer-events:none}
+
+/* Layout */
+#main{display:flex;gap:20px;justify-content:center;align-items:flex-start;flex-wrap:wrap;position:relative;z-index:1}
+
+/* Progress */
+#progress-bar{text-align:center;margin-bottom:12px;font-size:.85rem;color:#aaa;position:relative;z-index:1}
+#prog-count-wrap{color:#00C9A7;font-weight:bold}
+#prog-bar{width:240px;height:6px;background:#112240;border-radius:3px;display:inline-block;vertical-align:middle;margin-left:8px;overflow:hidden}
+#prog-fill{height:100%;background:#00C9A7;width:0%;transition:width .5s}
+
+/* Disease card */
+#disease-card{
+  width:275px;
+  background:#112240;
+  border:2px solid #00C9A7;
+  border-radius:12px;
+  padding:20px;
+  flex-shrink:0;
+  transition:opacity .3s;
+}
+#disease-num{color:#aaa;font-size:.8rem;margin-bottom:6px;letter-spacing:.5px}
+#disease-name{
+  color:#00C9A7;
+  font-size:1.55rem;
+  font-weight:bold;
+  margin-bottom:10px;
+  letter-spacing:1px;
+  min-height:38px;
+}
+#disease-def{
+  color:#fff;
+  font-size:.93rem;
+  line-height:1.55;
+  margin-bottom:14px;
+  min-height:70px;
+}
+#disease-hint{color:#7ecec4;font-size:.82rem;font-style:italic}
+#found-msg{display:none;margin-top:10px;text-align:center}
+#found-msg span{
+  display:inline-block;
+  background:#00C9A7;
+  color:#000;
+  font-weight:bold;
+  padding:5px 18px;
+  border-radius:20px;
+  font-size:.9rem;
+  animation:popIn .3s ease;
+}
+
+/* Found words log */
+#found-log{margin-top:14px;border-top:1px solid #1d3460;padding-top:10px}
+#found-log-title{color:#aaa;font-size:.75rem;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+#found-words-list{font-size:.82rem;line-height:1.7}
+.found-word-item{color:#00C9A7}
+.found-word-item::before{content:'✓ '}
+
+/* Grid */
+#grid-wrap{overflow:auto;-webkit-overflow-scrolling:touch}
+#grid-table{border-collapse:separate;border-spacing:2px}
+.cell{
+  width:26px;height:26px;
+  background:#fff;
+  border:1px solid #ddd;
+  text-align:center;
+  vertical-align:middle;
+  font-size:.72rem;
+  font-weight:bold;
+  color:#222;
+  cursor:pointer;
+  border-radius:3px;
+  transition:background .1s,color .1s;
+}
+.cell.hl{background:#b3e5fc !important;color:#003 !important;border-color:#29b6f6 !important}
+.cell.found{background:#00C9A7 !important;color:#fff !important;border-color:#009e87 !important}
+.cell.err{animation:errFlash .45s ease}
+
+/* Overlays */
+.overlay{position:fixed;inset:0;background:rgba(10,22,40,.93);display:flex;align-items:center;justify-content:center;z-index:500}
+.overlay.hidden{display:none}
+.overlay-box{background:#112240;border:2px solid #00C9A7;border-radius:16px;padding:30px 32px;max-width:440px;width:92%;text-align:center}
+.overlay-box h2{color:#00C9A7;font-size:1.35rem;margin-bottom:14px}
+.overlay-box p{color:#fff;font-size:.95rem;line-height:1.65;margin-bottom:22px}
+#play-again-btn{background:#00C9A7;color:#000;border:none;padding:11px 28px;border-radius:8px;cursor:pointer;font-size:.95rem;font-weight:bold;font-family:inherit}
+
+canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:499}
+
+@keyframes popIn{0%{transform:scale(.5);opacity:0}60%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+@keyframes errFlash{0%,100%{background:#fff}30%{background:#ffcdd2;color:#b71c1c}70%{background:#ffcdd2;color:#b71c1c}}
+@keyframes slideIn{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<canvas id="confetti"></canvas>
+
+<!-- Watermarks -->
+<div id="watermarks">
+  <img src="eritrocito2.png" style="width:190px;top:4%;left:1%;transform:rotate(-12deg)">
+  <img src="leucocito.png"   style="width:150px;top:15%;right:2%;transform:rotate(10deg)">
+  <img src="plaqueta.png"    style="width:120px;bottom:6%;left:3%;transform:rotate(20deg)">
+  <img src="hemoglobina.png" style="width:160px;bottom:4%;right:3%;transform:rotate(-14deg)">
+  <img src="plasma.png"      style="width:130px;top:50%;right:1%;transform:rotate(8deg)">
+  <img src="eritrocito2.png" style="width:100px;bottom:20%;left:40%;transform:rotate(30deg)">
+</div>
+
+<!-- Win overlay -->
+<div id="win-overlay" class="overlay hidden">
+  <div class="overlay-box">
+    <h2>🩺 ¡Misión Cumplida!</h2>
+    <p>Excelente, ahora conoces las enfermedades de la sangre. Recuérdalas bien, las necesitarás en los próximos niveles.</p>
+    <button id="play-again-btn" onclick="restartGame()">Jugar de nuevo</button>
+  </div>
+</div>
+
+<h1>Sopa de Letras: Enfermedades de la Sangre</h1>
+<div id="progress-bar">
+  Encontradas: <span id="prog-count-wrap"><span id="prog-count">0</span>/8</span>
+  <div id="prog-bar"><div id="prog-fill"></div></div>
+</div>
+
+<div id="main">
+
+  <!-- Disease card -->
+  <div id="disease-card">
+    <div id="disease-num"></div>
+    <div id="disease-name"></div>
+    <div id="disease-def"></div>
+    <div id="disease-hint">🔍 Encuéntrala en la sopa de letras y selecciónala</div>
+    <div id="found-msg"><span id="found-label">¡Encontrada! ✓</span></div>
+    <div id="found-log">
+      <div id="found-log-title">Encontradas</div>
+      <div id="found-words-list"></div>
+    </div>
+  </div>
+
+  <!-- Grid -->
+  <div id="grid-wrap">
+    <table id="grid-table"></table>
+  </div>
+
+</div>
+
+<script>
+/*
+Grid: 18×18 (rows/cols 0–17)
+
+Word placements (verified, no conflicts):
+  TROMBOCITOPENIA  row 0,  col 0,  →  horizontal  (0,0)–(0,14)
+  POLICITEMIA      row 2,  col 4,  ↓  vertical    (2,4)–(12,4)
+  LEUCOPENIA       row 4,  col 6,  →  horizontal  (4,6)–(4,15)
+  LEUCEMIA         row 7,  col 8,  →  horizontal  (7,8)–(7,15)
+  TALASEMIA        row 1,  col 16, ↓  vertical    (1,16)–(9,16)
+  HEMOFILIA        row 13, col 2,  →  horizontal  (13,2)–(13,10)
+  ANEMIA           row 16, col 8,  →  horizontal  (16,8)–(16,13)
+  SEPSIS           row 15, col 11, ↗  diagonal    (15,11)→(10,16)
+
+Intersection check (all clear — no two words share a cell with different letters).
+*/
+
+const GRID_SIZE = 18;
+
+const DISEASES = [
+  {word:'ANEMIA',          def:'Déficit de glóbulos rojos o hemoglobina que reduce el transporte de oxígeno'},
+  {word:'POLICITEMIA',     def:'Exceso de glóbulos rojos en la sangre que la hace más espesa'},
+  {word:'TALASEMIA',       def:'Producción anormal de hemoglobina por un defecto genético'},
+  {word:'LEUCEMIA',        def:'Producción descontrolada de glóbulos blancos anormales en la médula ósea'},
+  {word:'LEUCOPENIA',      def:'Déficit de glóbulos blancos que debilita las defensas del cuerpo'},
+  {word:'HEMOFILIA',       def:'Dificultad para coagular la sangre por ausencia de factores de coagulación'},
+  {word:'TROMBOCITOPENIA', def:'Déficit de plaquetas que impide la coagulación normal'},
+  {word:'SEPSIS',          def:'Infección generalizada en la sangre que puede poner en riesgo la vida'},
+];
+
+const PLACEMENTS = [
+  {word:'ANEMIA',          r:16, c:8,  dr:0,  dc:1},
+  {word:'POLICITEMIA',     r:2,  c:4,  dr:1,  dc:0},
+  {word:'TALASEMIA',       r:1,  c:16, dr:1,  dc:0},
+  {word:'LEUCEMIA',        r:7,  c:8,  dr:0,  dc:1},
+  {word:'LEUCOPENIA',      r:4,  c:6,  dr:0,  dc:1},
+  {word:'HEMOFILIA',       r:13, c:2,  dr:0,  dc:1},
+  {word:'TROMBOCITOPENIA', r:0,  c:0,  dr:0,  dc:1},
+  {word:'SEPSIS',          r:15, c:11, dr:-1, dc:1},
+];
+
+const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+// State
+let grid = [];
+let cellEls = [];
+let foundSet = new Set();   // "r,c" of found cells
+let currentIdx = 0;
+let selecting = false;
+let startR = -1, startC = -1;
+let hlPath = [];            // currently highlighted path
+
+/* ── Grid init ── */
+function initGrid(){
+  grid = Array.from({length:GRID_SIZE}, ()=>Array(GRID_SIZE).fill(''));
+  PLACEMENTS.forEach(p=>{
+    for(let i=0;i<p.word.length;i++){
+      grid[p.r + p.dr*i][p.c + p.dc*i] = p.word[i];
+    }
+  });
+  for(let r=0;r<GRID_SIZE;r++)
+    for(let c=0;c<GRID_SIZE;c++)
+      if(!grid[r][c]) grid[r][c] = ALPHA[Math.floor(Math.random()*26)];
+}
+
+function buildTable(){
+  const tbl = document.getElementById('grid-table');
+  tbl.innerHTML='';
+  cellEls=[];
+  for(let r=0;r<GRID_SIZE;r++){
+    cellEls[r]=[];
+    const tr = tbl.insertRow();
+    for(let c=0;c<GRID_SIZE;c++){
+      const td = tr.insertCell();
+      td.className='cell';
+      td.textContent=grid[r][c];
+      td.dataset.r=r; td.dataset.c=c;
+      cellEls[r][c]=td;
+    }
+  }
+}
+
+/* ── Path computation ── */
+function getPath(r1,c1,r2,c2){
+  if(r1===r2&&c1===c2) return [{r:r1,c:c1}];
+  const dr = r2===r1?0:(r2>r1?1:-1);
+  const dc = c2===c1?0:(c2>c1?1:-1);
+  // Diagonal must be perfect
+  if(dr!==0&&dc!==0&&Math.abs(r2-r1)!==Math.abs(c2-c1)) return null;
+  const path=[];
+  let r=r1,c=c1;
+  while(path.length<=GRID_SIZE){
+    if(r<0||r>=GRID_SIZE||c<0||c>=GRID_SIZE) return null;
+    path.push({r,c});
+    if(r===r2&&c===c2) break;
+    r+=dr; c+=dc;
+  }
+  if(path[path.length-1].r!==r2||path[path.length-1].c!==c2) return null;
+  return path;
+}
+
+function cellFromEvent(e){
+  const touch = e.touches?e.touches[0]:e;
+  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+  if(el&&el.classList.contains('cell')) return {r:+el.dataset.r, c:+el.dataset.c, el};
+  return null;
+}
+
+/* ── Highlight ── */
+function clearHL(){
+  hlPath.forEach(({r,c})=>{
+    if(!foundSet.has(r+','+c)) cellEls[r][c].classList.remove('hl');
+  });
+  hlPath=[];
+}
+
+function setHL(path){
+  clearHL();
+  if(!path) return;
+  hlPath=path;
+  path.forEach(({r,c})=>{
+    if(!foundSet.has(r+','+c)) cellEls[r][c].classList.add('hl');
+  });
+}
+
+/* ── Mouse events ── */
+const tbl = document.getElementById('grid-table');
+
+tbl.addEventListener('mousedown', e=>{
+  if(!e.target.classList.contains('cell')) return;
+  e.preventDefault();
+  selecting=true;
+  startR=+e.target.dataset.r; startC=+e.target.dataset.c;
+  setHL([{r:startR,c:startC}]);
+});
+
+document.addEventListener('mousemove', e=>{
+  if(!selecting) return;
+  const pos=cellFromEvent(e);
+  if(pos) setHL(getPath(startR,startC,pos.r,pos.c));
+});
+
+document.addEventListener('mouseup', e=>{
+  if(!selecting) return;
+  selecting=false;
+  validate();
+  clearHL();
+});
+
+/* ── Touch events ── */
+tbl.addEventListener('touchstart', e=>{
+  if(!e.target.classList.contains('cell')) return;
+  e.preventDefault();
+  selecting=true;
+  startR=+e.target.dataset.r; startC=+e.target.dataset.c;
+  setHL([{r:startR,c:startC}]);
+},{passive:false});
+
+document.addEventListener('touchmove', e=>{
+  if(!selecting) return;
+  e.preventDefault();
+  const pos=cellFromEvent(e);
+  if(pos) setHL(getPath(startR,startC,pos.r,pos.c));
+},{passive:false});
+
+document.addEventListener('touchend', e=>{
+  if(!selecting) return;
+  e.preventDefault();
+  selecting=false;
+  validate();
+  clearHL();
+},{passive:false});
+
+/* ── Validation ── */
+function validate(){
+  if(hlPath.length<2) return;
+  const typed = hlPath.map(({r,c})=>grid[r][c]).join('');
+  const target = DISEASES[currentIdx].word;
+  // Accept forward OR reverse selection
+  if(typed===target || typed===target.split('').reverse().join('')){
+    onFound();
+  } else {
+    // Brief red flash on selected cells
+    const snap=[...hlPath];
+    snap.forEach(({r,c})=>{
+      if(foundSet.has(r+','+c)) return;
+      const el=cellEls[r][c];
+      el.classList.add('err');
+      setTimeout(()=>el.classList.remove('err'), 450);
+    });
+  }
+}
+
+/* ── Word found ── */
+function onFound(){
+  const p = PLACEMENTS.find(pl=>pl.word===DISEASES[currentIdx].word);
+  for(let i=0;i<p.word.length;i++){
+    const r=p.r+p.dr*i, c=p.c+p.dc*i;
+    foundSet.add(r+','+c);
+    cellEls[r][c].classList.remove('hl');
+    cellEls[r][c].classList.add('found');
+  }
+
+  // Update found words log
+  const li=document.createElement('div');
+  li.className='found-word-item';
+  li.textContent=DISEASES[currentIdx].word;
+  document.getElementById('found-words-list').appendChild(li);
+
+  // Show "¡Encontrada!" banner
+  document.getElementById('found-msg').style.display='block';
+  document.getElementById('disease-hint').style.display='none';
+
+  // Progress
+  const cnt=currentIdx+1;
+  document.getElementById('prog-count').textContent=cnt;
+  document.getElementById('prog-fill').style.width=(cnt/8*100)+'%';
+
+  setTimeout(()=>{
+    currentIdx++;
+    if(currentIdx>=DISEASES.length) showWin();
+    else showDisease(true);
+  }, 1400);
+}
+
+/* ── Disease card ── */
+function showDisease(animate){
+  const d = DISEASES[currentIdx];
+  document.getElementById('disease-num').textContent = 'Enfermedad '+(currentIdx+1)+' de '+DISEASES.length;
+  document.getElementById('disease-name').textContent = d.word;
+  document.getElementById('disease-def').textContent  = d.def;
+  document.getElementById('found-msg').style.display  = 'none';
+  document.getElementById('disease-hint').style.display = 'block';
+
+  if(animate){
+    const card=document.getElementById('disease-card');
+    card.style.animation='none';
+    void card.offsetWidth;
+    card.style.animation='slideIn .35s ease';
+  }
+}
+
+/* ── Win ── */
+function showWin(){
+  setTimeout(()=>{
+    document.getElementById('win-overlay').classList.remove('hidden');
+    launchConfetti();
+  }, 700);
+}
+
+function restartGame(){
+  document.getElementById('win-overlay').classList.add('hidden');
+  foundSet.clear();
+  currentIdx=0;
+  document.getElementById('prog-count').textContent='0';
+  document.getElementById('prog-fill').style.width='0%';
+  document.getElementById('found-words-list').innerHTML='';
+  stopConfetti();
+  initGrid();
+  buildTable();
+  showDisease(false);
+}
+
+/* ── Confetti ── */
+let rafId=null, particles=[];
+function launchConfetti(){
+  const cv=document.getElementById('confetti');
+  const cx=cv.getContext('2d');
+  cv.width=innerWidth; cv.height=innerHeight;
+  particles=Array.from({length:130},()=>({
+    x:Math.random()*cv.width, y:Math.random()*-cv.height*.6,
+    w:7+Math.random()*8, h:4+Math.random()*6,
+    color:['#00C9A7','#FFD700','#FF6B6B','#4fc3f7','#fff','#a78bfa'][Math.floor(Math.random()*6)],
+    vel:2+Math.random()*4, angle:Math.random()*360, spin:(Math.random()-.5)*6
+  }));
+  (function draw(){
+    cx.clearRect(0,0,cv.width,cv.height);
+    particles.forEach(p=>{
+      cx.save(); cx.translate(p.x+p.w/2,p.y+p.h/2); cx.rotate(p.angle*Math.PI/180);
+      cx.fillStyle=p.color; cx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+      cx.restore();
+      p.y+=p.vel; p.angle+=p.spin;
+      if(p.y>cv.height) p.y=-20;
+    });
+    rafId=requestAnimationFrame(draw);
+  })();
+}
+function stopConfetti(){
+  if(rafId){cancelAnimationFrame(rafId);rafId=null;}
+  document.getElementById('confetti').getContext('2d')
+    .clearRect(0,0,innerWidth,innerHeight);
+}
+
+/* ── Init ── */
+initGrid();
+buildTable();
+showDisease(false);
+</script>
+</body>
+</html>
