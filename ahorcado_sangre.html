@@ -235,31 +235,6 @@ body{
 ═══════════════════════════════════════════ */
 #right-col{display:flex;flex-direction:column;gap:12px}
 
-/* Disease list */
-#disease-list{
-  background:var(--card);border:1px solid var(--border);
-  border-radius:var(--radius);padding:12px;
-}
-.dis-item{
-  display:flex;align-items:center;gap:9px;
-  padding:6px 8px;border-radius:var(--radius-s);
-  margin-bottom:4px;font-size:.8rem;
-  border:1px solid transparent;transition:all .3s;
-  cursor:default;
-}
-.dis-item:last-child{margin-bottom:0}
-.dis-item.locked{opacity:.4}
-.dis-item.active{
-  background:rgba(0,180,204,.12);
-  border-color:rgba(0,180,204,.35);
-  color:var(--accent);font-weight:800;
-}
-.dis-item.won{color:var(--green)}
-.dis-item.lost{color:#f87171}
-.dis-icon{font-size:1rem;flex-shrink:0;width:22px;text-align:center}
-.dis-name{font-weight:700;flex:1;font-size:.78rem}
-.dis-status{font-size:.9rem;flex-shrink:0}
-
 /* Letras probadas */
 #letras-box{
   background:var(--card);border:1px solid var(--border);
@@ -545,19 +520,14 @@ canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:90}
   <!-- RIGHT -->
   <div id="right-col">
 
-    <div id="disease-list">
-      <div class="panel-hdr">🗂️ ENFERMEDADES</div>
-      <div id="dis-items"></div>
+    <div id="pista-box">
+      <div class="panel-hdr">🔬 PISTA CLÍNICA</div>
+      <div id="pista-body">Cargando definición clínica…</div>
     </div>
 
     <div id="letras-box">
       <div class="panel-hdr">🔤 LETRAS PROBADAS</div>
       <div id="chips"></div>
-    </div>
-
-    <div id="pista-box">
-      <div class="panel-hdr">🔬 PISTA CLÍNICA</div>
-      <div id="pista-body">Cargando definición clínica…</div>
     </div>
 
   </div>
@@ -838,38 +808,6 @@ function resetChips() {
   });
 }
 
-function buildDiseaseList() {
-  const box = document.getElementById('dis-items');
-  box.innerHTML = '';
-  WORDS.forEach((w, i) => {
-    const d = document.createElement('div');
-    d.className = 'dis-item locked'; d.id = 'dis-' + i;
-    d.innerHTML = `<span class="dis-icon">${w.icon}</span>
-                   <span class="dis-name">${w.word}</span>
-                   <span class="dis-status" id="dis-st-${i}">🔒</span>`;
-    box.appendChild(d);
-  });
-}
-
-function updateDiseaseList() {
-  WORDS.forEach((w, i) => {
-    const item = document.getElementById('dis-' + i);
-    const st   = document.getElementById('dis-st-' + i);
-    if (!item) return;
-    item.className = 'dis-item';
-    if (i < wordIdx) {
-      item.classList.add(results[i] === 'won' ? 'won' : 'lost');
-      st.textContent = results[i] === 'won' ? '✅' : '❌';
-    } else if (i === wordIdx) {
-      item.classList.add('active');
-      st.textContent = '▶';
-    } else {
-      item.classList.add('locked');
-      st.textContent = '🔒';
-    }
-  });
-}
-
 /* ════════════════════════════════════════
    WORD TILES
 ════════════════════════════════════════ */
@@ -963,7 +901,6 @@ function loadWord(idx) {
   resetChips();
   updateHealthUI();
   updateRegistro();
-  updateDiseaseList();
 }
 
 /* ════════════════════════════════════════
@@ -1028,7 +965,6 @@ function guessLetter(ch) {
 function showWordResult(won) {
   const w = WORDS[wordIdx];
   results.push(won ? 'won' : 'lost');
-  updateDiseaseList();
   updateStats();
 
   document.getElementById('wr-disease-icon').textContent = w.icon;
@@ -1089,7 +1025,6 @@ function restartAll() {
   points  = 0;
   stopConfetti();
   updateStats();
-  buildDiseaseList();
   loadWord(0);
 }
 
@@ -1155,7 +1090,6 @@ function stopConfetti() {
 ════════════════════════════════════════ */
 buildKeyboard();
 buildChips();
-buildDiseaseList();
 initECG();
 loadWord(0);
 ecgTick();
