@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Defensa Inmune – Enfermedades de la Sangre</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#060e1e;font-family:'Nunito',sans-serif;touch-action:none}
+
+/* Game wrapper — max 480px centered */
+#wrap{
+  position:fixed;top:0;bottom:0;
+  left:50%;transform:translateX(-50%);
+  width:100%;max-width:480px;
+  overflow:hidden;
+}
+canvas{display:block;width:100%;height:100%}
+
+/* Controls */
+#ctrl{
+  position:absolute;bottom:0;left:0;right:0;
+  display:flex;justify-content:space-between;align-items:flex-end;
+  padding:8px 14px 14px;
+  pointer-events:none;z-index:10;
+}
+#ctrl-left{display:flex;flex-direction:column;gap:7px;pointer-events:all}
+#ctrl-right{pointer-events:all}
+.cbtn{
+  width:58px;height:58px;border-radius:50%;
+  background:rgba(15,32,64,.92);border:2px solid #1a3a5c;
+  color:#e2f0ff;font-size:1.35rem;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;pointer-events:all;
+  -webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;
+}
+.cbtn:active{background:rgba(0,180,204,.3);border-color:#00d4ff}
+#cbtn-shoot{
+  width:62px;height:62px;font-size:1.5rem;
+  background:rgba(251,191,36,.15);border-color:#fbbf24;
+}
+#cbtn-shoot:active{background:rgba(251,191,36,.4)}
+#arrows{display:flex;gap:7px}
+
+/* Overlays */
+.ov{
+  position:absolute;inset:0;
+  background:rgba(10,22,40,.96);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:11px;padding:22px 18px;text-align:center;z-index:100;overflow-y:auto;
+}
+.ov.hidden{display:none}
+.ov h1{font-size:1.75rem;font-weight:900;color:#00d4ff}
+.ov .sub{font-size:.78rem;color:#7a9cc0;margin-top:-6px}
+.rules{font-size:.76rem;color:#7a9cc0;max-width:320px;line-height:1.65}
+.rules b{color:#e2f0ff}
+.legend{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.leg{display:flex;align-items:center;gap:7px;background:#0d1e38;border:1px solid #1a3a5c;border-radius:8px;padding:7px 11px;font-size:.76rem}
+.ldot{width:12px;height:12px;border-radius:3px}
+.ldot.e{background:#1a3a5c;border:1.5px solid #00d4ff}
+.ldot.a{background:#1a3a5c;border:1.5px solid #00d4ff}
+.big-btn{
+  padding:12px 36px;
+  background:linear-gradient(135deg,#0099cc,#00C9A7);
+  border:none;border-radius:12px;color:#fff;
+  font-family:'Nunito',sans-serif;font-weight:900;font-size:1rem;
+  cursor:pointer;margin-top:4px;
+}
+.big-btn:active{transform:scale(.97)}
+
+/* Power-up legend */
+.pu-legend{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.pu-item{display:flex;align-items:center;gap:5px;background:#0d1e38;border:1px solid #1a3a5c;border-radius:8px;padding:5px 10px;font-size:.72rem;color:#7a9cc0}
+.pu-item b{color:#e2f0ff}
+
+/* Game Over */
+#go-sc{font-size:1.35rem;font-weight:900;color:#fbbf24}
+#go-msg{font-size:.8rem;color:#7a9cc0;max-width:300px;line-height:1.5}
+
+/* Sina */
+.sin-char{font-size:3.8rem;animation:bob 2.5s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.sin-tag{font-size:.6rem;text-transform:uppercase;letter-spacing:2px;color:#00d4ff}
+.sin-msg{font-size:.84rem;color:#e2f0ff;max-width:320px;line-height:1.6;font-weight:700}
+.cls-card{background:#0d1e38;border:2px solid #fbbf24;border-radius:12px;padding:14px 16px;max-width:340px;width:100%;text-align:left;box-shadow:0 0 20px rgba(251,191,36,.18)}
+.cls-hdr{font-size:.6rem;text-transform:uppercase;letter-spacing:1.5px;color:#fbbf24;margin-bottom:7px;display:flex;align-items:center;gap:7px}
+.cls-badge{background:#fbbf24;color:#0a1628;font-size:.56rem;font-weight:900;padding:2px 5px;border-radius:4px}
+.cls-txt{font-size:.79rem;color:#e2f0ff;line-height:1.6}
+.cls-txt b{color:#f87171}
+
+/* Toast */
+#toast{
+  position:absolute;top:52px;left:50%;
+  transform:translateX(-50%) translateY(-50px);
+  background:#0f2040;border:1px solid #1a3a5c;
+  border-radius:25px;padding:5px 16px;
+  font-size:.78rem;font-weight:800;color:#e2f0ff;
+  z-index:200;pointer-events:none;opacity:0;
+  transition:transform .3s,opacity .3s;white-space:nowrap;
+}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+#toast.g{border-color:#22c55e;color:#22c55e}
+#toast.r{border-color:#ef4444;color:#ef4444}
+#toast.y{border-color:#f59e0b;color:#f59e0b}
+#toast.p{border-color:#a78bfa;color:#a78bfa}
+
+/* Side gutter (desktop) */
+#gutter-l,#gutter-r{
+  position:fixed;top:0;bottom:0;background:#060e1e;z-index:0;
+}
+#gutter-l{left:0;right:calc(50% + 240px)}
+#gutter-r{left:calc(50% + 240px);right:0}
+</style>
+</head>
+<body>
+
+<!-- Desktop gutters -->
+<div id="gutter-l"></div>
+<div id="gutter-r"></div>
+
+<!-- Game wrapper -->
+<div id="wrap">
+  <canvas id="gc"></canvas>
+
+  <!-- Touch controls -->
+  <div id="ctrl">
+    <div id="ctrl-left">
+      <button class="cbtn" id="cbtn-shoot">💊</button>
+    </div>
+    <div id="ctrl-right">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:5px;pointer-events:all">
+        <button class="cbtn" id="cbtn-up">▲</button>
+        <div style="display:flex;gap:5px">
+          <button class="cbtn" id="cbtn-left">◀</button>
+          <button class="cbtn" id="cbtn-down">▼</button>
+          <button class="cbtn" id="cbtn-right">▶</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <!-- Start -->
+  <div class="ov" id="ov-start">
+    <h1>🩸 Defensa Inmune</h1>
+    <div class="sub">Sistema Circulatorio · Biología Humana</div>
+    <div class="legend">
+      <div class="leg"><div class="ldot e"></div><span>ENFERMEDADES — <b style="color:#f87171">ELIMINAR</b></span></div>
+      <div class="leg"><div class="ldot a"></div><span>ALIADOS — <b style="color:#6ee7b7">NO ELIMINAR</b></span></div>
+    </div>
+    <div class="rules">
+      <b>◀ ▶</b> mover la nave &nbsp;·&nbsp; <b>💊</b> disparar<br>
+      Lee el nombre antes de disparar.<br>
+      Elimina <b>enfermedades</b>, protege <b>aliados</b>.<br><br>
+      ❤️❤️❤️❤️❤️ &nbsp;<b>5 vidas</b> &nbsp;·&nbsp; nivel sube cada <b>5 eliminadas</b>
+    </div>
+    <div class="pu-legend">
+      <div class="pu-item">💛 <b>2x</b> disparo doble</div>
+      <div class="pu-item">⚡ <b>rápido</b> disparo veloz</div>
+      <div class="pu-item">🛡️ <b>escudo</b> protege 1 vida</div>
+    </div>
+    <button class="big-btn" id="btn-start">¡Defender! 🛡️</button>
+  </div>
+
+  <!-- Game Over -->
+  <div class="ov hidden" id="ov-go">
+    <div style="font-size:3rem">💔</div>
+    <h1 style="color:#ef4444">GAME OVER</h1>
+    <div id="go-sc">0 puntos</div>
+    <div id="go-msg"></div>
+    <button class="big-btn" id="btn-retry">Jugar de nuevo ↺</button>
+  </div>
+
+  <!-- Victoria -->
+  <div class="ov hidden" id="ov-win">
+    <div style="font-size:3.5rem;animation:bob 2s ease-in-out infinite">🏆</div>
+    <h1 style="color:#fbbf24">¡MISIÓN CUMPLIDA!</h1>
+    <div style="font-size:1.3rem;font-weight:900;color:#22c55e" id="win-sc">250 puntos</div>
+    <div style="font-size:.84rem;color:#7a9cc0;max-width:300px;line-height:1.6">
+      ¡Defendiste el sistema circulatorio con éxito!<br>
+      El paciente sobrevivió gracias a tu habilidad.
+    </div>
+    <button class="big-btn" id="btn-retry-win">Jugar de nuevo ↺</button>
+  </div>
+
+</div><!-- /wrap -->
+
+<script>
+/* ═══════════════ DATA ═══════════════ */
+var ENEMIES = ['Anemia','Policitemia','Talasemia','Leucemia','Leucopenia','Hemofilia','Trombocitopenia','Sepsis'];
+var ALLIES  = ['Eritrocito','Leucocito','Hemoglobina','Plasma','Plaqueta','Vena','Arteria','Corazón','Sangre','Nutrientes','Oxígeno'];
+
+/* Level config: spd=fall speed, ms=spawn interval, ec=enemy chance, max=max on screen */
+var LVL = [
+  null,
+  {spd:1.2, ms:3200, ec:0.42, max:4},
+  {spd:2.2, ms:2200, ec:0.47, max:6},
+  {spd:3.4, ms:1300, ec:0.52, max:9}
+];
+
+/* Power-up types */
+var PU_TYPES = [
+  {id:'double', label:'2x DOBLE',  col:'#fbbf24', dur:8000},
+  {id:'fast',   label:'⚡ VELOZ',  col:'#a78bfa', dur:6000},
+  {id:'shield', label:'🛡 ESCUDO', col:'#22c55e', dur:0},
+];
+
+/* ═══════════════ CANVAS ═══════════════ */
+var wrap = document.getElementById('wrap');
+var cv   = document.getElementById('gc');
+var ctx  = cv.getContext('2d');
+var W, H;
+
+function resize(){
+  W = cv.width  = wrap.offsetWidth;
+  H = cv.height = wrap.offsetHeight;
+  if(G) G.py = H - 90;
+}
+window.addEventListener('resize', resize);
+resize();
+
+/* ═══════════════ BG DOTS ═══════════════ */
+var BGDOTS = [];
+function initBg(){
+  BGDOTS = [];
+  for(var i=0;i<35;i++){
+    BGDOTS.push({
+      x: Math.random()*500,
+      y: Math.random()*800,
+      r: Math.random()*1.8+.3,
+      a: Math.random()*.06+.015,
+      dy: Math.random()*.3+.06
+    });
+  }
+}
+initBg();
+
+/* ═══════════════ GAME STATE ═══════════════ */
+var G = null;
+
+function newGame(){
+  G = {
+    px: W/2, py: H-90, pr: 22,
+    vx: 0,
+    bullets: [],
+    items:   [],
+    powerups:[],
+    parts:   [],
+    floats:  [],
+    lives:  3,
+    score:  0,
+    level:  1,
+    kills:  0,
+    dmg:    0,
+    scd:    0,   /* shoot cooldown */
+    spcd:   0,   /* shoot pulse visual */
+    spawnT: Date.now(),
+    puSpawnT: Date.now(),
+    over:   false,
+    shield: false,
+    double: false, doubleTmr: 0,
+    fast:   false, fastTmr:   0,
+    left: false, right: false, up: false, down: false, shoot: false,
+  };
+}
+
+/* ═══════════════ SPAWN ITEMS ═══════════════ */
+function spawnItem(){
+  var lv = LVL[G.level];
+  if(G.items.length >= lv.max) return;
+  var isEnemy = Math.random() < lv.ec;
+  var pool    = isEnemy ? ENEMIES : ALLIES;
+  var word    = pool[Math.floor(Math.random()*pool.length)];
+  ctx.font = 'bold 15px Nunito,sans-serif';
+  var tw = ctx.measureText(word).width;
+  var iw = tw + 28;
+  var x  = Math.random()*(W - iw - 16) + iw/2 + 8;
+  G.items.push({word:word, enemy:isEnemy, x:x, y:-30, w:iw,
+    spd: lv.spd + (Math.random()*.4-.2)});
+}
+
+/* ═══════════════ SPAWN POWERUP ═══════════════ */
+function spawnPowerup(){
+  var t = PU_TYPES[Math.floor(Math.random()*PU_TYPES.length)];
+  var x = Math.random()*(W-60)+30;
+  G.powerups.push({id:t.id, label:t.label, col:t.col, dur:t.dur,
+    x:x, y:-28, spd:1.2, r:18});
+}
+
+/* ═══════════════ SHOOT ═══════════════ */
+function doShoot(){
+  var cooldown = G.fast ? 130 : 280;
+  if(G.scd>0) return;
+  if(G.double){
+    G.bullets.push({x:G.px-10, y:G.py-G.pr-4});
+    G.bullets.push({x:G.px+10, y:G.py-G.pr-4});
+  } else {
+    G.bullets.push({x:G.px, y:G.py-G.pr-4});
+  }
+  G.scd  = cooldown;
+  G.spcd = 140;
+}
+
+/* ═══════════════ LOSE LIFE ═══════════════ */
+function hitLife(msg){
+  if(G.shield){
+    G.shield = false;
+    toast('🛡️ ¡Escudo absorbió el golpe!','g');
+    G.dmg = 300;
+    return;
+  }
+  G.lives--;
+  G.dmg = 650;
+  toast(msg,'r');
+  if(G.lives<=0){ G.lives=0; G.over=true; setTimeout(showOver,700); }
+}
+
+/* ═══════════════ LEVEL CHECK ═══════════════ */
+function checkLevel(){
+  var next = Math.min(3, Math.floor(G.kills/5)+1);
+  if(next > G.level){
+    G.level = next;
+    toast('🔥 ¡NIVEL '+G.level+'!','y');
+  }
+}
+
+/* ═══════════════ PARTICLES ═══════════════ */
+function burst(x,y,col,n){
+  for(var i=0;i<n;i++){
+    var a=(i/n)*Math.PI*2, s=2.5+Math.random()*2;
+    G.parts.push({x:x,y:y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-1.5,
+      col:col,r:2.5+Math.random()*2,life:420,max:420,a:1});
+  }
+}
+function floatTxt(x,y,txt,col){
+  G.floats.push({x:x,y:y,txt:txt,col:col,life:900,max:900,a:1});
+}
+
+/* ═══════════════ UPDATE ═══════════════ */
+function update(dt){
+  /* player */
+  var spd=5;
+  if(G.left)  G.px-=spd;
+  if(G.right) G.px+=spd;
+  if(G.up)    G.py-=spd;
+  if(G.down)  G.py+=spd;
+  if(G.px<G.pr)    G.px=G.pr;
+  if(G.px>W-G.pr)  G.px=W-G.pr;
+  if(G.py<54)      G.py=54;
+  if(G.py>H-78)    G.py=H-78;
+
+  /* shoot */
+  G.scd  = Math.max(0,G.scd-dt);
+  G.spcd = Math.max(0,G.spcd-dt);
+  if(G.shoot) doShoot();
+
+  /* power-up timers */
+  if(G.double){ G.doubleTmr-=dt; if(G.doubleTmr<=0){G.double=false;toast('2x terminó','y');} }
+  if(G.fast)  { G.fastTmr-=dt;   if(G.fastTmr<=0)  {G.fast=false;  toast('⚡ terminó','y');} }
+
+  /* bullets */
+  var nb=[];
+  for(var i=0;i<G.bullets.length;i++){
+    var b=G.bullets[i]; b.y-=11;
+    if(b.y>-10) nb.push(b);
+  }
+  G.bullets=nb;
+
+  /* items fall */
+  var ni=[];
+  for(var i=0;i<G.items.length;i++){
+    var it=G.items[i]; it.y+=it.spd;
+    if(it.y>H+40){ if(it.enemy) hitLife('🦠 ¡Enfermedad escapó!'); }
+    else ni.push(it);
+  }
+  G.items=ni;
+
+  /* powerups fall + collect */
+  var npu=[];
+  for(var i=0;i<G.powerups.length;i++){
+    var pu=G.powerups[i]; pu.y+=pu.spd;
+    if(pu.y>H+30){ npu.push(pu); continue; }
+    /* collect: ship overlaps powerup */
+    var dx=G.px-pu.x, dy=G.py-pu.y;
+    if(Math.sqrt(dx*dx+dy*dy)<G.pr+pu.r){
+      applyPowerup(pu);
+    } else {
+      npu.push(pu);
+    }
+  }
+  G.powerups=npu;
+
+  /* bullet-item collision */
+  var usedB={}, usedI={};
+  for(var bi=0;bi<G.bullets.length;bi++){
+    var b=G.bullets[bi];
+    for(var ii=0;ii<G.items.length;ii++){
+      if(usedI[ii]) continue;
+      var it=G.items[ii];
+      if(b.x>it.x-it.w/2-4 && b.x<it.x+it.w/2+4 && b.y>it.y-22 && b.y<it.y+22){
+        usedB[bi]=true; usedI[ii]=true;
+        if(it.enemy){
+          G.score+=10; G.kills++;
+          burst(it.x,it.y,'#00d4ff',9);
+          floatTxt(it.x,it.y-12,'+10','#fbbf24');
+          checkLevel();
+          if(G.score>=250){ G.over=true; setTimeout(showWin,600); }
+        } else {
+          burst(it.x,it.y,'#ef4444',7);
+          floatTxt(it.x,it.y-12,'¡Aliado!','#f87171');
+          hitLife('💔 ¡Aliado eliminado!');
+        }
+        break;
+      }
+    }
+  }
+  var fb=[],fi=[];
+  for(var i=0;i<G.bullets.length;i++) if(!usedB[i]) fb.push(G.bullets[i]);
+  for(var i=0;i<G.items.length;i++)   if(!usedI[i]) fi.push(G.items[i]);
+  G.bullets=fb; G.items=fi;
+
+  /* ship-item collision */
+  var ni2=[];
+  for(var i=0;i<G.items.length;i++){
+    var it=G.items[i];
+    var cx=Math.max(it.x-it.w/2, Math.min(G.px, it.x+it.w/2));
+    var cy=Math.max(it.y-19,      Math.min(G.py, it.y+19));
+    var dx=G.px-cx, dy=G.py-cy;
+    if(dx*dx+dy*dy < G.pr*G.pr){
+      if(it.enemy){
+        burst(it.x,it.y,'#ef4444',10);
+        floatTxt(it.x,it.y-14,'💥 IMPACTO','#f87171');
+        hitLife('💥 ¡La nave fue golpeada!');
+        /* item destruido al chocar */
+      } else {
+        ni2.push(it); /* aliados: nave los atraviesa */
+      }
+    } else {
+      ni2.push(it);
+    }
+  }
+  G.items=ni2;
+
+  /* spawn items */
+  var now=Date.now();
+  if(now-G.spawnT > LVL[G.level].ms){ spawnItem(); G.spawnT=now; }
+
+  /* spawn powerup every ~12s randomly */
+  if(now-G.puSpawnT > 11000+Math.random()*4000){ spawnPowerup(); G.puSpawnT=now; }
+
+  /* particles */
+  var np=[];
+  for(var i=0;i<G.parts.length;i++){
+    var p=G.parts[i];
+    p.x+=p.vx; p.y+=p.vy; p.vy+=.12;
+    p.life-=dt; p.a=p.life/p.max;
+    if(p.life>0) np.push(p);
+  }
+  G.parts=np;
+
+  /* floats */
+  var nf=[];
+  for(var i=0;i<G.floats.length;i++){
+    var f=G.floats[i];
+    f.y-=1.5; f.life-=dt; f.a=f.life/f.max;
+    if(f.life>0) nf.push(f);
+  }
+  G.floats=nf;
+
+  if(G.dmg>0) G.dmg-=dt;
+}
+
+function applyPowerup(pu){
+  burst(pu.x,pu.y,pu.col,10);
+  floatTxt(pu.x,pu.y-14,pu.label,pu.col);
+  if(pu.id==='double'){ G.double=true; G.doubleTmr=pu.dur; toast('💛 ¡Disparo doble!','p'); }
+  if(pu.id==='fast')  { G.fast=true;   G.fastTmr=pu.dur;   toast('⚡ ¡Disparo veloz!','p'); }
+  if(pu.id==='shield'){ G.shield=true;                      toast('🛡️ ¡Escudo activado!','g'); }
+}
+
+/* ═══════════════ DRAW ═══════════════ */
+function draw(){
+  ctx.fillStyle='#060e1e'; ctx.fillRect(0,0,W,H);
+
+  /* radial glow */
+  var g1=ctx.createRadialGradient(W*.5,H*.4,0,W*.5,H*.4,W*.7);
+  g1.addColorStop(0,'rgba(0,140,180,.07)'); g1.addColorStop(1,'transparent');
+  ctx.fillStyle=g1; ctx.fillRect(0,0,W,H);
+
+  /* bg dots */
+  for(var i=0;i<BGDOTS.length;i++){
+    var d=BGDOTS[i]; d.y+=d.dy; if(d.y>H+4) d.y=-4;
+    ctx.beginPath(); ctx.arc(d.x%W,d.y,d.r,0,Math.PI*2);
+    ctx.fillStyle='rgba(0,180,204,'+d.a+')'; ctx.fill();
+  }
+
+  if(!G) return;
+
+  /* damage flash */
+  if(G.dmg>0){
+    ctx.fillStyle='rgba(239,68,68,'+(G.dmg/650*.22)+')';
+    ctx.fillRect(0,0,W,H);
+  }
+
+  drawPowerups();
+  drawItems();
+  drawBullets();
+  drawParts();
+  drawShip();
+  drawFloats();
+  drawHUD();
+}
+
+/* ── Ship (nave con alas rojas) ── */
+function drawShip(){
+  var x=G.px, y=G.py;
+  ctx.save(); ctx.translate(x,y);
+
+  /* engine glow */
+  var eg=ctx.createRadialGradient(0,18,0,0,18,22);
+  eg.addColorStop(0,'rgba(0,200,255,.55)');
+  eg.addColorStop(1,'transparent');
+  ctx.fillStyle=eg; ctx.fillRect(-22,4,44,32);
+
+  /* shoot pulse */
+  if(G.spcd>0){
+    ctx.beginPath(); ctx.arc(0,-G.pr-2,6,0,Math.PI*2);
+    ctx.fillStyle='rgba(251,191,36,'+(G.spcd/140*.7)+')'; ctx.fill();
+  }
+
+  /* ── RED WINGS ── */
+  ctx.fillStyle='#b91c1c';
+  /* left wing */
+  ctx.beginPath();
+  ctx.moveTo(-6,4); ctx.lineTo(-28,20); ctx.lineTo(-22,28); ctx.lineTo(-6,16);
+  ctx.closePath(); ctx.fill();
+  /* right wing */
+  ctx.beginPath();
+  ctx.moveTo(6,4); ctx.lineTo(28,20); ctx.lineTo(22,28); ctx.lineTo(6,16);
+  ctx.closePath(); ctx.fill();
+  /* wing accents */
+  ctx.fillStyle='#ef4444';
+  ctx.beginPath();
+  ctx.moveTo(-8,8); ctx.lineTo(-24,20); ctx.lineTo(-20,24); ctx.lineTo(-8,14);
+  ctx.closePath(); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(8,8); ctx.lineTo(24,20); ctx.lineTo(20,24); ctx.lineTo(8,14);
+  ctx.closePath(); ctx.fill();
+
+  /* ── FUSELAGE ── */
+  /* shadow/base */
+  ctx.fillStyle='#0d2a4a';
+  ctx.beginPath();
+  ctx.moveTo(0,-26); ctx.lineTo(10,0); ctx.lineTo(10,24); ctx.lineTo(-10,24); ctx.lineTo(-10,0);
+  ctx.closePath(); ctx.fill();
+  /* main hull */
+  var hg=ctx.createLinearGradient(-10,0,10,0);
+  hg.addColorStop(0,'#1e4a7a'); hg.addColorStop(.5,'#2d6aa8'); hg.addColorStop(1,'#1e4a7a');
+  ctx.fillStyle=hg;
+  ctx.beginPath();
+  ctx.moveTo(0,-24); ctx.lineTo(9,2); ctx.lineTo(9,22); ctx.lineTo(-9,22); ctx.lineTo(-9,2);
+  ctx.closePath(); ctx.fill();
+  /* cockpit */
+  var cg=ctx.createRadialGradient(0,-10,1,0,-10,8);
+  cg.addColorStop(0,'#a0e8ff'); cg.addColorStop(1,'#00aacc');
+  ctx.fillStyle=cg;
+  ctx.beginPath();
+  ctx.moveTo(0,-22); ctx.lineTo(6,-4); ctx.lineTo(-6,-4);
+  ctx.closePath(); ctx.fill();
+  /* cockpit shine */
+  ctx.fillStyle='rgba(255,255,255,.35)';
+  ctx.beginPath();
+  ctx.moveTo(-1,-18); ctx.lineTo(2,-10); ctx.lineTo(-2,-10);
+  ctx.closePath(); ctx.fill();
+  /* hull stripe */
+  ctx.fillStyle='rgba(0,212,255,.25)';
+  ctx.fillRect(-9,4,18,3);
+
+  /* engine nozzles */
+  ctx.fillStyle='#0d2a4a';
+  ctx.fillRect(-7,20,5,6); ctx.fillRect(2,20,5,6);
+  /* engine flames */
+  var fl=ctx.createLinearGradient(0,26,0,36);
+  fl.addColorStop(0,'rgba(0,200,255,.9)'); fl.addColorStop(1,'transparent');
+  ctx.fillStyle=fl;
+  ctx.beginPath(); ctx.ellipse(-4,28,3,5+Math.random()*3,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(4,28,3,5+Math.random()*3,0,0,Math.PI*2); ctx.fill();
+
+  /* shield ring */
+  if(G.shield){
+    ctx.strokeStyle='rgba(34,197,94,.7)';
+    ctx.lineWidth=2;
+    ctx.shadowColor='#22c55e'; ctx.shadowBlur=12;
+    ctx.beginPath(); ctx.arc(0,0,G.pr+8,0,Math.PI*2); ctx.stroke();
+    ctx.shadowBlur=0;
+  }
+
+  ctx.restore();
+}
+
+/* ── Bullets ── */
+function drawBullets(){
+  for(var i=0;i<G.bullets.length;i++){
+    var b=G.bullets[i];
+    ctx.save();
+    ctx.shadowColor=G.double?'#fbbf24':'#00d4ff';
+    ctx.shadowBlur=10;
+    ctx.fillStyle=G.double?'#fbbf24':'#00d4ff';
+    ctx.beginPath(); ctx.ellipse(b.x,b.y,3,9,0,0,Math.PI*2); ctx.fill();
+    ctx.globalAlpha=.3;
+    ctx.beginPath(); ctx.ellipse(b.x,b.y+11,2,5,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+}
+
+/* ── Falling Items (same color) ── */
+function drawItems(){
+  var IH=38;
+  for(var i=0;i<G.items.length;i++){
+    var it=G.items[i];
+    var x=it.x-it.w/2, y=it.y-IH/2;
+    ctx.save();
+    ctx.shadowColor='#00d4ff'; ctx.shadowBlur=8;
+    ctx.fillStyle='rgba(5,20,50,.92)';
+    rr(x,y,it.w,IH,8); ctx.fill();
+    ctx.strokeStyle='#00d4ff'; ctx.lineWidth=1.6;
+    rr(x,y,it.w,IH,8); ctx.stroke();
+    ctx.shadowBlur=0;
+    ctx.fillStyle='#e2f0ff';
+    ctx.font='bold 15px Nunito,sans-serif'; ctx.textAlign='center';
+    ctx.fillText(it.word, it.x, it.y+6);
+    ctx.restore();
+  }
+}
+
+/* ── Powerups ── */
+function drawPowerups(){
+  for(var i=0;i<G.powerups.length;i++){
+    var pu=G.powerups[i];
+    ctx.save();
+    ctx.shadowColor=pu.col; ctx.shadowBlur=14;
+    /* hexagon */
+    ctx.fillStyle='rgba(10,22,40,.9)';
+    ctx.strokeStyle=pu.col; ctx.lineWidth=2;
+    ctx.beginPath();
+    for(var k=0;k<6;k++){
+      var a=k/6*Math.PI*2-Math.PI/6;
+      var kx=pu.x+pu.r*Math.cos(a), ky=pu.y+pu.r*Math.sin(a);
+      k===0?ctx.moveTo(kx,ky):ctx.lineTo(kx,ky);
+    }
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.shadowBlur=0;
+    /* label */
+    ctx.fillStyle=pu.col;
+    ctx.font='bold 9px Nunito,sans-serif'; ctx.textAlign='center';
+    ctx.fillText(pu.label,pu.x,pu.y+4);
+    ctx.restore();
+  }
+}
+
+/* ── Particles ── */
+function drawParts(){
+  for(var i=0;i<G.parts.length;i++){
+    var p=G.parts[i];
+    ctx.save(); ctx.globalAlpha=p.a;
+    ctx.fillStyle=p.col; ctx.shadowColor=p.col; ctx.shadowBlur=5;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+}
+
+/* ── Float texts ── */
+function drawFloats(){
+  for(var i=0;i<G.floats.length;i++){
+    var f=G.floats[i];
+    ctx.save(); ctx.globalAlpha=f.a;
+    ctx.fillStyle=f.col; ctx.shadowColor=f.col; ctx.shadowBlur=8;
+    ctx.font='bold 16px Nunito,sans-serif'; ctx.textAlign='center';
+    ctx.fillText(f.txt,f.x,f.y);
+    ctx.restore();
+  }
+}
+
+/* ── HUD ── */
+function drawHUD(){
+  /* bar */
+  ctx.fillStyle='rgba(6,14,30,.7)'; ctx.fillRect(0,0,W,46);
+
+  /* lives */
+  ctx.font='18px serif';
+  for(var i=0;i<3;i++){
+    ctx.globalAlpha=i<G.lives?1:.18;
+    ctx.fillText('❤️',10+i*26,34);
+  }
+  ctx.globalAlpha=1;
+
+  /* power indicators */
+  var px=W/2-40;
+  if(G.shield){ ctx.font='16px serif'; ctx.fillText('🛡️',px,33); px+=26; }
+  if(G.double){ ctx.font='13px Nunito,sans-serif'; ctx.fillStyle='#fbbf24'; ctx.fillText('2x',px,34); px+=22; }
+  if(G.fast)  { ctx.font='16px serif'; ctx.fillText('⚡',px,33); }
+
+  /* score */
+  ctx.font='bold 18px Nunito,sans-serif'; ctx.textAlign='center';
+  ctx.fillStyle='#fbbf24';
+  ctx.shadowColor='#fbbf24'; ctx.shadowBlur=5;
+  ctx.fillText('⭐ '+G.score, W/2, 34);
+  ctx.shadowBlur=0;
+
+  /* level */
+  var lc=G.level===1?'#22c55e':G.level===2?'#f59e0b':'#ef4444';
+  ctx.font='bold 14px Nunito,sans-serif'; ctx.textAlign='right';
+  ctx.fillStyle=lc; ctx.shadowColor=lc; ctx.shadowBlur=5;
+  ctx.fillText('NIVEL '+G.level, W-10, 34);
+  ctx.shadowBlur=0;
+
+  /* progress bar */
+  var prog=(G.kills%5)/5, bw=60, bh=3, bx=W-10-bw, by=38;
+  ctx.fillStyle='#1a3a5c'; rr(bx,by,bw,bh,2); ctx.fill();
+  if(prog>0){ctx.fillStyle=lc; rr(bx,by,bw*prog,bh,2); ctx.fill();}
+  ctx.textAlign='left';
+}
+
+/* roundRect */
+function rr(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
+
+/* ═══════════════ GAME LOOP ═══════════════ */
+var lastT=0;
+function loop(ts){
+  var dt=ts-lastT; if(dt>60)dt=60; lastT=ts;
+  if(G && !G.over) update(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* ═══════════════ OVERLAYS ═══════════════ */
+function showOver(){
+  document.getElementById('go-sc').textContent = G.score + ' puntos';
+  document.getElementById('go-msg').textContent = '☠️ El paciente no sobrevivió. Las enfermedades de la sangre lograron su cometido. ¡Inténtalo de nuevo!';
+  document.getElementById('ov-go').classList.remove('hidden');
+}
+function showWin(){
+  document.getElementById('win-sc').textContent = G.score + ' puntos';
+  document.getElementById('ov-win').classList.remove('hidden');
+}
+function doStart(){ document.getElementById('ov-start').classList.add('hidden'); newGame(); }
+function doRetry(){ document.getElementById('ov-go').classList.add('hidden'); newGame(); }
+function doRetryWin(){ document.getElementById('ov-win').classList.add('hidden'); newGame(); }
+document.getElementById('btn-start').addEventListener('click', doStart);
+document.getElementById('btn-retry').addEventListener('click', doRetry);
+document.getElementById('btn-retry-win').addEventListener('click', doRetryWin);
+
+/* ═══════════════ KEYBOARD ═══════════════ */
+window.addEventListener('keydown',function(e){
+  var GAME_KEYS=['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' ','w','a','s','d'];
+  if(GAME_KEYS.indexOf(e.key)!==-1) e.preventDefault();
+  if(!G||G.over)return;
+  if(e.key==='ArrowLeft' ||e.key==='a') G.left =true;
+  if(e.key==='ArrowRight'||e.key==='d') G.right=true;
+  if(e.key===' ')                        G.shoot=true;
+  if(e.key==='ArrowUp'  ||e.key==='w')  G.up   =true;
+  if(e.key==='ArrowDown'||e.key==='s')  G.down =true;
+},false);
+window.addEventListener('keyup',function(e){
+  if(!G)return;
+  if(e.key==='ArrowLeft' ||e.key==='a') G.left =false;
+  if(e.key==='ArrowRight'||e.key==='d') G.right=false;
+  if(e.key===' ')                        G.shoot=false;
+  if(e.key==='ArrowUp'  ||e.key==='w')  G.up   =false;
+  if(e.key==='ArrowDown'||e.key==='s')  G.down =false;
+},false);
+
+/* ═══════════════ TOUCH BUTTONS ═══════════════ */
+function bindCtrl(id,prop){
+  var btn=document.getElementById(id);
+  function on(e){e.preventDefault();if(G)G[prop]=true;}
+  function off(e){e.preventDefault();if(G)G[prop]=false;}
+  btn.addEventListener('touchstart',on,{passive:false});
+  btn.addEventListener('touchend',off,{passive:false});
+  btn.addEventListener('touchcancel',off,{passive:false});
+  btn.addEventListener('mousedown',on);
+  btn.addEventListener('mouseup',off);
+  btn.addEventListener('mouseleave',off);
+}
+bindCtrl('cbtn-left','left');
+bindCtrl('cbtn-right','right');
+bindCtrl('cbtn-shoot','shoot');
+bindCtrl('cbtn-up','up');
+bindCtrl('cbtn-down','down');
+
+/* ═══════════════ TOAST ═══════════════ */
+var tTmr=null;
+function toast(msg,type){
+  var t=document.getElementById('toast');
+  if(tTmr)clearTimeout(tTmr);
+  t.textContent=msg; t.className='show '+(type||'');
+  tTmr=setTimeout(function(){t.className='';},2000);
+}
+</script>
+</body>
+</html>
