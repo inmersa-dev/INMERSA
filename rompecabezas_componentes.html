@@ -158,6 +158,48 @@ html,body{
 }
 .piece.error{animation:errShake .38s ease;border-color:var(--red) !important}
 
+/* Board celebrate */
+@keyframes boardCelebrate{
+  0%,100%{transform:scale(1) rotate(0)}
+  15%{transform:scale(1.025) rotate(1.5deg)}
+  30%{transform:scale(1.025) rotate(-1.5deg)}
+  45%{transform:scale(1.02) rotate(1deg)}
+  60%{transform:scale(1.02) rotate(-1deg)}
+  75%{transform:scale(1.01) rotate(.5deg)}
+  85%{transform:scale(1.01) rotate(-.5deg)}
+}
+#board.celebrate{
+  animation:boardCelebrate .85s ease;
+  filter:drop-shadow(0 0 22px rgba(0,212,255,.8));
+}
+
+/* ── Info overlay ── */
+#info-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.82);backdrop-filter:blur(8px);
+  z-index:550;align-items:center;justify-content:center;
+}
+#info-overlay.show{display:flex}
+.info-box{
+  background:linear-gradient(140deg,var(--card),var(--card2));
+  border:2px solid var(--teal);border-radius:20px;
+  padding:32px 40px;text-align:center;
+  max-width:460px;width:90%;
+  box-shadow:0 24px 70px rgba(0,0,0,.7),0 0 40px rgba(0,180,204,.15);
+  animation:slideUp .4s cubic-bezier(.34,1.56,.64,1);
+}
+.info-box-title{font-size:1.5rem;font-weight:900;color:var(--accent);margin-bottom:2px}
+.info-box-sub{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:18px}
+.info-box .fact-grid{margin-bottom:12px}
+#btn-info-continue{
+  background:linear-gradient(135deg,var(--teal),var(--accent));
+  color:var(--bg);border:none;border-radius:30px;
+  padding:12px 34px;font-size:.92rem;font-weight:900;
+  font-family:'Nunito',sans-serif;cursor:pointer;margin-top:14px;display:inline-block;
+  transition:transform .15s,box-shadow .15s;
+}
+#btn-info-continue:hover{transform:scale(1.05);box-shadow:0 6px 22px rgba(0,212,255,.4)}
+
 /* ── Right column ── */
 #col-right{display:flex;flex-direction:column;gap:10px}
 #ref-img{
@@ -407,6 +449,16 @@ html,body{
 
 </div><!-- /layout -->
 
+<!-- ── Info overlay ── -->
+<div id="info-overlay">
+  <div class="info-box">
+    <div class="info-box-title" id="info-overlay-title"></div>
+    <div class="info-box-sub" id="info-overlay-sub"></div>
+    <div id="info-overlay-content"></div>
+    <button id="btn-info-continue">Ver pregunta →</button>
+  </div>
+</div>
+
 <!-- ── Bonus overlay ── -->
 <div id="bonus-overlay">
   <div class="bonus-box">
@@ -609,8 +661,12 @@ var infoContent   = document.getElementById('info-content');
 var infoHdr       = document.getElementById('info-hdr');
 var bonusQuestion = document.getElementById('bonus-question');
 var bonusOptions  = document.getElementById('bonus-options');
-var titleCell     = document.getElementById('title-cell');
-var puzzleCurrent = document.getElementById('puzzle-current');
+var titleCell          = document.getElementById('title-cell');
+var puzzleCurrent      = document.getElementById('puzzle-current');
+var infoOverlay        = document.getElementById('info-overlay');
+var infoOverlayTitle   = document.getElementById('info-overlay-title');
+var infoOverlaySub     = document.getElementById('info-overlay-sub');
+var infoOverlayContent = document.getElementById('info-overlay-content');
 
 /* ─────────────────────────────────────────────
    ECG
@@ -730,6 +786,19 @@ function playBonusWrong(){
   gain.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.35);
   osc.start(); osc.stop(ac.currentTime+0.35);
 }
+function playCelebration(){
+  var ac=getAC();
+  [523,659,784,880,1047,1319].forEach(function(freq,i){
+    var osc=ac.createOscillator(), gain=ac.createGain();
+    osc.connect(gain); gain.connect(ac.destination);
+    osc.frequency.value=freq; osc.type='sine';
+    var t=ac.currentTime+i*0.09;
+    gain.gain.setValueAtTime(0,t);
+    gain.gain.linearRampToValueAtTime(0.2,t+0.03);
+    gain.gain.exponentialRampToValueAtTime(0.001,t+0.5);
+    osc.start(t); osc.stop(t+0.5);
+  });
+}
 
 /* ─────────────────────────────────────────────
    TOAST
@@ -836,7 +905,11 @@ function renderPuzzle(idx){
       }
       bonusFeedback.style.display='block';
       btnContinue.style.display='inline-block';
-      btnContinue.textContent = (currentPuzzleIdx < PUZZLES.length-1) ? 'Siguiente →' : 'Ver resultados →';
+      if(btn.dataset.key===PUZZLES[currentPuzzleIdx].bonus.correct){
+        btnContinue.textContent = (currentPuzzleIdx < PUZZLES.length-1) ? 'Siguiente →' : 'Ver resultados →';
+      } else {
+        btnContinue.textContent = '↺ Reintentar imagen';
+      }
     });
   });
 }
@@ -1017,24 +1090,73 @@ function onWin(){
   ghostEl.style.display='none';
   dragPiece=null; dragId=null;
   clearHighlights();
+  celebrateBoard();
+  playCelebration();
+  setTimeout(showInfoOverlay, 2200);
+}
+
+function celebrateBoard(){
+  boardEl.classList.add('celebrate');
+  boardEl.addEventListener('animationend',function(){
+    boardEl.classList.remove('celebrate');
+  },{once:true});
+}
+
+function showInfoOverlay(){
+  var p=PUZZLES[currentPuzzleIdx];
+  infoOverlayTitle.textContent = p.title;
+  infoOverlaySub.textContent   = p.subtitle;
+  var factsHTML=p.facts.map(function(f){
+    var style=f.color?' style="color:'+f.color+'"':'';
+    return '<div class="fact-box"><span class="fact-num"'+style+'>'+f.num+'</span><span class="fact-lbl">'+f.lbl+'</span></div>';
+  }).join('');
+  infoOverlayContent.innerHTML=
+    '<div class="fact-grid">'+factsHTML+'</div>'+
+    '<div class="func-bar" style="text-align:left">'+
+      '<div class="func-icon">'+p.icon+'</div>'+
+      '<div class="func-text">'+
+        '<div class="fc-lbl">Función principal</div>'+
+        '<div class="fc-val">'+p.funcion+'</div>'+
+      '</div>'+
+    '</div>';
+  infoOverlay.classList.add('show');
+}
+
+document.getElementById('btn-info-continue').addEventListener('click',function(){
+  infoOverlay.classList.remove('show');
   bonusPoints=0;
   bonusFeedback.className='';
   bonusFeedback.textContent='';
   bonusFeedback.style.display='none';
   btnContinue.style.display='none';
   bonusOverlay.classList.add('show');
-}
+});
 
 btnContinue.addEventListener('click',function(){
   bonusOverlay.classList.remove('show');
-  totalBonusPoints += bonusPoints;
-  if(currentPuzzleIdx < PUZZLES.length-1){
-    currentPuzzleIdx++;
-    nextPuzzle();
+  if(bonusPoints > 0){
+    totalBonusPoints += bonusPoints;
+    if(currentPuzzleIdx < PUZZLES.length-1){
+      currentPuzzleIdx++;
+      nextPuzzle();
+    } else {
+      showFinalWin();
+    }
   } else {
-    showFinalWin();
+    retryPuzzle();
   }
 });
+
+function retryPuzzle(){
+  placed=0; attempts=0;
+  startTime=null; elapsedSecs=0;
+  timerDisplay.textContent='00:00';
+  statTime.textContent='00:00';
+  updateUI();
+  buildBoard();
+  buildPool();
+  showToast('↺ Repite el rompecabezas: '+PUZZLES[currentPuzzleIdx].title,'yellow',2500);
+}
 
 function nextPuzzle(){
   placed=0; attempts=0;
@@ -1108,6 +1230,7 @@ function reset(){
   statTime.textContent='00:00';
   winOverlay.classList.remove('show');
   bonusOverlay.classList.remove('show');
+  infoOverlay.classList.remove('show');
   ghostEl.style.display='none';
   confCanvas.style.display='none';
   dragPiece=null; dragId=null;
