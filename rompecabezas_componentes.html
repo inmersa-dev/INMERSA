@@ -463,7 +463,7 @@ html,body{
 <div id="bonus-overlay">
   <div class="bonus-box">
     <div class="bonus-icon">⭐</div>
-    <div class="bonus-badge">Pregunta Bonus · +50 pts</div>
+    <div class="bonus-badge" id="bonus-badge">Pregunta 1 de 3 · +50 pts</div>
     <h2 id="bonus-question"></h2>
     <div class="options" id="bonus-options"></div>
     <div id="bonus-feedback"></div>
@@ -512,16 +512,14 @@ var PUZZLES = [
       {num:'O₂',  lbl:'transporta oxígeno', color:'var(--green)'}
     ],
     funcion: 'Transportar O₂ desde los pulmones hacia los tejidos y regresar CO₂',
-    bonus: {
-      q: '¿Qué proteína transporta el oxígeno dentro del glóbulo rojo?',
-      opts: [
-        {key:'A', text:'Albúmina'},
-        {key:'B', text:'Fibrinógeno'},
-        {key:'C', text:'Hemoglobina'},
-        {key:'D', text:'Insulina'}
-      ],
-      correct: 'C'
-    }
+    bonus: [
+      {q:'¿Cuántos días dura un glóbulo rojo en circulación?',
+       opts:[{key:'A',text:'30 días'},{key:'B',text:'60 días'},{key:'C',text:'120 días'},{key:'D',text:'180 días'}], correct:'C'},
+      {q:'¿Cuál es la función principal del glóbulo rojo?',
+       opts:[{key:'A',text:'Combatir infecciones'},{key:'B',text:'Transportar O₂ a los tejidos'},{key:'C',text:'Coagular la sangre'},{key:'D',text:'Producir hormonas'}], correct:'B'},
+      {q:'¿Qué proteína transporta el oxígeno dentro del glóbulo rojo?',
+       opts:[{key:'A',text:'Albúmina'},{key:'B',text:'Fibrinógeno'},{key:'C',text:'Hemoglobina'},{key:'D',text:'Queratina'}], correct:'C'}
+    ]
   },
   {
     title: 'Glóbulo Blanco',
@@ -535,16 +533,14 @@ var PUZZLES = [
       {num:'🦠',    lbl:'destruye patógenos', color:'var(--yellow)'}
     ],
     funcion: 'Defender el organismo contra infecciones, bacterias, virus y cuerpos extraños',
-    bonus: {
-      q: '¿Con qué nombre científico se conocen los glóbulos blancos?',
-      opts: [
-        {key:'A', text:'Eritrocitos'},
-        {key:'B', text:'Trombocitos'},
-        {key:'C', text:'Leucocitos'},
-        {key:'D', text:'Linfocitos'}
-      ],
-      correct: 'C'
-    }
+    bonus: [
+      {q:'¿Cuántos glóbulos blancos hay aproximadamente por mm³ de sangre?',
+       opts:[{key:'A',text:'500'},{key:'B',text:'7.000'},{key:'C',text:'50.000'},{key:'D',text:'250.000'}], correct:'B'},
+      {q:'¿Cuál es la función principal del glóbulo blanco?',
+       opts:[{key:'A',text:'Transportar O₂'},{key:'B',text:'Coagular la sangre'},{key:'C',text:'Defender contra infecciones'},{key:'D',text:'Regular la temperatura'}], correct:'C'},
+      {q:'¿Con qué nombre científico se conocen los glóbulos blancos?',
+       opts:[{key:'A',text:'Eritrocitos'},{key:'B',text:'Trombocitos'},{key:'C',text:'Leucocitos'},{key:'D',text:'Plaquetas'}], correct:'C'}
+    ]
   },
   {
     title: 'Hemoglobina',
@@ -558,16 +554,14 @@ var PUZZLES = [
       {num:'O₂+CO₂', lbl:'gases que transporta', color:'var(--accent)'}
     ],
     funcion: 'Transportar O₂ y CO₂ dentro de los eritrocitos mediante el grupo hemo con hierro',
-    bonus: {
-      q: '¿Qué mineral contiene la hemoglobina para unir el oxígeno?',
-      opts: [
-        {key:'A', text:'Calcio (Ca)'},
-        {key:'B', text:'Zinc (Zn)'},
-        {key:'C', text:'Magnesio (Mg)'},
-        {key:'D', text:'Hierro (Fe)'}
-      ],
-      correct: 'D'
-    }
+    bonus: [
+      {q:'¿Cuántas cadenas proteicas tiene la hemoglobina?',
+       opts:[{key:'A',text:'2'},{key:'B',text:'3'},{key:'C',text:'4'},{key:'D',text:'6'}], correct:'C'},
+      {q:'¿Qué mineral contiene la hemoglobina para unir el oxígeno?',
+       opts:[{key:'A',text:'Calcio (Ca)'},{key:'B',text:'Zinc (Zn)'},{key:'C',text:'Magnesio (Mg)'},{key:'D',text:'Hierro (Fe)'}], correct:'D'},
+      {q:'¿Qué gases transporta la hemoglobina?',
+       opts:[{key:'A',text:'Solo O₂'},{key:'B',text:'Solo CO₂'},{key:'C',text:'O₂ y CO₂'},{key:'D',text:'N₂ y O₂'}], correct:'C'}
+    ]
   },
   {
     title: 'Plaqueta',
@@ -581,16 +575,14 @@ var PUZZLES = [
       {num:'🔒',    lbl:'sella vasos dañados', color:'var(--yellow)'}
     ],
     funcion: 'Coagulación sanguínea y sellado de vasos dañados para detener hemorragias',
-    bonus: {
-      q: '¿Cuál es la función principal de las plaquetas en la sangre?',
-      opts: [
-        {key:'A', text:'Transportar oxígeno'},
-        {key:'B', text:'Producir anticuerpos'},
-        {key:'C', text:'Coagulación sanguínea'},
-        {key:'D', text:'Filtrar toxinas'}
-      ],
-      correct: 'C'
-    }
+    bonus: [
+      {q:'¿Cuál es el diámetro promedio de una plaqueta?',
+       opts:[{key:'A',text:'7 μm'},{key:'B',text:'2 μm'},{key:'C',text:'15 μm'},{key:'D',text:'10 μm'}], correct:'B'},
+      {q:'¿Cuántas plaquetas hay aproximadamente por mm³ de sangre?',
+       opts:[{key:'A',text:'7.000'},{key:'B',text:'5.000.000'},{key:'C',text:'250.000'},{key:'D',text:'1.000'}], correct:'C'},
+      {q:'¿Cuál es la función principal de las plaquetas?',
+       opts:[{key:'A',text:'Transportar O₂'},{key:'B',text:'Producir anticuerpos'},{key:'C',text:'Coagulación sanguínea'},{key:'D',text:'Filtrar toxinas'}], correct:'C'}
+    ]
   },
   {
     title: 'Plasma',
@@ -604,16 +596,14 @@ var PUZZLES = [
       {num:'🌊',  lbl:'transporta nutrientes', color:'var(--accent)'}
     ],
     funcion: 'Transportar nutrientes, hormonas, proteínas y productos de desecho por el organismo',
-    bonus: {
-      q: '¿Qué porcentaje del volumen sanguíneo total representa el plasma?',
-      opts: [
-        {key:'A', text:'25%'},
-        {key:'B', text:'40%'},
-        {key:'C', text:'55%'},
-        {key:'D', text:'75%'}
-      ],
-      correct: 'C'
-    }
+    bonus: [
+      {q:'¿Qué porcentaje del plasma es agua?',
+       opts:[{key:'A',text:'55%'},{key:'B',text:'70%'},{key:'C',text:'90%'},{key:'D',text:'100%'}], correct:'C'},
+      {q:'¿Qué porcentaje del volumen sanguíneo representa el plasma?',
+       opts:[{key:'A',text:'25%'},{key:'B',text:'40%'},{key:'C',text:'55%'},{key:'D',text:'75%'}], correct:'C'},
+      {q:'¿Cuál es el pH del plasma sanguíneo?',
+       opts:[{key:'A',text:'6.0'},{key:'B',text:'6.8'},{key:'C',text:'7.4'},{key:'D',text:'8.2'}], correct:'C'}
+    ]
   }
 ];
 
@@ -631,7 +621,8 @@ document.documentElement.style.setProperty('--ph', PH+'px');
 var placed=0, attempts=0;
 var startTime=null, timerInterval=null, elapsedSecs=0;
 var bonusPoints=0;
-var currentPuzzleIdx=0;
+var currentPuzzleIdx=0, currentQuestionIdx=0;
+var lastAnswerWasCorrect=false;
 var totalAttempts=0, totalElapsedSecs=0, totalBonusPoints=0;
 
 /* ─────────────────────────────────────────────
@@ -661,6 +652,7 @@ var infoContent   = document.getElementById('info-content');
 var infoHdr       = document.getElementById('info-hdr');
 var bonusQuestion = document.getElementById('bonus-question');
 var bonusOptions  = document.getElementById('bonus-options');
+var bonusBadge    = document.getElementById('bonus-badge');
 var titleCell          = document.getElementById('title-cell');
 var puzzleCurrent      = document.getElementById('puzzle-current');
 var infoOverlay        = document.getElementById('info-overlay');
@@ -881,35 +873,47 @@ function renderPuzzle(idx){
       '</div>'+
     '</div>';
 
-  bonusQuestion.textContent = p.bonus.q;
-  bonusOptions.innerHTML = p.bonus.opts.map(function(o){
+}
+
+function showBonusQuestion(qIdx){
+  var q=PUZZLES[currentPuzzleIdx].bonus[qIdx];
+  var total=PUZZLES[currentPuzzleIdx].bonus.length;
+  bonusBadge.textContent='Pregunta '+(qIdx+1)+' de '+total+' · +50 pts';
+  bonusQuestion.textContent=q.q;
+  bonusOptions.innerHTML=q.opts.map(function(o){
     return '<button class="opt-btn" data-key="'+o.key+'">'+o.key+')&nbsp; '+o.text+'</button>';
   }).join('');
-
+  bonusFeedback.className='';
+  bonusFeedback.textContent='';
+  bonusFeedback.style.display='none';
+  btnContinue.style.display='none';
   bonusOptions.querySelectorAll('.opt-btn').forEach(function(btn){
-    btn.addEventListener('click', function(){
+    btn.addEventListener('click',function(){
       bonusOptions.querySelectorAll('.opt-btn').forEach(function(b){ b.disabled=true; });
-      var correct=PUZZLES[currentPuzzleIdx].bonus.correct;
-      if(btn.dataset.key===correct){
+      var correct=q.correct;
+      lastAnswerWasCorrect=(btn.dataset.key===correct);
+      if(lastAnswerWasCorrect){
         btn.classList.add('correct');
-        bonusPoints=50;
-        bonusFeedback.textContent='⭐ ¡Excelente! +50 puntos extra';
+        bonusPoints+=50;
+        bonusFeedback.textContent='⭐ ¡Correcto! +50 puntos';
         bonusFeedback.className='success';
         playBonusCorrect();
+        var isLast=(qIdx===total-1);
+        if(isLast){
+          btnContinue.textContent=(currentPuzzleIdx<PUZZLES.length-1)?'Siguiente imagen →':'Ver resultados →';
+        } else {
+          btnContinue.textContent='Siguiente pregunta →';
+        }
       } else {
         btn.classList.add('wrong');
         bonusOptions.querySelector('.opt-btn[data-key="'+correct+'"]').classList.add('correct');
-        bonusFeedback.textContent='✗ Incorrecto. La respuesta correcta estaba marcada.';
+        bonusFeedback.textContent='✗ Incorrecto. Debes repetir el rompecabezas.';
         bonusFeedback.className='fail';
         playBonusWrong();
+        btnContinue.textContent='↺ Reintentar imagen';
       }
       bonusFeedback.style.display='block';
       btnContinue.style.display='inline-block';
-      if(btn.dataset.key===PUZZLES[currentPuzzleIdx].bonus.correct){
-        btnContinue.textContent = (currentPuzzleIdx < PUZZLES.length-1) ? 'Siguiente →' : 'Ver resultados →';
-      } else {
-        btnContinue.textContent = '↺ Reintentar imagen';
-      }
     });
   });
 }
@@ -1125,25 +1129,31 @@ function showInfoOverlay(){
 document.getElementById('btn-info-continue').addEventListener('click',function(){
   infoOverlay.classList.remove('show');
   bonusPoints=0;
-  bonusFeedback.className='';
-  bonusFeedback.textContent='';
-  bonusFeedback.style.display='none';
-  btnContinue.style.display='none';
+  currentQuestionIdx=0;
+  lastAnswerWasCorrect=false;
+  showBonusQuestion(0);
   bonusOverlay.classList.add('show');
 });
 
 btnContinue.addEventListener('click',function(){
-  bonusOverlay.classList.remove('show');
-  if(bonusPoints > 0){
-    totalBonusPoints += bonusPoints;
+  if(!lastAnswerWasCorrect){
+    bonusOverlay.classList.remove('show');
+    retryPuzzle();
+    return;
+  }
+  var total=PUZZLES[currentPuzzleIdx].bonus.length;
+  if(currentQuestionIdx < total-1){
+    currentQuestionIdx++;
+    showBonusQuestion(currentQuestionIdx);
+  } else {
+    bonusOverlay.classList.remove('show');
+    totalBonusPoints+=bonusPoints;
     if(currentPuzzleIdx < PUZZLES.length-1){
       currentPuzzleIdx++;
       nextPuzzle();
     } else {
       showFinalWin();
     }
-  } else {
-    retryPuzzle();
   }
 });
 
@@ -1165,9 +1175,31 @@ function nextPuzzle(){
   statTime.textContent='00:00';
   renderPuzzle(currentPuzzleIdx);
   updateUI();
-  buildBoard();
-  buildPool();
-  showToast('🔬 Imagen '+( currentPuzzleIdx+1)+' / '+PUZZLES.length+': '+PUZZLES[currentPuzzleIdx].title,'yellow',2500);
+  loadPuzzleAndBuild(currentPuzzleIdx, function(){
+    showToast('🔬 Imagen '+(currentPuzzleIdx+1)+' / '+PUZZLES.length+': '+PUZZLES[currentPuzzleIdx].title,'yellow',2500);
+  });
+}
+
+function loadPuzzleAndBuild(idx, cb){
+  var img=new Image();
+  img.onload=function(){
+    var nPW=img.naturalWidth/COLS;
+    var nPH=img.naturalHeight/ROWS;
+    var scale=Math.min(95/nPW, 95/nPH, 1);
+    PW=Math.floor(nPW*scale);
+    PH=Math.floor(nPH*scale);
+    document.documentElement.style.setProperty('--pw',PW+'px');
+    document.documentElement.style.setProperty('--ph',PH+'px');
+    buildBoard();
+    buildPool();
+    if(cb) cb();
+  };
+  img.onerror=function(){
+    buildBoard();
+    buildPool();
+    if(cb) cb();
+  };
+  img.src=PUZZLES[idx].img;
 }
 
 function showFinalWin(){
@@ -1224,7 +1256,7 @@ function reset(){
   placed=0; attempts=0;
   startTime=null; elapsedSecs=0;
   bonusPoints=0; totalAttempts=0; totalElapsedSecs=0; totalBonusPoints=0;
-  currentPuzzleIdx=0;
+  currentPuzzleIdx=0; currentQuestionIdx=0; lastAnswerWasCorrect=false;
   stopTimer();
   timerDisplay.textContent='00:00';
   statTime.textContent='00:00';
@@ -1236,8 +1268,7 @@ function reset(){
   dragPiece=null; dragId=null;
   renderPuzzle(0);
   updateUI();
-  buildBoard();
-  buildPool();
+  loadPuzzleAndBuild(0, null);
 }
 
 document.getElementById('btn-reset').addEventListener('click',reset);
