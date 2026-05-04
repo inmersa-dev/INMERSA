@@ -81,23 +81,12 @@ canvas{display:block;width:100%;height:100%}
     <div style="font-size:2.8rem;animation:bob 2.5s ease-in-out infinite">🩸</div>
     <h1>Defensa Inmune</h1>
     <div class="sub">8 niveles · Vaso Sanguíneo</div>
-    <div style="background:#12091a;border:1.5px solid #fbbf24;border-radius:12px;padding:12px 16px;max-width:310px;text-align:left">
-      <div style="font-size:.6rem;text-transform:uppercase;letter-spacing:2px;color:#fbbf24;font-weight:900;margin-bottom:8px">⚠️ CÓMO JUGAR</div>
-      <div style="font-size:1.0rem;color:#e2f0ff;line-height:1.85">
-        🧬 <b>LEE</b> cada etiqueta antes de actuar<br>
-        💊 Si es una <b>ENFERMEDAD</b> → <b style="color:#fbbf24">DISPARA</b><br>
-        🩸 Si es un <b>COMPONENTE</b> → <b style="color:#fbbf24">RECOGE</b><br>
-        🟠 Si es un <b>PATÓGENO</b> → <b style="color:#fbbf24">ESQUIVA</b>
-      </div>
+    <div class="rules" style="background:#1a0508;border:1px solid #3a1020;border-radius:10px;padding:12px 18px;line-height:2.1;font-size:1.05rem">
+      💊 <b>DISPARA</b> enfermedades<br>
+      🩸 <b>RECOGE</b> componentes<br>
+      ⚠️ Todos se ven igual — <b>lee</b> antes de actuar
     </div>
-    <div class="rules" style="background:#1a0508;border:1px solid #3a1020;border-radius:10px;padding:10px 14px">
-      ⚠️ Todos los ítems se ven <b>igual</b> — tu conocimiento es tu arma.<br>
-      Clasificar mal → pierdes vida.
-    </div>
-    <div class="rules">
-      Vuela por el vaso sanguíneo, llega a la <b>🫀 válvula</b>, responde el quiz y enfrenta al <b>jefe final</b>.<br><br>
-      ❤️×5 al inicio · hasta <b>8 ❤️</b> · cada <b>6 rescates = +1 vida</b>
-    </div>
+    <div class="sub" style="font-size:.92rem">❤️×5 al inicio · hasta 8 ❤️ · cada 6 rescates = +1 vida</div>
     <button class="big-btn" id="btn-start">¡Entrar al vaso! 🩸</button>
   </div>
 
@@ -111,11 +100,6 @@ canvas{display:block;width:100%;height:100%}
     <div id="oi-intro-box" style="display:none;background:#12100a;border:1.5px solid #fbbf24;border-radius:10px;padding:10px 14px;max-width:310px">
       <div style="font-size:.58rem;text-transform:uppercase;letter-spacing:2px;color:#fbbf24;font-weight:900;margin-bottom:6px">⚡ MECÁNICA DE ESTE NIVEL</div>
       <div id="oi-intro-txt" style="font-size:1.05rem;color:#f5f0e0;line-height:1.7"></div>
-    </div>
-    <div id="oi-mechanic" class="rules" style="background:#120820;border:1px solid #4a2070;border-radius:10px;padding:10px 14px;color:#d8c8f0"></div>
-    <div class="rules" style="background:#1a0508;border:1px solid #3a1020;border-radius:10px;padding:10px 14px">
-      Lee la etiqueta: <b>dispara</b> si es enfermedad · <b>recoge</b> si es componente<br>
-      ⚠️ Clasificar mal → pierdes vida · 🫀 Llega a la válvula · <b>jefe final</b>
     </div>
     <button class="big-btn" id="btn-intro">¡Entrar al vaso! 🚀</button>
   </div>
@@ -170,50 +154,74 @@ var LD=[
    desc:'Déficit de glóbulos rojos o hemoglobina. Los tejidos reciben menos oxígeno.',
    fact:'La Anemia es la enfermedad sanguínea más común a nivel mundial.',
    intro:'Tu visión se oscurecerá progresivamente por los bordes. Recoge eritrocitos y hemoglobina para recuperarla. Si no recoges suficientes, terminas jugando casi a ciegas.',
-   qs:[{q:'¿Qué componente reduce la Anemia?',opts:['Eritrocito','Leucocito','Plaqueta','Plasma'],a:0},
-       {q:'La principal consecuencia de la Anemia es...',opts:['Más infecciones','Sangre espesa','Menos oxígeno en tejidos','Sangrado excesivo'],a:2}]},
+   qs:[
+     {q:'¿Qué componente de la sangre se reduce en la Anemia?',opts:['Eritrocito','Leucocito','Plaqueta','Plasma'],a:0},
+     {q:'La Anemia causa que los tejidos reciban menos...',opts:['Nutrientes','Oxígeno','Agua','Anticuerpos'],a:1},
+     {q:'¿Cuál es el otro nombre del eritrocito?',opts:['Glóbulo blanco','Trombocito','Glóbulo rojo','Linfocito'],a:2}
+   ]},
   {disease:'Leucemia',mechanic:'leucemia',bossType:'leucemia',col:'#a855f7',affected:['Leucocito'],
    desc:'Producción descontrolada de glóbulos blancos anormales en la médula ósea.',
    fact:'La Leucemia es un cáncer que altera la médula ósea y los glóbulos blancos.',
    intro:'Leucocitos anormales caerán mezclados con los sanos — se ven igual. Solo la etiqueta los delata. Si recoges uno anormal, pierdes vida. Lee con cuidado.',
-   qs:[{q:'La Leucemia afecta principalmente a...',opts:['Plaquetas','Leucocitos','Eritrocitos','Plasma'],a:1},
-       {q:'En la Leucemia los glóbulos blancos se producen...',opts:['En exceso y anormales','En poca cantidad','Con más tamaño','Normalmente'],a:0}]},
+   qs:[
+     {q:'¿Qué tipo de célula se produce de forma anormal en la Leucemia?',opts:['Plaquetas','Leucocitos','Eritrocitos','Plasma'],a:1},
+     {q:'¿En qué parte del cuerpo se origina la Leucemia?',opts:['El hígado','Los pulmones','La médula ósea','El corazón'],a:2},
+     {q:'Los leucocitos también se conocen como...',opts:['Glóbulos rojos','Plaquetas','Glóbulos blancos','Trombocitos'],a:2}
+   ]},
   {disease:'Leucopenia',mechanic:'leucopenia',bossType:'leucopenia',col:'#f59e0b',affected:['Leucocito'],
    desc:'Cantidad anormalmente baja de glóbulos blancos. Las defensas se debilitan.',
    fact:'La Leucopenia aumenta gravemente el riesgo de infecciones oportunistas.',
    intro:'Tus disparos son más lentos y los patógenos vienen más rápido. Recoge leucocitos para restaurar tu velocidad de disparo. Sin ellos te verás desbordado.',
-   qs:[{q:'Leucopenia significa...',opts:['Exceso de glóbulos blancos','Déficit de glóbulos blancos','Déficit de plaquetas','Exceso de glóbulos rojos'],a:1},
-       {q:'La Leucopenia debilita principalmente...',opts:['La coagulación','El transporte de O₂','Las defensas del cuerpo','La producción de plasma'],a:2}]},
+   qs:[
+     {q:'¿Qué significa tener Leucopenia?',opts:['Exceso de glóbulos rojos','Déficit de glóbulos blancos','Déficit de plaquetas','Exceso de plasma'],a:1},
+     {q:'¿Qué se debilita principalmente con la Leucopenia?',opts:['La coagulación','El transporte de oxígeno','Las defensas del cuerpo','La producción de plasma'],a:2},
+     {q:'¿Qué otro nombre reciben los glóbulos blancos?',opts:['Eritrocitos','Leucocitos','Trombocitos','Plaquetas'],a:1}
+   ]},
   {disease:'Policitemia',mechanic:'policitemia',bossType:'policitemia',col:'#dc2626',affected:['Eritrocito'],
    desc:'Exceso de glóbulos rojos. La sangre se vuelve más espesa y lenta.',
    fact:'La Policitemia aumenta el riesgo de trombosis y accidentes cerebrovasculares.',
    intro:'La sangre está espesa. Tu nave se mueve más lento y el vaso está congestionado de glóbulos rojos flotantes. Navega entre los obstáculos y sigue clasificando.',
-   qs:[{q:'La Policitemia se caracteriza por...',opts:['Pocos glóbulos rojos','Exceso de glóbulos rojos','Pocos glóbulos blancos','Pocas plaquetas'],a:1},
-       {q:'En la Policitemia la sangre se vuelve...',opts:['Más fluida','Más clara','Más espesa','Sin color'],a:2}]},
+   qs:[
+     {q:'¿Qué ocurre en la sangre de una persona con Policitemia?',opts:['Tiene pocos glóbulos rojos','Tiene exceso de glóbulos rojos','Tiene pocos glóbulos blancos','Tiene pocas plaquetas'],a:1},
+     {q:'¿Por qué la Policitemia hace la sangre más espesa?',opts:['Por exceso de agua','Por falta de plasma','Por exceso de glóbulos rojos','Por exceso de plaquetas'],a:2},
+     {q:'Los glóbulos rojos también se llaman...',opts:['Leucocitos','Trombocitos','Linfocitos','Eritrocitos'],a:3}
+   ]},
   {disease:'Talasemia',mechanic:'talasemia',bossType:'talasemia',col:'#ea580c',affected:['Hemoglobina'],
    desc:'Hemoglobina defectuosa de origen genético. Los glóbulos rojos no funcionan bien.',
    fact:'La Talasemia es hereditaria y más frecuente en países mediterráneos y asiáticos.',
    intro:'Hemoglobinas funcionales y defectuosas caerán con la misma etiqueta. La diferencia es visual: las defectuosas tienen bordes irregulares y deformados. Solo recoge las de bordes limpios.',
-   qs:[{q:'La Talasemia afecta directamente a...',opts:['Leucocitos','Plaquetas','Hemoglobina','Plasma'],a:2},
-       {q:'La Talasemia es de origen...',opts:['Viral','Bacteriano','Genético','Ambiental'],a:2}]},
+   qs:[
+     {q:'¿Qué proteína está defectuosa en la Talasemia?',opts:['Leucocito','Plaqueta','Hemoglobina','Plasma'],a:2},
+     {q:'La Talasemia es una enfermedad de origen...',opts:['Viral','Bacteriano','Genético','Ambiental'],a:2},
+     {q:'¿Qué función cumple la hemoglobina?',opts:['Defender contra infecciones','Coagular la sangre','Transportar oxígeno','Producir plasma'],a:2}
+   ]},
   {disease:'Hemofilia',mechanic:'hemofilia',bossType:'hemofilia',col:'#0891b2',affected:['Plaqueta','Plasma'],
    desc:'Los factores de coagulación del plasma fallan. La sangre no coagula correctamente.',
    fact:'La Hemofilia fue llamada "la enfermedad de los reyes" por afectar a familias reales europeas.',
    intro:'Si te golpean, no pierdes vida de golpe — empiezas a sangrar. Un temporizador drena tu vida gradualmente. Recoge plaquetas o plasma para detener la hemorragia antes de que sea tarde.',
-   qs:[{q:'¿Qué falla principalmente en la Hemofilia?',opts:['Los glóbulos blancos','Los glóbulos rojos','Los factores de coagulación','El hierro'],a:2},
-       {q:'La Hemofilia afecta a...',opts:['Eritrocito','Leucocito','Plaqueta y Plasma','Hemoglobina'],a:2}]},
+   qs:[
+     {q:'¿Qué proceso falla en una persona con Hemofilia?',opts:['El transporte de oxígeno','La producción de glóbulos blancos','La coagulación de la sangre','La absorción de nutrientes'],a:2},
+     {q:'¿Qué componentes de la sangre están involucrados en la Hemofilia?',opts:['Eritrocitos y hemoglobina','Leucocitos y plasma','Plaquetas y factores del plasma','Solo los eritrocitos'],a:2},
+     {q:'Las plaquetas también se conocen como...',opts:['Eritrocitos','Leucocitos','Trombocitos','Linfocitos'],a:2}
+   ]},
   {disease:'Trombocitopenia',mechanic:'trombocitopenia',bossType:'trombocitopenia',col:'#db2777',affected:['Plaqueta'],
    desc:'Cantidad baja de plaquetas. El cuerpo no puede detener las hemorragias.',
    fact:'La Trombocitopenia puede ser causada por medicamentos, infecciones o autoinmunidad.',
    intro:'Las paredes del vaso se agrietan. Recoge plaquetas y llévalas a las grietas para sellarlas. Si no las cierras a tiempo, el sangrado constante te matará.',
-   qs:[{q:'La Trombocitopenia es un déficit de...',opts:['Eritrocitos','Leucocitos','Plaquetas','Hemoglobina'],a:2},
-       {q:'Las personas con Trombocitopenia tienen riesgo de...',opts:['Más infecciones','Menos oxígeno','Sangrado excesivo','Sangre espesa'],a:2}]},
+   qs:[
+     {q:'¿Qué componente de la sangre tiene niveles bajos en la Trombocitopenia?',opts:['Eritrocitos','Leucocitos','Plaquetas','Hemoglobina'],a:2},
+     {q:'¿Cuál es el principal riesgo de la Trombocitopenia?',opts:['Más infecciones','Menos oxígeno','Sangrado excesivo','Sangre espesa'],a:2},
+     {q:'¿Cuál es el nombre científico de las plaquetas?',opts:['Eritrocitos','Leucocitos','Trombocitos','Monocitos'],a:2}
+   ]},
   {disease:'Sepsis',mechanic:'sepsis',bossType:'sepsis',col:'#16a34a',affected:['Leucocito','Plasma'],
    desc:'Infección generalizada en la sangre que desborda el sistema inmune del organismo.',
    fact:'La Sepsis es una emergencia médica que puede provocar fallo multiorgánico.',
    intro:'Infección total. Patógenos desde todas direcciones. Tu disparo perderá alcance con el tiempo. Recoge leucocitos y plasma para mantener tus defensas. Esto es todo o nada.',
-   qs:[{q:'La Sepsis es causada por...',opts:['Una mutación genética','Una infección generalizada','Exceso de glóbulos','Falta de hierro'],a:1},
-       {q:'La Sepsis desborda...',opts:['La producción de GR','Las defensas del organismo','La coagulación','El plasma'],a:1}]}
+   qs:[
+     {q:'¿Qué causa la Sepsis?',opts:['Una mutación genética','Una infección generalizada en la sangre','Exceso de glóbulos rojos','Falta de hierro'],a:1},
+     {q:'La Sepsis puede provocar...',opts:['Solo fiebre leve','Fallo de múltiples órganos','Exceso de plaquetas','Sangre más espesa'],a:1},
+     {q:'¿Qué componente de la sangre defiende contra infecciones?',opts:['Eritrocitos (glóbulos rojos)','Leucocitos (glóbulos blancos)','Trombocitos (plaquetas)','Plasma'],a:1}
+   ]}
 ];
 
 var PU_TYPES=[
@@ -239,8 +247,38 @@ var wrap=document.getElementById('wrap');
 var cv=document.getElementById('gc');
 var ctx=cv.getContext('2d');
 var W,H;
-function resize(){W=cv.width=wrap.offsetWidth;H=cv.height=wrap.offsetHeight;if(G)G.py=H-90;}
-window.addEventListener('resize',resize); resize();
+function resize(){
+  W=cv.width=wrap.offsetWidth; H=cv.height=wrap.offsetHeight;
+  if(G) G.py=H-90;
+  /* reposicionar base del joystick según nuevo tamaño */
+  joystick.baseX=W-90; joystick.baseY=H-90;
+  if(!joystick.active){ joystick.knobX=joystick.baseX; joystick.knobY=joystick.baseY; }
+}
+window.addEventListener('resize',resize);
+
+/* ── Detección táctil ── */
+var IS_TOUCH='ontouchstart' in window||navigator.maxTouchPoints>0;
+var ctrlLeft=document.getElementById('ctrl-left');
+var ctrlRight=document.getElementById('ctrl-right');
+if(IS_TOUCH){
+  /* en touch: ocultar botones direccionales, mantener botón de disparo */
+  ctrlRight.style.display='none';
+} else {
+  /* en escritorio: ocultar todos los botones HTML (teclado es suficiente) */
+  ctrlLeft.style.display='none';
+  ctrlRight.style.display='none';
+}
+
+/* ── Estado del joystick virtual ── */
+var joystick={
+  active:false,
+  baseX:0, baseY:0,
+  knobX:0, knobY:0,
+  touchId:-1
+};
+var SHOOT_TOUCH_ID=-1;
+
+resize();
 
 /* ══════════════════════════════════════════
    BACKGROUND LAYERS
@@ -286,6 +324,7 @@ function newGame(){
     lives:LIVES_START, score:0,
     combo:0, bestCombo:0,
     enemyKilled:0, allyCollected:0, allyHit:0, quizWrong:0,
+    checkpoint:0, checkpointScore:0, quizCorrect:0,
     dmg:0, shake:0, valveFlash:0, scd:0, spcd:0,
     spawnT:Date.now(), puSpawnT:Date.now(),
     over:false,
@@ -314,7 +353,10 @@ function newGame(){
     flightTime:0,
     /* valve */
     valveOpen:0,   // 0=closed … 1=open
-    valveAnimating:false
+    valveAnimating:false,
+    /* transitions */
+    transY:0, transVY:0, transShrink:1, transTimer:0,
+    exitTimer:0
   };
 }
 
@@ -341,9 +383,6 @@ function startLevel(idx){
     var t=document.createElement('span');
     t.className='comp-tag'; t.textContent='🩸 '+a; c.appendChild(t);
   });
-  var m=document.getElementById('oi-mechanic');
-  if(m) m.innerHTML=MECHS[idx]||'';
-  m.style.display=MECHS[idx]?'block':'none';
   /* caja dorada con mecánica del nivel */
   var ib=document.getElementById('oi-intro-box');
   var it2=document.getElementById('oi-intro-txt');
@@ -407,6 +446,7 @@ function spawnAbscess(){
 
 function startQuizPhase(){
   G.phase='idle';
+  G.quizCorrect=0;
   /* valve-arrival effect — destello dorado positivo */
   G.shake=320; G.valveFlash=680;
   var lv=LD[G.levelIdx];
@@ -421,7 +461,7 @@ var QZ_IDX=0;
 function showQuizQuestion(idx){
   QZ_IDX=idx;
   var lv=LD[G.levelIdx]; var q=lv.qs[idx];
-  document.getElementById('qz-prog').textContent='Pregunta '+(idx+1)+' de '+lv.qs.length;
+  document.getElementById('qz-prog').textContent='Pregunta '+(idx+1)+' de 3  ·  ✓ '+G.quizCorrect+' correctas';
   document.getElementById('qz-q').textContent=q.q;
   document.getElementById('qz-fb').textContent='';
   var opts=document.getElementById('qz-opts'); opts.innerHTML='';
@@ -429,22 +469,44 @@ function showQuizQuestion(idx){
   q.opts.forEach(function(o,i){
     var btn=document.createElement('button');
     btn.className='qz-btn'; btn.textContent=lb[i]+') '+o;
-    btn.addEventListener('click',function(){handleAnswer(i,q.a,1);});
+    btn.addEventListener('click',function(){handleAnswer(i,q.a);});
     opts.appendChild(btn);
   });
 }
 
-function handleAnswer(chosen,correct,total){
+function handleAnswer(chosen,correct){
   var btns=document.querySelectorAll('.qz-btn');
   btns.forEach(function(b){b.disabled=true;});
   btns[correct].classList.add('ok');
   var fb=document.getElementById('qz-fb');
-  if(chosen===correct){fb.style.color='#22c55e';fb.textContent='✓ ¡Correcto!';}
-  else{btns[chosen].classList.add('bad');G.quizWrong++;fb.style.color='#ef4444';
-    fb.textContent='✗ Incorrecto. Respuesta: '+document.querySelectorAll('.qz-btn')[correct].textContent.slice(3);}
+  if(chosen===correct){
+    G.quizCorrect++;
+    fb.style.color='#22c55e'; fb.textContent='✓ ¡Correcto!';
+  } else {
+    btns[chosen].classList.add('bad'); G.quizWrong++;
+    fb.style.color='#ef4444';
+    fb.textContent='✗ Incorrecto. Respuesta: '+document.querySelectorAll('.qz-btn')[correct].textContent.slice(3);
+  }
   setTimeout(function(){
-    if(QZ_IDX+1<total) showQuizQuestion(QZ_IDX+1);
-    else{showOnlyOverlay(null); startBossPhase();}
+    if(QZ_IDX+1<3){
+      showQuizQuestion(QZ_IDX+1);
+    } else {
+      /* Todas las preguntas respondidas — evaluar resultado */
+      showOnlyOverlay(null);
+      if(G.quizCorrect<=1){
+        toast('📚 Necesitas repasar — vuelves al Pasillo','r');
+        setTimeout(function(){ startMiniPhase(); },1600);
+      } else if(G.quizCorrect===2){
+        toast('⚔️ ¡Bien! Prepárate para el jefe','g');
+        setTimeout(function(){ startBossPhase(); },1400);
+      } else {
+        /* 3 de 3 — checkpoint guardado */
+        G.checkpoint=G.levelIdx;
+        G.checkpointScore=G.score;
+        toast('🏁 ¡Perfecto! Checkpoint guardado — Nivel '+(G.levelIdx+1),'p');
+        setTimeout(function(){ startBossPhase(); },1600);
+      }
+    }
   },1600);
 }
 
@@ -470,7 +532,18 @@ function showLevelWin(){
 
 function advanceLevel(){G.levelIdx>=7?showWinAll():startLevel(G.levelIdx+1);}
 function showWinAll(){G.over=true;document.getElementById('win-sc').textContent=G.score+' puntos';buildStats(document.getElementById('win-stats'));showOnlyOverlay('ov-win');}
-function showOver(){G.over=true;document.getElementById('go-sc').textContent=G.score+' puntos';buildStats(document.getElementById('go-stats'));showOnlyOverlay('ov-go');}
+function showOver(){
+  G.over=true;
+  document.getElementById('go-sc').textContent=G.score+' puntos';
+  buildStats(document.getElementById('go-stats'));
+  var btn=document.getElementById('btn-retry');
+  if(G.checkpoint>0){
+    btn.textContent='Volver al Checkpoint (Nivel '+(G.checkpoint+1)+') 🏁';
+  } else {
+    btn.textContent='Intentar de nuevo ↺';
+  }
+  showOnlyOverlay('ov-go');
+}
 
 /* ══════════════════════════════════════════
    SPAWN
@@ -566,9 +639,20 @@ function spawnItem(){
   if(lv.mechanic==='talasemia'&&!isE&&word==='Hemoglobina'&&Math.random()<.40){
     defective=true;
   }
+  /* Nombres alternativos (50% de chance de mostrar nombre alternativo) */
+  var altNames={
+    'Eritrocito':'Glóbulo rojo','Glóbulo rojo':'Eritrocito',
+    'Leucocito':'Glóbulo blanco','Glóbulo blanco':'Leucocito',
+    'Plaqueta':'Trombocito','Trombocito':'Plaqueta'
+  };
+  if(!isE && altNames[word] && Math.random()<0.5){
+    word=altNames[word];
+  }
   /* L6 Hemofilia: más plaquetas/plasma para curar el sangrado */
   if(lv.mechanic==='hemofilia'&&!isE&&Math.random()<.35){
     word=Math.random()<.5?'Plaqueta':'Plasma';
+    /* también aplicar alt-name */
+    if(word==='Plaqueta'&&Math.random()<0.5) word='Trombocito';
   }
   /* L8 Sepsis: bias hacia enemigos al avanzar la infección */
   if(lv.mechanic==='sepsis'&&!isE&&Math.random()<G.sepsisProgress*.006){
@@ -640,6 +724,36 @@ function applyPowerup(pu){
    UPDATE
 ══════════════════════════════════════════ */
 function update(dt){
+  /* ── Transición: entrando en la válvula (800ms) ── */
+  if(G.phase==='entering_valve'){
+    G.transTimer-=dt;
+    G.transVY-=dt*0.010; // aceleración hacia arriba
+    G.transY+=G.transVY;
+    G.transShrink=Math.max(0.22, 1-(800-G.transTimer)/800*0.78);
+    /* partículas doradas al final */
+    if(G.transTimer<180){
+      G.parts.push({x:G.px+(Math.random()-.5)*16,y:G.transY+(Math.random()-.5)*10,
+        vx:(Math.random()-.5)*3,vy:-1-Math.random()*2,col:'#fbbf24',r:2+Math.random()*2,life:380,max:380});
+    }
+    G.parts=G.parts.filter(function(p){p.x+=p.vx;p.y+=p.vy;p.vy+=.09;p.life-=dt;return p.life>0;});
+    if(G.transTimer<=0){ G.phase='idle'; startQuizPhase(); }
+    return;
+  }
+
+  /* ── Transición: saliendo del nivel tras matar al jefe (600ms) ── */
+  if(G.phase==='exiting_level'){
+    G.exitTimer-=dt;
+    G.py-=8;
+    /* estela azul */
+    if(Math.random()<0.6){
+      G.parts.push({x:G.px+(Math.random()-.5)*10,y:G.py+22,
+        vx:(Math.random()-.5)*1.5,vy:1.5+Math.random()*2,col:'#7dd8ff',r:1.5+Math.random()*2,life:260,max:260});
+    }
+    G.parts=G.parts.filter(function(p){p.x+=p.vx;p.y+=p.vy;p.life-=dt;return p.life>0;});
+    if(G.exitTimer<=0){ G.phase='idle'; showLevelWin(); }
+    return;
+  }
+
   if(G.phase!=='mini'&&G.phase!=='boss') return;
 
   /* ── player movement ── */
@@ -788,10 +902,13 @@ function update(dt){
   /* ── FLYING PHASE — torretas de pared + transición a válvula ── */
   if(G.phase==='mini'){
     if(G.flightProg>=100){
-      /* llegamos a la válvula */
-      G.phase='idle';
-      toast('🫀 ¡Válvula cardíaca! — Quiz de acceso','r');
-      setTimeout(startQuizPhase,700);
+      /* llegamos a la válvula — iniciar animación de entrada */
+      G.phase='entering_valve';
+      G.transY=G.py;
+      G.transVY=-3;
+      G.transShrink=1;
+      G.transTimer=800;
+      toast('🫀 ¡Válvula cardíaca!','y');
       return;
     }
 
@@ -834,8 +951,10 @@ function update(dt){
       if(b2.dyingTimer<=0){
         burst(b2.x,b2.y,'#fbbf24',35); burst(b2.x,b2.y,'#fff',20);
         G.bossClones=[];  /* todos los clones mueren con el jefe */
-        G.boss=null; G.phase='idle';
-        setTimeout(showLevelWin,300); return;
+        G.boss=null;
+        G.phase='exiting_level';
+        G.exitTimer=600;
+        return;
       }
     } else if(!G.valveAnimating){
       /* base: movimiento lateral oscilante */
@@ -1096,7 +1215,7 @@ function update(dt){
       for(var bi=0;bi<G.bullets.length;bi++){
         var b=G.bullets[bi];
         var dx=b.x-tX2, dy=b.y-tY2;
-        if(!hit2&&dx*dx+dy*dy<14*14){
+        if(!hit2&&dx*dx+dy*dy<22*22){
           hit2=true;
           burst(tX2,tY2,'#ff4020',12);
           burst(tX2,tY2,'#fbbf24',7);
@@ -1164,12 +1283,12 @@ function update(dt){
         G.allyCollected++;G.score+=8;burst(it.x,it.y,'#22c55e',9);
         if(G.phase==='mini') G.flightProg=Math.min(100,G.flightProg+2);
         /* L1 Anemia: restaurar visión */
-        if(G.levelIdx===0&&(it.word==='Eritrocito'||it.word==='Hemoglobina')){
+        if(G.levelIdx===0&&(it.word==='Eritrocito'||it.word==='Glóbulo rojo'||it.word==='Hemoglobina')){
           G.visionLevel=Math.min(100,G.visionLevel+15);
           floatTxt(it.x,it.y-28,'👁 +15','#fbbf24');
         }
         /* L3 Leucopenia: restaurar velocidad de disparo (mín 0.7 = 30% más rápido que normal) */
-        if(LD[G.levelIdx].mechanic==='leucopenia'&&it.word==='Leucocito'){
+        if(LD[G.levelIdx].mechanic==='leucopenia'&&(it.word==='Leucocito'||it.word==='Glóbulo blanco')){
           G.shootCdMod=Math.max(0.7,G.shootCdMod-0.2);
           G.leucoTimer=0;
           floatTxt(it.x,it.y-28,'⚡ disparo +','#a78bfa');
@@ -1180,7 +1299,7 @@ function update(dt){
           floatTxt(it.x,it.y-28,'⚠️ Hb defectuosa −20%','#f59e0b');
         }
         /* L6 Hemofilia: Plaqueta o Plasma detiene el sangrado */
-        if(LD[G.levelIdx].mechanic==='hemofilia'&&(it.word==='Plaqueta'||it.word==='Plasma')){
+        if(LD[G.levelIdx].mechanic==='hemofilia'&&(it.word==='Plaqueta'||it.word==='Trombocito'||it.word==='Plasma')){
           if(G.bleeding){
             G.bleeding=false; G.bleedTimer=0; G.bleedDropT=0;
             floatTxt(it.x,it.y-28,'🩹 Sangrado curado','#22c55e');
@@ -1188,13 +1307,13 @@ function update(dt){
           }
         }
         /* L7 Trombocitopenia: recoger Plaqueta la equipa */
-        if(LD[G.levelIdx].mechanic==='trombocitopenia'&&it.word==='Plaqueta'){
+        if(LD[G.levelIdx].mechanic==='trombocitopenia'&&(it.word==='Plaqueta'||it.word==='Trombocito')){
           G.carryingPlatelet=true;
           floatTxt(it.x,it.y-28,'🩹 ¡Lleva a la herida!','#a78bfa');
           toast('🩹 Plaqueta recogida — ve a la grieta roja','y');
         }
         /* L8 Sepsis: Leucocito restaura alcance y reduce progresión */
-        if(LD[G.levelIdx].mechanic==='sepsis'&&it.word==='Leucocito'){
+        if(LD[G.levelIdx].mechanic==='sepsis'&&(it.word==='Leucocito'||it.word==='Glóbulo blanco')){
           G.bulletRange=Math.min(1.0,G.bulletRange+0.15);
           G.sepsisProgress=Math.max(0,G.sepsisProgress-8);
           floatTxt(it.x,it.y-28,'⚡ alcance +','#22c55e');
@@ -1344,13 +1463,7 @@ function drawBackground(){
     vgg.addColorStop(.5,'rgba(200,20,10,'+(ap*.22)+')');
     vgg.addColorStop(1,'rgba(0,0,0,0)');
     ctx.fillStyle=vgg; ctx.fillRect(0,0,W,H);
-    /* distant valve silhouette */
-    if(ap>.25){
-      var vs=0.12+ap*.45;
-      ctx.save(); ctx.translate(W/2,vgy); ctx.scale(vs,vs);
-      drawValveShape(0,0,0.05,ap*.6);
-      ctx.restore();
-    }
+    /* valve silhouette removed — transition handled by entering_valve phase */
   }
 }
 
@@ -1448,18 +1561,40 @@ function draw(){
     ctx.fillStyle=cg2; ctx.fillRect(0,0,W,H);
   }
 
-  /* valve at boss entrance */
-  if(G.phase==='boss'||(G.phase==='idle'&&G.boss)){
-    drawValveShape(W/2,118,G.valveOpen,1);
-  }
-
   if(G.phase==='boss')  drawBoss();
 
   drawObstacles();
   drawWounds();
   drawTurrets();
   drawPathogens(); drawPowerups(); drawItems();
-  drawBullets(); drawParts(); drawShip(); drawFloats();
+  drawBullets(); drawParts();
+
+  /* ── Transición entering_valve: nave encogida subiendo hacia la válvula ── */
+  if(G.phase==='entering_valve'){
+    var prog=(800-G.transTimer)/800;
+    ctx.save();
+    ctx.globalAlpha=Math.max(0, 1-prog*0.8);
+    ctx.translate(G.px, G.transY);
+    ctx.scale(G.transShrink, G.transShrink);
+    drawShipAt(0,0);
+    ctx.restore();
+    /* destello dorado en el punto de entrada */
+    if(G.transTimer<200){
+      var fAlpha=(200-G.transTimer)/200;
+      var fg=ctx.createRadialGradient(G.px,G.transY,0,G.px,G.transY,35+fAlpha*25);
+      fg.addColorStop(0,'rgba(251,191,36,'+(fAlpha*.9)+')');
+      fg.addColorStop(.5,'rgba(255,120,30,'+(fAlpha*.4)+')');
+      fg.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=fg; ctx.beginPath(); ctx.arc(G.px,G.transY,60,0,Math.PI*2); ctx.fill();
+    }
+  } else if(G.phase==='exiting_level'){
+    /* nave en modo exiting */
+    drawShip();
+  } else {
+    drawShip();
+  }
+
+  drawFloats();
   if(shaking) ctx.restore();
 
   /* ── L1 Anemia: viñeta de oscuridad (centrada en pantalla) ── */
@@ -1521,6 +1656,23 @@ function draw(){
   }
 
   drawHUD();
+
+  /* ── Joystick virtual (solo en touch, solo durante gameplay) ── */
+  if(IS_TOUCH&&G&&(G.phase==='mini'||G.phase==='boss'||G.phase==='entering_valve'||G.phase==='exiting_level')){
+    var jbx=joystick.baseX, jby=joystick.baseY;
+    var jkx=joystick.knobX, jky=joystick.knobY;
+    /* base */
+    ctx.save();
+    ctx.globalAlpha=0.55;
+    ctx.beginPath(); ctx.arc(jbx,jby,50,0,Math.PI*2);
+    ctx.fillStyle='rgba(20,3,8,0.7)'; ctx.fill();
+    ctx.strokeStyle='rgba(180,170,175,0.3)'; ctx.lineWidth=2; ctx.stroke();
+    /* knob */
+    ctx.beginPath(); ctx.arc(jkx,jky,22,0,Math.PI*2);
+    ctx.fillStyle='rgba(180,170,175,0.5)'; ctx.fill();
+    ctx.strokeStyle='rgba(220,215,218,0.6)'; ctx.lineWidth=2; ctx.stroke();
+    ctx.restore();
+  }
 }
 
 /* ── Obstáculos flotantes (Policitemia L4) ── */
@@ -1601,42 +1753,42 @@ function drawTurrets(){
 
     /* base — protuberancia orgánica de la pared */
     ctx.shadowColor='rgba(180,10,10,'+(0.5+fAlp*0.5)+')';
-    ctx.shadowBlur=firing?18+fAlp*14:8;
-    var bg=ctx.createRadialGradient(0,0,2,0,0,13);
+    ctx.shadowBlur=firing?24+fAlp*18:12;
+    var bg=ctx.createRadialGradient(0,0,3,0,0,22);
     bg.addColorStop(0, firing?'rgba(255,90,60,.9)':'rgba(140,10,10,.9)');
     bg.addColorStop(0.55,'rgba(90,5,5,.85)');
     bg.addColorStop(1,'rgba(40,2,2,.6)');
     ctx.fillStyle=bg;
     ctx.beginPath();
-    /* forma irregular tipo verruga biológica */
-    ctx.ellipse(0,0, 10,8, 0,0,Math.PI*2); ctx.fill();
+    /* forma irregular tipo verruga biológica — más grande */
+    ctx.ellipse(0,0, 18,14, 0,0,Math.PI*2); ctx.fill();
     ctx.shadowBlur=0;
 
     /* detalles — segmentos del cañón */
     ctx.strokeStyle=firing?'rgba(255,120,80,.85)':'rgba(160,20,20,.7)';
-    ctx.lineWidth=1.5;
-    ctx.beginPath(); ctx.ellipse(0,0,10,8,0,0,Math.PI*2); ctx.stroke();
+    ctx.lineWidth=2;
+    ctx.beginPath(); ctx.ellipse(0,0,18,14,0,0,Math.PI*2); ctx.stroke();
 
-    /* boca del cañón (tubo que apunta al interior) */
+    /* boca del cañón (tubo que apunta al interior) — más largo */
     ctx.fillStyle=firing?'rgba(255,140,90,.95)':'rgba(110,8,8,.9)';
     ctx.beginPath();
     ctx.roundRect
-      ? ctx.roundRect(dir*2,-3,dir*8,6,3)
-      : (function(){ctx.rect(dir*2,-3,dir*8,6);})();
+      ? ctx.roundRect(dir*3,-4,dir*14,8,4)
+      : (function(){ctx.rect(dir*3,-4,dir*14,8);})();
     ctx.fill();
 
     /* orificio interior oscuro */
     ctx.fillStyle='rgba(10,0,0,.92)';
-    ctx.beginPath(); ctx.ellipse(dir*10,0,3,2.5,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(dir*17,0,5,4,0,0,Math.PI*2); ctx.fill();
 
     /* destellos de disparo */
     if(firing){
       ctx.globalAlpha=fAlp*0.85;
       ctx.fillStyle='rgba(255,200,100,1)';
-      ctx.beginPath(); ctx.arc(dir*12,0,5+fAlp*4,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(dir*20,0,8+fAlp*6,0,Math.PI*2); ctx.fill();
       ctx.globalAlpha=fAlp*0.4;
       ctx.fillStyle='rgba(255,255,200,1)';
-      ctx.beginPath(); ctx.arc(dir*12,0,9+fAlp*6,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(dir*20,0,14+fAlp*8,0,Math.PI*2); ctx.fill();
       ctx.globalAlpha=1;
     }
 
@@ -2248,8 +2400,8 @@ function drawItems(){
 }
 
 /* ── Ship (Glóbulo Blanco / Leucocito) ── */
-function drawShip(){
-  var x=G.px, y=G.py;
+function drawShip(){ drawShipAt(G.px,G.py); }
+function drawShipAt(x,y){
   ctx.save(); ctx.translate(x,y);
 
   /* ── aura de movimiento ── */
@@ -2585,6 +2737,13 @@ function drawHUD(){
     }
   }
 
+  /* checkpoint indicator */
+  if(G.checkpoint>0){
+    ctx.font='bold 9px Nunito,sans-serif'; ctx.textAlign='center';
+    ctx.fillStyle='#a78bfa'; ctx.shadowColor='#a78bfa'; ctx.shadowBlur=5;
+    ctx.fillText('🏁'+(G.checkpoint+1),W/2-46,22); ctx.shadowBlur=0;
+  }
+
   ctx.textAlign='left';
 }
 
@@ -2626,7 +2785,17 @@ function buildStats(el){
 document.getElementById('btn-start').addEventListener('click',function(){newGame();startLevel(0);});
 document.getElementById('btn-intro').addEventListener('click',function(){showOnlyOverlay(null);startMiniPhase();});
 document.getElementById('btn-lwin').addEventListener('click',function(){showOnlyOverlay(null);advanceLevel();});
-document.getElementById('btn-retry').addEventListener('click',function(){newGame();startLevel(0);});
+document.getElementById('btn-retry').addEventListener('click',function(){
+  var ck=G?G.checkpoint:0, cks=G?G.checkpointScore:0;
+  newGame();
+  if(ck>0){
+    G.checkpoint=ck; G.checkpointScore=cks;
+    G.score=cks;
+    startLevel(ck);
+  } else {
+    startLevel(0);
+  }
+});
 document.getElementById('btn-win').addEventListener('click',function(){newGame();startLevel(0);});
 
 /* ══════════════════════════════════════════
@@ -2652,21 +2821,106 @@ window.addEventListener('keyup',function(e){
 },false);
 
 /* ══════════════════════════════════════════
-   TOUCH
+   TOUCH — botón de disparo + joystick virtual
 ══════════════════════════════════════════ */
-function bindCtrl(id,prop){
-  var btn=document.getElementById(id);
-  function on(e){e.preventDefault();if(G)G[prop]=true;}
-  function off(e){e.preventDefault();if(G)G[prop]=false;}
+/* El botón de disparo siempre funciona (touch y mouse) */
+(function(){
+  var btn=document.getElementById('cbtn-shoot');
+  function on(e){e.preventDefault();if(G)G.shoot=true;}
+  function off(e){e.preventDefault();if(G)G.shoot=false;}
   btn.addEventListener('touchstart',on,{passive:false});
   btn.addEventListener('touchend',off,{passive:false});
   btn.addEventListener('touchcancel',off,{passive:false});
   btn.addEventListener('mousedown',on);
   btn.addEventListener('mouseup',off);
   btn.addEventListener('mouseleave',off);
+})();
+
+/* Botones direccionales (solo si no es touch) */
+if(!IS_TOUCH){
+  function bindCtrl(id,prop){
+    var btn=document.getElementById(id);
+    if(!btn) return;
+    function on(e){if(G)G[prop]=true;}
+    function off(e){if(G)G[prop]=false;}
+    btn.addEventListener('mousedown',on);
+    btn.addEventListener('mouseup',off);
+    btn.addEventListener('mouseleave',off);
+  }
+  bindCtrl('cbtn-left','left');bindCtrl('cbtn-right','right');
+  bindCtrl('cbtn-up','up');bindCtrl('cbtn-down','down');
 }
-bindCtrl('cbtn-left','left');bindCtrl('cbtn-right','right');
-bindCtrl('cbtn-shoot','shoot');bindCtrl('cbtn-up','up');bindCtrl('cbtn-down','down');
+
+/* Joystick virtual (solo si IS_TOUCH) */
+if(IS_TOUCH){
+  function isJoystickZone(x,y){
+    /* mitad derecha + tercio inferior de la pantalla */
+    return x>W/2 && y>H*0.55;
+  }
+  function updateJoystickInput(){
+    if(!joystick.active||!G){G.left=G.right=G.up=G.down=false;return;}
+    var dx=joystick.knobX-joystick.baseX;
+    var dy=joystick.knobY-joystick.baseY;
+    var dist=Math.sqrt(dx*dx+dy*dy);
+    if(dist>8){
+      G.left=dx<-12; G.right=dx>12;
+      G.up=dy<-12;   G.down=dy>12;
+    } else {
+      G.left=G.right=G.up=G.down=false;
+    }
+  }
+  cv.addEventListener('touchstart',function(e){
+    e.preventDefault();
+    for(var ti=0;ti<e.changedTouches.length;ti++){
+      var t=e.changedTouches[ti];
+      if(isJoystickZone(t.clientX,t.clientY)&&!joystick.active){
+        joystick.active=true;
+        joystick.touchId=t.identifier;
+        joystick.baseX=t.clientX; joystick.baseY=t.clientY;
+        joystick.knobX=t.clientX; joystick.knobY=t.clientY;
+      } else if(t.clientX<W/2&&SHOOT_TOUCH_ID===-1){
+        /* toque en mitad izquierda = disparo adicional */
+        SHOOT_TOUCH_ID=t.identifier;
+        if(G) G.shoot=true;
+      }
+    }
+    updateJoystickInput();
+  },{passive:false});
+
+  cv.addEventListener('touchmove',function(e){
+    e.preventDefault();
+    for(var ti=0;ti<e.changedTouches.length;ti++){
+      var t=e.changedTouches[ti];
+      if(t.identifier===joystick.touchId){
+        var dx=t.clientX-joystick.baseX;
+        var dy=t.clientY-joystick.baseY;
+        var dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist>50){dx=dx/dist*50;dy=dy/dist*50;}
+        joystick.knobX=joystick.baseX+dx;
+        joystick.knobY=joystick.baseY+dy;
+      }
+    }
+    updateJoystickInput();
+  },{passive:false});
+
+  function touchEnd(e){
+    e.preventDefault();
+    for(var ti=0;ti<e.changedTouches.length;ti++){
+      var t=e.changedTouches[ti];
+      if(t.identifier===joystick.touchId){
+        joystick.active=false; joystick.touchId=-1;
+        joystick.knobX=joystick.baseX; joystick.knobY=joystick.baseY;
+        if(G) G.left=G.right=G.up=G.down=false;
+      }
+      if(t.identifier===SHOOT_TOUCH_ID){
+        SHOOT_TOUCH_ID=-1;
+        if(G) G.shoot=false;
+      }
+    }
+  }
+  cv.addEventListener('touchend',touchEnd,{passive:false});
+  cv.addEventListener('touchcancel',touchEnd,{passive:false});
+}
 
 /* ══════════════════════════════════════════
    TOAST
