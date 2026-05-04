@@ -330,6 +330,7 @@ function newGame(){
     over:false,
     shield:false, double:false, doubleTmr:0, fast:false, fastTmr:0,
     left:false, right:false, up:false, down:false, shoot:false,
+    joyX:0, joyY:0,   // analógico del joystick táctil (-1…1)
     ecgBuf:new Array(52).fill(0), ecgPhase:0,
     boss:null,
     bossClones:[],
@@ -758,10 +759,17 @@ function update(dt){
 
   /* ── player movement ── */
   var ms=5*G.moveMult;
-  if(G.left)  G.px-=ms;
-  if(G.right) G.px+=ms;
-  if(G.up)    G.py-=ms;
-  if(G.down)  G.py+=ms;
+  if(G.joyX||G.joyY){
+    /* analógico: velocidad proporcional al desplazamiento del knob */
+    G.px+=G.joyX*ms;
+    G.py+=G.joyY*ms;
+  } else {
+    /* digital: teclado */
+    if(G.left)  G.px-=ms;
+    if(G.right) G.px+=ms;
+    if(G.up)    G.py-=ms;
+    if(G.down)  G.py+=ms;
+  }
   G.px=Math.max(G.pr,Math.min(W-G.pr,G.px));
   G.py=Math.max(56,Math.min(H-78,G.py));
 
@@ -1667,8 +1675,15 @@ function draw(){
     ctx.beginPath(); ctx.arc(jbx,jby,50,0,Math.PI*2);
     ctx.fillStyle='rgba(20,3,8,0.7)'; ctx.fill();
     ctx.strokeStyle='rgba(180,170,175,0.3)'; ctx.lineWidth=2; ctx.stroke();
-    /* knob */
-    ctx.beginPath(); ctx.arc(jkx,jky,22,0,Math.PI*2);
+    /* zona muerta (círculo interior tenue) */
+    ctx.globalAlpha=0.18;
+    ctx.beginPath(); ctx.arc(jbx,jby,12,0,Math.PI*2);
+    ctx.strokeStyle='rgba(220,215,218,0.8)'; ctx.lineWidth=1; ctx.stroke();
+    /* knob — tamaño refleja cuánto está empujado */
+    var jDist=Math.sqrt((jkx-jbx)*(jkx-jbx)+(jky-jby)*(jky-jby));
+    var kR=16+Math.min(8, jDist/50*8);  // 16px en reposo → 24px a tope
+    ctx.globalAlpha=0.55;
+    ctx.beginPath(); ctx.arc(jkx,jky,kR,0,Math.PI*2);
     ctx.fillStyle='rgba(180,170,175,0.5)'; ctx.fill();
     ctx.strokeStyle='rgba(220,215,218,0.6)'; ctx.lineWidth=2; ctx.stroke();
     ctx.restore();
@@ -2858,16 +2873,22 @@ if(IS_TOUCH){
     return x>W/2 && y>H*0.55;
   }
   function updateJoystickInput(){
-    if(!joystick.active||!G){G.left=G.right=G.up=G.down=false;return;}
+    if(!joystick.active||!G){ G.joyX=0; G.joyY=0; G.left=G.right=G.up=G.down=false; return; }
     var dx=joystick.knobX-joystick.baseX;
     var dy=joystick.knobY-joystick.baseY;
     var dist=Math.sqrt(dx*dx+dy*dy);
-    if(dist>8){
-      G.left=dx<-12; G.right=dx>12;
-      G.up=dy<-12;   G.down=dy>12;
+    var DEAD=12, MAX=50;
+    if(dist<DEAD){
+      G.joyX=0; G.joyY=0;
     } else {
-      G.left=G.right=G.up=G.down=false;
+      /* remapear [DEAD…MAX] → [0…1] para movimiento proporcional */
+      var norm=Math.min(1,(dist-DEAD)/(MAX-DEAD));
+      G.joyX=dx/dist*norm;
+      G.joyY=dy/dist*norm;
     }
+    /* mantener flags booleanos para compatibilidad con teclado */
+    G.left=G.joyX<-0.18; G.right=G.joyX>0.18;
+    G.up=G.joyY<-0.18;   G.down=G.joyY>0.18;
   }
   cv.addEventListener('touchstart',function(e){
     e.preventDefault();
