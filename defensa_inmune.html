@@ -327,7 +327,7 @@ function newGame(){
     checkpoint:0, checkpointScore:0, quizCorrect:0,
     dmg:0, shake:0, valveFlash:0, scd:0, spcd:0,
     spawnT:Date.now(), puSpawnT:Date.now(),
-    over:false,
+    over:false, dying:false,
     shield:false, double:false, doubleTmr:0, fast:false, fastTmr:0,
     left:false, right:false, up:false, down:false, shoot:false,
     joyX:0, joyY:0,   // analógico del joystick táctil (-1…1)
@@ -693,7 +693,7 @@ function hitLife(msg){
   }
   G.lives--; G.dmg=720; G.shake=420; G.combo=0;
   toast(msg,'r');
-  if(G.lives<=0){G.lives=0;setTimeout(showOver,700);}
+  if(G.lives<=0){G.lives=0; G.dying=true; setTimeout(showOver,700);}
 }
 
 function updateECG(dt){
@@ -726,6 +726,9 @@ function applyPowerup(pu){
    UPDATE
 ══════════════════════════════════════════ */
 function update(dt){
+  /* Si el jugador murió, congelar todo hasta que aparezca el overlay */
+  if(G.dying) return;
+
   /* ── Transición: entrando en la válvula (800ms) ── */
   if(G.phase==='entering_valve'){
     G.transTimer-=dt;
@@ -849,7 +852,7 @@ function update(dt){
         G.lives=Math.max(0,G.lives-1);
         G.dmg=320; G.shake=160;
         floatTxt(G.px,G.py-35,'🩸 -1 vida','#ef4444');
-        if(G.lives<=0){G.lives=0;setTimeout(showOver,700);}
+        if(G.lives<=0){G.lives=0; G.dying=true; setTimeout(showOver,700);}
       }
       if(G.bleedTimer<=0){ G.bleeding=false; G.bleedDropT=0; toast('🩹 Sangrado detenido','g'); }
     }
@@ -874,7 +877,7 @@ function update(dt){
           G.lives=Math.max(0,G.lives-1);
           G.dmg=280; G.shake=140;
           floatTxt(wo.x,wo.y-15,'🩸 herida -1','#ef4444');
-          if(G.lives<=0){G.lives=0;setTimeout(showOver,700);}
+          if(G.lives<=0){G.lives=0; G.dying=true; setTimeout(showOver,700);}
         }
         /* nave cerca con plaqueta → sellar */
         if(G.carryingPlatelet){
