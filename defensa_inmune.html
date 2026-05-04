@@ -569,14 +569,14 @@ function spawnBoss(){
 
   /* ── Jefe 1: Anemia — eritrocito pálido sin proyectiles ── */
   if(bt==='anemia'){
-    cfg.r=45; cfg.hp=12; cfg.maxHp=12;
+    cfg.r=45; cfg.hp=45; cfg.maxHp=45;
     cfg.speed=0.5; cfg.amplitude=W/2-84;
     cfg.fireTimer=999999; cfg.fireInterval=999999;
     cfg.anemiaTimer=2000;
   }
   /* ── Jefe 2: Leucemia — leucocito deforme con clones ── */
   if(bt==='leucemia'){
-    cfg.r=38; cfg.hp=14; cfg.maxHp=14;
+    cfg.r=38; cfg.hp=55; cfg.maxHp=55;
     cfg.cloneTimer=5000; cfg.cloneInterval=5000;
   }
   /* ── Jefe 3: Leucopenia — bacteria con flagelos, ráfagas ── */
@@ -627,10 +627,10 @@ function spawnBoss(){
 function spawnItem(){
   var lv=LD[G.levelIdx], max=G.phase==='mini'?4:5;
   if(G.items.length>=max) return;
-  var isE, word;
-  /* Leucemia (L2): 30% de chance de leucocito anormal (trampa) */
+  var isE, word, abnormal=false;
+  /* Leucemia (L2): 30% de chance de leucocito anormal (trampa) — solo forma diferente, mismo texto */
   if(G.levelIdx===1 && G.phase==='mini' && Math.random()<.30){
-    isE=true; word='Leucocito anormal';
+    isE=true; word='Leucocito'; abnormal=true;
   } else {
     isE=Math.random()<.5;
     var pool=isE?[lv.disease]:lv.affected;
@@ -663,7 +663,7 @@ function spawnItem(){
   ctx.font='bold 15px Nunito,sans-serif';
   var tw=ctx.measureText(word).width, iw=tw+28;
   var x=Math.random()*(W-iw-16)+iw/2+8;
-  G.items.push({word:word,enemy:isE,defective:defective,x:x,y:-30,w:iw,spd:1.2+G.levelIdx*.18+(Math.random()*.3-.15)});
+  G.items.push({word:word,enemy:isE,defective:defective,abnormal:abnormal,x:x,y:-30,w:iw,spd:1.2+G.levelIdx*.18+(Math.random()*.3-.15)});
 }
 
 function spawnPowerup(){
@@ -1566,6 +1566,25 @@ function draw(){
   drawBackground();
   if(!G) return;
 
+  /* ── Nombre de enfermedad al inicio del pasillo ── */
+  if(G.phase==='mini' && G.flightTime<4000){
+    var lv=LD[G.levelIdx];
+    var t=G.flightTime;
+    /* aparece rápido (0-400ms), se mantiene, desaparece suavemente (2800-4000ms) */
+    var alpha = t<400 ? t/400*0.13
+              : t<2800 ? 0.13
+              : 0.13*(1-(t-2800)/1200);
+    ctx.save();
+    ctx.globalAlpha=alpha;
+    ctx.font='bold 88px Nunito,sans-serif';
+    ctx.textAlign='center';
+    ctx.fillStyle=lv.col;
+    ctx.shadowColor=lv.col; ctx.shadowBlur=28;
+    ctx.fillText(lv.disease, W/2, H/2+28);
+    ctx.shadowBlur=0;
+    ctx.restore();
+  }
+
   var shaking=G.shake>0;
   if(shaking){var si=G.shake/420;ctx.save();ctx.translate((Math.random()-.5)*8*si,(Math.random()-.5)*7*si);}
   if(G.dmg>0){ctx.fillStyle='rgba(239,68,68,'+(G.dmg/720*.22)+')';ctx.fillRect(0,0,W,H);}
@@ -2394,6 +2413,20 @@ function drawSketchyRect(x,y,w,h,r,seed){
   ctx.closePath();
 }
 
+/* ── drawOctBox: caja con esquinas cortadas (octágono) para Leucemia anormal ── */
+function drawOctBox(x,y,w,h,cut){
+  ctx.beginPath();
+  ctx.moveTo(x+cut, y);
+  ctx.lineTo(x+w-cut, y);
+  ctx.lineTo(x+w, y+cut);
+  ctx.lineTo(x+w, y+h-cut);
+  ctx.lineTo(x+w-cut, y+h);
+  ctx.lineTo(x+cut, y+h);
+  ctx.lineTo(x, y+h-cut);
+  ctx.lineTo(x, y+cut);
+  ctx.closePath();
+}
+
 /* ── Items (todos neutros — el jugador debe leer la etiqueta) ── */
 function drawItems(){
   var IH=42, now=Date.now();
@@ -2401,21 +2434,31 @@ function drawItems(){
     var it=G.items[i], x=it.x-it.w/2, y=it.y-IH/2;
     var pulse=Math.sin(now/280+i)*.5+.5;
     ctx.save();
-    ctx.shadowColor='rgba(180,175,178,.22)';
-    ctx.shadowBlur=6+pulse*3;
-    ctx.fillStyle='rgba(20,15,18,.94)';
-    rr(x,y,it.w,IH,9); ctx.fill();
-    if(it.defective){
-      /* borde irregular ámbar para hemoglobina defectuosa (L5) */
-      ctx.shadowColor='rgba(245,158,11,.55)'; ctx.shadowBlur=8+pulse*4;
-      ctx.strokeStyle='rgba(245,158,11,'+(0.55+pulse*0.25)+')';
-      ctx.lineWidth=2.2;
-      drawSketchyRect(x,y,it.w,IH,9,i*97+Math.floor(now/8000));
-      ctx.stroke();
+
+    if(it.abnormal){
+      /* Leucocito anormal (L2): caja octagonal, fondo con tinte violeta */
+      ctx.shadowColor='rgba(168,85,247,.40)'; ctx.shadowBlur=7+pulse*4;
+      ctx.fillStyle='rgba(22,10,32,.95)';
+      drawOctBox(x,y,it.w,IH,9); ctx.fill();
+      ctx.strokeStyle='rgba(168,85,247,'+(0.45+pulse*0.28)+')';
+      ctx.lineWidth=1.8; drawOctBox(x,y,it.w,IH,9); ctx.stroke();
     } else {
-      ctx.strokeStyle='rgba(180,170,175,'+(0.42+pulse*0.13)+')';
-      ctx.lineWidth=1.6; rr(x,y,it.w,IH,9); ctx.stroke();
+      ctx.shadowColor='rgba(180,175,178,.22)'; ctx.shadowBlur=6+pulse*3;
+      ctx.fillStyle='rgba(20,15,18,.94)';
+      rr(x,y,it.w,IH,9); ctx.fill();
+      if(it.defective){
+        /* borde irregular ámbar para hemoglobina defectuosa (L5) */
+        ctx.shadowColor='rgba(245,158,11,.55)'; ctx.shadowBlur=8+pulse*4;
+        ctx.strokeStyle='rgba(245,158,11,'+(0.55+pulse*0.25)+')';
+        ctx.lineWidth=2.2;
+        drawSketchyRect(x,y,it.w,IH,9,i*97+Math.floor(now/8000));
+        ctx.stroke();
+      } else {
+        ctx.strokeStyle='rgba(180,170,175,'+(0.42+pulse*0.13)+')';
+        ctx.lineWidth=1.6; rr(x,y,it.w,IH,9); ctx.stroke();
+      }
     }
+
     ctx.shadowBlur=0;
     ctx.fillStyle=it.defective?'#f59e0b':'#e2e0e1';
     ctx.font='bold 15px Nunito,sans-serif'; ctx.textAlign='center';
