@@ -319,7 +319,7 @@ var G=null;
 function newGame(){
   G={
     phase:'idle', levelIdx:0,
-    px:W/2, py:H-90, pr:22,
+    px:W/2, py:H-90, pr:15,
     bullets:[], items:[], powerups:[], pathogens:[], parts:[], floats:[],
     lives:LIVES_START, score:0,
     combo:0, bestCombo:0,
@@ -331,6 +331,7 @@ function newGame(){
     shield:false, double:false, doubleTmr:0, fast:false, fastTmr:0,
     left:false, right:false, up:false, down:false, shoot:false,
     joyX:0, joyY:0,   // analógico del joystick táctil (-1…1)
+    velX:0, velY:0,   // velocidad suavizada (inercia)
     ecgBuf:new Array(52).fill(0), ecgPhase:0,
     boss:null,
     bossClones:[],
@@ -758,13 +759,19 @@ function update(dt){
   if(G.phase!=='mini'&&G.phase!=='boss') return;
 
   /* ── player movement ── */
-  var ms=5*G.moveMult;
+  var ms=4.2*G.moveMult;
   if(G.joyX||G.joyY){
-    /* analógico: velocidad proporcional al desplazamiento del knob */
-    G.px+=G.joyX*ms;
-    G.py+=G.joyY*ms;
+    /* analógico con inercia: lerp suave hacia velocidad objetivo */
+    var tvx=G.joyX*ms, tvy=G.joyY*ms;
+    G.velX+=(tvx-G.velX)*0.14;
+    G.velY+=(tvy-G.velY)*0.14;
+    G.px+=G.velX; G.py+=G.velY;
   } else {
-    /* digital: teclado */
+    /* cuando el stick está en reposo, frenar suavemente */
+    G.velX*=0.72; G.velY*=0.72;
+    if(Math.abs(G.velX)>0.1) G.px+=G.velX;
+    if(Math.abs(G.velY)>0.1) G.py+=G.velY;
+    /* digital: teclado (siempre directo y responsivo) */
     if(G.left)  G.px-=ms;
     if(G.right) G.px+=ms;
     if(G.up)    G.py-=ms;
