@@ -2,132 +2,67 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>Defensa Inmune – Enfermedades de la Sangre</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{width:100%;height:100%;overflow:hidden;background:#060e1e;font-family:'Nunito',sans-serif;touch-action:none}
-
-/* Game wrapper — max 480px centered */
-#wrap{
-  position:fixed;top:0;bottom:0;
-  left:50%;transform:translateX(-50%);
-  width:100%;max-width:480px;
-  overflow:hidden;
-}
+html,body{width:100%;height:100%;overflow:hidden;background:#0e0103;font-family:'Nunito',sans-serif;touch-action:none}
+#wrap{position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;overflow:hidden}
 canvas{display:block;width:100%;height:100%}
-
-/* Controls */
-#ctrl{
-  position:absolute;bottom:0;left:0;right:0;
-  display:flex;justify-content:space-between;align-items:flex-end;
-  padding:8px 14px 14px;
-  pointer-events:none;z-index:10;
-}
+#ctrl{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-end;padding:8px 14px 14px;pointer-events:none;z-index:10}
 #ctrl-left{display:flex;flex-direction:column;gap:7px;pointer-events:all}
 #ctrl-right{pointer-events:all}
-.cbtn{
-  width:58px;height:58px;border-radius:50%;
-  background:rgba(15,32,64,.92);border:2px solid #1a3a5c;
-  color:#e2f0ff;font-size:1.35rem;
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;pointer-events:all;
-  -webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;
-}
-.cbtn:active{background:rgba(0,180,204,.3);border-color:#00d4ff}
-#cbtn-shoot{
-  width:62px;height:62px;font-size:1.5rem;
-  background:rgba(251,191,36,.15);border-color:#fbbf24;
-}
+.cbtn{width:58px;height:58px;border-radius:50%;background:rgba(20,3,8,.92);border:2px solid #3a0e1e;color:#e2f0ff;font-size:1.35rem;display:flex;align-items:center;justify-content:center;cursor:pointer;pointer-events:all;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+.cbtn:active{background:rgba(180,0,40,.35);border-color:#dd0030}
+#cbtn-shoot{width:66px;height:66px;font-size:1.6rem;background:rgba(251,191,36,.15);border-color:#fbbf24}
 #cbtn-shoot:active{background:rgba(251,191,36,.4)}
-#arrows{display:flex;gap:7px}
-
-/* Overlays */
-.ov{
-  position:absolute;inset:0;
-  background:rgba(10,22,40,.96);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:11px;padding:22px 18px;text-align:center;z-index:100;overflow-y:auto;
-}
+.ov{position:absolute;inset:0;background:rgba(14,1,3,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:11px;padding:22px 18px;text-align:center;z-index:100;overflow-y:auto}
 .ov.hidden{display:none}
-.ov h1{font-size:1.75rem;font-weight:900;color:#00d4ff}
-.ov .sub{font-size:.78rem;color:#7a9cc0;margin-top:-6px}
-.rules{font-size:.76rem;color:#7a9cc0;max-width:320px;line-height:1.65}
-.rules b{color:#e2f0ff}
-.legend{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
-.leg{display:flex;align-items:center;gap:7px;background:#0d1e38;border:1px solid #1a3a5c;border-radius:8px;padding:7px 11px;font-size:.76rem}
-.ldot{width:12px;height:12px;border-radius:3px}
-.ldot.e{background:#1a3a5c;border:1.5px solid #00d4ff}
-.ldot.a{background:#1a3a5c;border:1.5px solid #00d4ff}
-.big-btn{
-  padding:12px 36px;
-  background:linear-gradient(135deg,#0099cc,#00C9A7);
-  border:none;border-radius:12px;color:#fff;
-  font-family:'Nunito',sans-serif;font-weight:900;font-size:1rem;
-  cursor:pointer;margin-top:4px;
-}
+.ov h1{font-size:2.1rem;font-weight:900;color:#ff6060}
+.sub{font-size:1.1rem;color:#9a7070}
+.big-btn{padding:11px 32px;background:linear-gradient(135deg,#990018,#cc0035);border:none;border-radius:12px;color:#fff;font-family:'Nunito',sans-serif;font-weight:900;font-size:1.1rem;cursor:pointer;box-shadow:0 4px 20px rgba(180,0,40,.45)}
 .big-btn:active{transform:scale(.97)}
-
-/* Power-up legend */
-.pu-legend{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
-.pu-item{display:flex;align-items:center;gap:5px;background:#0d1e38;border:1px solid #1a3a5c;border-radius:8px;padding:5px 10px;font-size:.72rem;color:#7a9cc0}
-.pu-item b{color:#e2f0ff}
-
-/* Game Over */
-#go-sc{font-size:1.35rem;font-weight:900;color:#fbbf24}
-#go-msg{font-size:.8rem;color:#7a9cc0;max-width:300px;line-height:1.5}
-
-/* Sina */
-.sin-char{font-size:3.8rem;animation:bob 2.5s ease-in-out infinite}
-@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-.sin-tag{font-size:.6rem;text-transform:uppercase;letter-spacing:2px;color:#00d4ff}
-.sin-msg{font-size:.84rem;color:#e2f0ff;max-width:320px;line-height:1.6;font-weight:700}
-.cls-card{background:#0d1e38;border:2px solid #fbbf24;border-radius:12px;padding:14px 16px;max-width:340px;width:100%;text-align:left;box-shadow:0 0 20px rgba(251,191,36,.18)}
-.cls-hdr{font-size:.6rem;text-transform:uppercase;letter-spacing:1.5px;color:#fbbf24;margin-bottom:7px;display:flex;align-items:center;gap:7px}
-.cls-badge{background:#fbbf24;color:#0a1628;font-size:.56rem;font-weight:900;padding:2px 5px;border-radius:4px}
-.cls-txt{font-size:.79rem;color:#e2f0ff;line-height:1.6}
-.cls-txt b{color:#f87171}
-
-/* Toast */
-#toast{
-  position:absolute;top:52px;left:50%;
-  transform:translateX(-50%) translateY(-50px);
-  background:#0f2040;border:1px solid #1a3a5c;
-  border-radius:25px;padding:5px 16px;
-  font-size:.78rem;font-weight:800;color:#e2f0ff;
-  z-index:200;pointer-events:none;opacity:0;
-  transition:transform .3s,opacity .3s;white-space:nowrap;
-}
+.rules{font-size:1.05rem;color:#9a7070;max-width:320px;line-height:1.75}
+.rules b{color:#f0d0d0}
+.legend{display:flex;gap:7px;flex-wrap:wrap;justify-content:center}
+.leg{display:flex;align-items:center;gap:6px;border-radius:8px;padding:6px 10px;font-size:.85rem}
+.leg.red{background:rgba(40,5,5,.8);border:1px solid #ef4444;color:#fca5a5}
+.leg.grn{background:rgba(5,30,15,.8);border:1px solid #22c55e;color:#86efac}
+.leg.org{background:rgba(40,20,5,.8);border:1px solid #f97316;color:#fdba74}
+.qz-btn{width:100%;max-width:360px;padding:12px 16px;background:#1a0508;border:1.5px solid #3a1020;border-radius:10px;color:#e2f0ff;font-family:'Nunito',sans-serif;font-size:1.15rem;font-weight:700;cursor:pointer;text-align:left;transition:border-color .15s}
+.qz-btn:hover{border-color:#cc0030}
+.qz-btn.ok{background:rgba(34,197,94,.18);border-color:#22c55e;color:#86efac}
+.qz-btn.bad{background:rgba(239,68,68,.18);border-color:#ef4444;color:#fca5a5}
+.qz-btn:disabled{cursor:default}
+#qz-q{font-size:1.3rem;color:#e2f0ff;font-weight:800;max-width:360px;line-height:1.5}
+#qz-fb{font-size:.95rem;color:#9a7070;max-width:340px;line-height:1.5;min-height:36px}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;width:100%;max-width:300px}
+.stat-box{background:#1a0508;border:1px solid #3a1020;border-radius:10px;padding:9px;text-align:center}
+.stat-num{font-size:1.5rem;font-weight:900;color:#fbbf24}
+.stat-lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:1px;color:#9a7070;margin-top:2px}
+.stat-box.good .stat-num{color:#22c55e}
+.stat-box.bad  .stat-num{color:#ef4444}
+.comp-tag{display:inline-flex;align-items:center;gap:5px;background:rgba(5,30,15,.8);border:1px solid #22c55e;border-radius:20px;padding:5px 14px;font-size:.85rem;color:#86efac;font-weight:700}
+#toast{position:absolute;top:58px;left:50%;transform:translateX(-50%) translateY(-50px);background:#1e0508;border:1px solid #3a1020;border-radius:25px;padding:6px 18px;font-size:.85rem;font-weight:800;color:#e2f0ff;z-index:200;pointer-events:none;opacity:0;transition:transform .3s,opacity .3s;white-space:nowrap;max-width:290px;overflow:hidden;text-overflow:ellipsis}
 #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 #toast.g{border-color:#22c55e;color:#22c55e}
 #toast.r{border-color:#ef4444;color:#ef4444}
 #toast.y{border-color:#f59e0b;color:#f59e0b}
 #toast.p{border-color:#a78bfa;color:#a78bfa}
-
-/* Side gutter (desktop) */
-#gutter-l,#gutter-r{
-  position:fixed;top:0;bottom:0;background:#060e1e;z-index:0;
-}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes valvePulse{0%,100%{opacity:.7;transform:scale(1)}50%{opacity:1;transform:scale(1.04)}}
+#gutter-l,#gutter-r{position:fixed;top:0;bottom:0;background:#0e0103;z-index:0}
 #gutter-l{left:0;right:calc(50% + 240px)}
 #gutter-r{left:calc(50% + 240px);right:0}
 </style>
 </head>
 <body>
-
-<!-- Desktop gutters -->
-<div id="gutter-l"></div>
-<div id="gutter-r"></div>
-
-<!-- Game wrapper -->
+<div id="gutter-l"></div><div id="gutter-r"></div>
 <div id="wrap">
   <canvas id="gc"></canvas>
-
-  <!-- Touch controls -->
   <div id="ctrl">
-    <div id="ctrl-left">
-      <button class="cbtn" id="cbtn-shoot">💊</button>
-    </div>
+    <div id="ctrl-left"><button class="cbtn" id="cbtn-shoot">💊</button></div>
     <div id="ctrl-right">
       <div style="display:flex;flex-direction:column;align-items:center;gap:5px;pointer-events:all">
         <button class="cbtn" id="cbtn-up">▲</button>
@@ -139,498 +74,2333 @@ canvas{display:block;width:100%;height:100%}
       </div>
     </div>
   </div>
-
   <div id="toast"></div>
 
-  <!-- Start -->
+  <!-- START -->
   <div class="ov" id="ov-start">
-    <h1>🩸 Defensa Inmune</h1>
-    <div class="sub">Sistema Circulatorio · Biología Humana</div>
-    <div class="legend">
-      <div class="leg"><div class="ldot e"></div><span>ENFERMEDADES — <b style="color:#f87171">ELIMINAR</b></span></div>
-      <div class="leg"><div class="ldot a"></div><span>ALIADOS — <b style="color:#6ee7b7">NO ELIMINAR</b></span></div>
+    <div style="font-size:2.8rem;animation:bob 2.5s ease-in-out infinite">🩸</div>
+    <h1>Defensa Inmune</h1>
+    <div class="sub">8 niveles · Vaso Sanguíneo</div>
+    <div style="background:#12091a;border:1.5px solid #fbbf24;border-radius:12px;padding:12px 16px;max-width:310px;text-align:left">
+      <div style="font-size:.6rem;text-transform:uppercase;letter-spacing:2px;color:#fbbf24;font-weight:900;margin-bottom:8px">⚠️ CÓMO JUGAR</div>
+      <div style="font-size:1.0rem;color:#e2f0ff;line-height:1.85">
+        🧬 <b>LEE</b> cada etiqueta antes de actuar<br>
+        💊 Si es una <b>ENFERMEDAD</b> → <b style="color:#fbbf24">DISPARA</b><br>
+        🩸 Si es un <b>COMPONENTE</b> → <b style="color:#fbbf24">RECOGE</b><br>
+        🟠 Si es un <b>PATÓGENO</b> → <b style="color:#fbbf24">ESQUIVA</b>
+      </div>
+    </div>
+    <div class="rules" style="background:#1a0508;border:1px solid #3a1020;border-radius:10px;padding:10px 14px">
+      ⚠️ Todos los ítems se ven <b>igual</b> — tu conocimiento es tu arma.<br>
+      Clasificar mal → pierdes vida.
     </div>
     <div class="rules">
-      <b>◀ ▶</b> mover la nave &nbsp;·&nbsp; <b>💊</b> disparar<br>
-      Lee el nombre antes de disparar.<br>
-      Elimina <b>enfermedades</b>, protege <b>aliados</b>.<br><br>
-      ❤️❤️❤️❤️❤️ &nbsp;<b>5 vidas</b> &nbsp;·&nbsp; nivel sube cada <b>5 eliminadas</b>
+      Vuela por el vaso sanguíneo, llega a la <b>🫀 válvula</b>, responde el quiz y enfrenta al <b>jefe final</b>.<br><br>
+      ❤️×5 al inicio · hasta <b>8 ❤️</b> · cada <b>6 rescates = +1 vida</b>
     </div>
-    <div class="pu-legend">
-      <div class="pu-item">💛 <b>2x</b> disparo doble</div>
-      <div class="pu-item">⚡ <b>rápido</b> disparo veloz</div>
-      <div class="pu-item">🛡️ <b>escudo</b> protege 1 vida</div>
-    </div>
-    <button class="big-btn" id="btn-start">¡Defender! 🛡️</button>
+    <button class="big-btn" id="btn-start">¡Entrar al vaso! 🩸</button>
   </div>
 
-  <!-- Game Over -->
+  <!-- LEVEL INTRO -->
+  <div class="ov hidden" id="ov-intro">
+    <div id="oi-num" class="sub"></div>
+    <div id="oi-icon" style="font-size:3rem;animation:bob 2s ease-in-out infinite">🦠</div>
+    <h1 id="oi-name"></h1>
+    <div id="oi-desc" class="sub" style="max-width:300px;line-height:1.6"></div>
+    <div id="oi-comps" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center"></div>
+    <div id="oi-intro-box" style="display:none;background:#12100a;border:1.5px solid #fbbf24;border-radius:10px;padding:10px 14px;max-width:310px">
+      <div style="font-size:.58rem;text-transform:uppercase;letter-spacing:2px;color:#fbbf24;font-weight:900;margin-bottom:6px">⚡ MECÁNICA DE ESTE NIVEL</div>
+      <div id="oi-intro-txt" style="font-size:1.05rem;color:#f5f0e0;line-height:1.7"></div>
+    </div>
+    <div id="oi-mechanic" class="rules" style="background:#120820;border:1px solid #4a2070;border-radius:10px;padding:10px 14px;color:#d8c8f0"></div>
+    <div class="rules" style="background:#1a0508;border:1px solid #3a1020;border-radius:10px;padding:10px 14px">
+      Lee la etiqueta: <b>dispara</b> si es enfermedad · <b>recoge</b> si es componente<br>
+      ⚠️ Clasificar mal → pierdes vida · 🫀 Llega a la válvula · <b>jefe final</b>
+    </div>
+    <button class="big-btn" id="btn-intro">¡Entrar al vaso! 🚀</button>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="ov hidden" id="ov-quiz">
+    <div style="font-size:1.8rem;animation:valvePulse 1.2s ease-in-out infinite">🫀</div>
+    <div id="qz-badge" style="font-size:.6rem;text-transform:uppercase;letter-spacing:2px;padding:4px 18px;border-radius:20px;font-weight:900;color:#fff"></div>
+    <div style="font-size:.68rem;color:#cc4040;font-weight:800">VÁLVULA BLOQUEADA — VERIFICACIÓN REQUERIDA</div>
+    <div id="qz-prog" style="font-size:.72rem;color:#9a7070"></div>
+    <div id="qz-q"></div>
+    <div id="qz-opts" style="display:flex;flex-direction:column;gap:7px;width:100%;max-width:310px"></div>
+    <div id="qz-fb"></div>
+  </div>
+
+  <!-- LEVEL WIN -->
+  <div class="ov hidden" id="ov-lwin">
+    <div style="font-size:3rem;animation:bob 2s ease-in-out infinite">🏅</div>
+    <h1 style="color:#fbbf24">¡Nivel Superado!</h1>
+    <div id="lw-name" style="font-size:1.1rem;font-weight:900"></div>
+    <div id="lw-fact" class="sub" style="max-width:300px;line-height:1.55"></div>
+    <div id="lw-score" style="font-size:.84rem;color:#fbbf24;font-weight:800"></div>
+    <button class="big-btn" id="btn-lwin">Siguiente nivel →</button>
+  </div>
+
+  <!-- GAME OVER -->
   <div class="ov hidden" id="ov-go">
     <div style="font-size:3rem">💔</div>
-    <h1 style="color:#ef4444">GAME OVER</h1>
-    <div id="go-sc">0 puntos</div>
-    <div id="go-msg"></div>
-    <button class="big-btn" id="btn-retry">Jugar de nuevo ↺</button>
+    <h1 style="color:#ef4444">MISIÓN FALLIDA</h1>
+    <div id="go-sc" style="font-size:1.3rem;font-weight:900;color:#fbbf24"></div>
+    <div class="stats-grid" id="go-stats"></div>
+    <button class="big-btn" id="btn-retry">Intentar de nuevo ↺</button>
   </div>
 
-  <!-- Victoria -->
+  <!-- WIN ALL -->
   <div class="ov hidden" id="ov-win">
-    <div style="font-size:3.5rem;animation:bob 2s ease-in-out infinite">🏆</div>
-    <h1 style="color:#fbbf24">¡MISIÓN CUMPLIDA!</h1>
-    <div style="font-size:1.3rem;font-weight:900;color:#22c55e" id="win-sc">250 puntos</div>
-    <div style="font-size:.84rem;color:#7a9cc0;max-width:300px;line-height:1.6">
-      ¡Defendiste el sistema circulatorio con éxito!<br>
-      El paciente sobrevivió gracias a tu habilidad.
-    </div>
-    <button class="big-btn" id="btn-retry-win">Jugar de nuevo ↺</button>
+    <div style="font-size:3rem;animation:bob 2s ease-in-out infinite">🏆</div>
+    <h1 style="color:#fbbf24">¡SISTEMA PROTEGIDO!</h1>
+    <div style="font-size:.78rem;color:#22c55e;font-weight:800">Las 8 enfermedades han sido eliminadas</div>
+    <div id="win-sc" style="font-size:1.3rem;font-weight:900;color:#fbbf24"></div>
+    <div class="stats-grid" id="win-stats"></div>
+    <button class="big-btn" id="btn-win">Jugar de nuevo 🔄</button>
   </div>
-
-</div><!-- /wrap -->
+</div>
 
 <script>
-/* ═══════════════ DATA ═══════════════ */
-var ENEMIES = ['Anemia','Policitemia','Talasemia','Leucemia','Leucopenia','Hemofilia','Trombocitopenia','Sepsis'];
-var ALLIES  = ['Eritrocito','Leucocito','Hemoglobina','Plasma','Plaqueta','Vena','Arteria','Corazón','Sangre','Nutrientes','Oxígeno'];
-
-/* Level config: spd=fall speed, ms=spawn interval, ec=enemy chance, max=max on screen */
-var LVL = [
-  null,
-  {spd:1.2, ms:3200, ec:0.42, max:4},
-  {spd:2.2, ms:2200, ec:0.47, max:6},
-  {spd:3.4, ms:1300, ec:0.52, max:9}
+/* ══════════════════════════════════════════
+   DATA
+══════════════════════════════════════════ */
+var LD=[
+  {disease:'Anemia',mechanic:'anemia',bossType:'anemia',col:'#ef4444',affected:['Eritrocito','Hemoglobina'],
+   desc:'Déficit de glóbulos rojos o hemoglobina. Los tejidos reciben menos oxígeno.',
+   fact:'La Anemia es la enfermedad sanguínea más común a nivel mundial.',
+   intro:'Tu visión se oscurecerá progresivamente por los bordes. Recoge eritrocitos y hemoglobina para recuperarla. Si no recoges suficientes, terminas jugando casi a ciegas.',
+   qs:[{q:'¿Qué componente reduce la Anemia?',opts:['Eritrocito','Leucocito','Plaqueta','Plasma'],a:0},
+       {q:'La principal consecuencia de la Anemia es...',opts:['Más infecciones','Sangre espesa','Menos oxígeno en tejidos','Sangrado excesivo'],a:2}]},
+  {disease:'Leucemia',mechanic:'leucemia',bossType:'leucemia',col:'#a855f7',affected:['Leucocito'],
+   desc:'Producción descontrolada de glóbulos blancos anormales en la médula ósea.',
+   fact:'La Leucemia es un cáncer que altera la médula ósea y los glóbulos blancos.',
+   intro:'Leucocitos anormales caerán mezclados con los sanos — se ven igual. Solo la etiqueta los delata. Si recoges uno anormal, pierdes vida. Lee con cuidado.',
+   qs:[{q:'La Leucemia afecta principalmente a...',opts:['Plaquetas','Leucocitos','Eritrocitos','Plasma'],a:1},
+       {q:'En la Leucemia los glóbulos blancos se producen...',opts:['En exceso y anormales','En poca cantidad','Con más tamaño','Normalmente'],a:0}]},
+  {disease:'Leucopenia',mechanic:'leucopenia',bossType:'leucopenia',col:'#f59e0b',affected:['Leucocito'],
+   desc:'Cantidad anormalmente baja de glóbulos blancos. Las defensas se debilitan.',
+   fact:'La Leucopenia aumenta gravemente el riesgo de infecciones oportunistas.',
+   intro:'Tus disparos son más lentos y los patógenos vienen más rápido. Recoge leucocitos para restaurar tu velocidad de disparo. Sin ellos te verás desbordado.',
+   qs:[{q:'Leucopenia significa...',opts:['Exceso de glóbulos blancos','Déficit de glóbulos blancos','Déficit de plaquetas','Exceso de glóbulos rojos'],a:1},
+       {q:'La Leucopenia debilita principalmente...',opts:['La coagulación','El transporte de O₂','Las defensas del cuerpo','La producción de plasma'],a:2}]},
+  {disease:'Policitemia',mechanic:'policitemia',bossType:'policitemia',col:'#dc2626',affected:['Eritrocito'],
+   desc:'Exceso de glóbulos rojos. La sangre se vuelve más espesa y lenta.',
+   fact:'La Policitemia aumenta el riesgo de trombosis y accidentes cerebrovasculares.',
+   intro:'La sangre está espesa. Tu nave se mueve más lento y el vaso está congestionado de glóbulos rojos flotantes. Navega entre los obstáculos y sigue clasificando.',
+   qs:[{q:'La Policitemia se caracteriza por...',opts:['Pocos glóbulos rojos','Exceso de glóbulos rojos','Pocos glóbulos blancos','Pocas plaquetas'],a:1},
+       {q:'En la Policitemia la sangre se vuelve...',opts:['Más fluida','Más clara','Más espesa','Sin color'],a:2}]},
+  {disease:'Talasemia',mechanic:'talasemia',bossType:'talasemia',col:'#ea580c',affected:['Hemoglobina'],
+   desc:'Hemoglobina defectuosa de origen genético. Los glóbulos rojos no funcionan bien.',
+   fact:'La Talasemia es hereditaria y más frecuente en países mediterráneos y asiáticos.',
+   intro:'Hemoglobinas funcionales y defectuosas caerán con la misma etiqueta. La diferencia es visual: las defectuosas tienen bordes irregulares y deformados. Solo recoge las de bordes limpios.',
+   qs:[{q:'La Talasemia afecta directamente a...',opts:['Leucocitos','Plaquetas','Hemoglobina','Plasma'],a:2},
+       {q:'La Talasemia es de origen...',opts:['Viral','Bacteriano','Genético','Ambiental'],a:2}]},
+  {disease:'Hemofilia',mechanic:'hemofilia',bossType:'hemofilia',col:'#0891b2',affected:['Plaqueta','Plasma'],
+   desc:'Los factores de coagulación del plasma fallan. La sangre no coagula correctamente.',
+   fact:'La Hemofilia fue llamada "la enfermedad de los reyes" por afectar a familias reales europeas.',
+   intro:'Si te golpean, no pierdes vida de golpe — empiezas a sangrar. Un temporizador drena tu vida gradualmente. Recoge plaquetas o plasma para detener la hemorragia antes de que sea tarde.',
+   qs:[{q:'¿Qué falla principalmente en la Hemofilia?',opts:['Los glóbulos blancos','Los glóbulos rojos','Los factores de coagulación','El hierro'],a:2},
+       {q:'La Hemofilia afecta a...',opts:['Eritrocito','Leucocito','Plaqueta y Plasma','Hemoglobina'],a:2}]},
+  {disease:'Trombocitopenia',mechanic:'trombocitopenia',bossType:'trombocitopenia',col:'#db2777',affected:['Plaqueta'],
+   desc:'Cantidad baja de plaquetas. El cuerpo no puede detener las hemorragias.',
+   fact:'La Trombocitopenia puede ser causada por medicamentos, infecciones o autoinmunidad.',
+   intro:'Las paredes del vaso se agrietan. Recoge plaquetas y llévalas a las grietas para sellarlas. Si no las cierras a tiempo, el sangrado constante te matará.',
+   qs:[{q:'La Trombocitopenia es un déficit de...',opts:['Eritrocitos','Leucocitos','Plaquetas','Hemoglobina'],a:2},
+       {q:'Las personas con Trombocitopenia tienen riesgo de...',opts:['Más infecciones','Menos oxígeno','Sangrado excesivo','Sangre espesa'],a:2}]},
+  {disease:'Sepsis',mechanic:'sepsis',bossType:'sepsis',col:'#16a34a',affected:['Leucocito','Plasma'],
+   desc:'Infección generalizada en la sangre que desborda el sistema inmune del organismo.',
+   fact:'La Sepsis es una emergencia médica que puede provocar fallo multiorgánico.',
+   intro:'Infección total. Patógenos desde todas direcciones. Tu disparo perderá alcance con el tiempo. Recoge leucocitos y plasma para mantener tus defensas. Esto es todo o nada.',
+   qs:[{q:'La Sepsis es causada por...',opts:['Una mutación genética','Una infección generalizada','Exceso de glóbulos','Falta de hierro'],a:1},
+       {q:'La Sepsis desborda...',opts:['La producción de GR','Las defensas del organismo','La coagulación','El plasma'],a:1}]}
 ];
 
-/* Power-up types */
-var PU_TYPES = [
-  {id:'double', label:'2x DOBLE',  col:'#fbbf24', dur:8000},
-  {id:'fast',   label:'⚡ VELOZ',  col:'#a78bfa', dur:6000},
-  {id:'shield', label:'🛡 ESCUDO', col:'#22c55e', dur:0},
+var PU_TYPES=[
+  {id:'double',label:'2x DOBLE',col:'#fbbf24',dur:8000},
+  {id:'fast',  label:'⚡ VELOZ', col:'#a78bfa',dur:6000},
+  {id:'shield',label:'🛡 ESCUDO',col:'#22c55e',dur:0}
+];
+var LIVES_START=5, LIVES_MAX=8;
+
+/* Descripción de mecánica especial por nivel (se muestra en el intro) */
+var MECHS=[
+  '👁 Tu <b>visión se oscurecerá</b> progresivamente. Recoge <b>Eritrocitos</b> y <b>Hemoglobina</b> para recuperarla.',
+  '⚠️ <b>Leucocitos anormales</b> caen mezclados con los sanos. Tienen el mismo aspecto — solo la etiqueta los delata. Recoger uno anormal → pierdes vida.',
+  '🐢 Tus defensas son escasas: <b>disparas más lento</b> y los patógenos vienen más rápido. Recoge <b>Leucocitos</b> para recuperar velocidad de disparo.',
+  '🩸 Exceso de células: la nave se mueve más <b>lenta</b> y el vaso está <b>congestionado</b>. Esquiva los eritrocitos flotantes mientras sigues clasificando.',
+  '','','',''
 ];
 
-/* ═══════════════ CANVAS ═══════════════ */
-var wrap = document.getElementById('wrap');
-var cv   = document.getElementById('gc');
-var ctx  = cv.getContext('2d');
-var W, H;
+/* ══════════════════════════════════════════
+   CANVAS
+══════════════════════════════════════════ */
+var wrap=document.getElementById('wrap');
+var cv=document.getElementById('gc');
+var ctx=cv.getContext('2d');
+var W,H;
+function resize(){W=cv.width=wrap.offsetWidth;H=cv.height=wrap.offsetHeight;if(G)G.py=H-90;}
+window.addEventListener('resize',resize); resize();
 
-function resize(){
-  W = cv.width  = wrap.offsetWidth;
-  H = cv.height = wrap.offsetHeight;
-  if(G) G.py = H - 90;
-}
-window.addEventListener('resize', resize);
-resize();
+/* ══════════════════════════════════════════
+   BACKGROUND LAYERS
+══════════════════════════════════════════ */
+var RBC=[];   // red blood cells (parallax)
+var FIBERS=[]; // vessel wall fibers (speed lines)
 
-/* ═══════════════ BG DOTS ═══════════════ */
-var BGDOTS = [];
 function initBg(){
-  BGDOTS = [];
-  for(var i=0;i<35;i++){
-    BGDOTS.push({
-      x: Math.random()*500,
-      y: Math.random()*800,
-      r: Math.random()*1.8+.3,
-      a: Math.random()*.06+.015,
-      dy: Math.random()*.3+.06
+  RBC=[];
+  for(var i=0;i<38;i++) RBC.push({
+    bx:20+Math.random()*(480-40),
+    by:Math.random()*900,
+    rx:5+Math.random()*6.5, ry:3+Math.random()*3.5,
+    alpha:.03+Math.random()*.065,
+    spd:.28+Math.random()*.45,  // parallax factor (relative to scrollY)
+    ang:Math.random()*Math.PI
+  });
+  FIBERS=[];
+  for(var i=0;i<20;i++){
+    var side=i<10?0:1; // 0=left wall region, 1=right wall region
+    FIBERS.push({
+      bx:side===0?(8+Math.random()*55):(W-63+Math.random()*55),
+      by:Math.random()*900,
+      len:18+Math.random()*40,
+      spd:3.2+Math.random()*5,
+      alpha:.05+Math.random()*.1,
+      w:.5+Math.random()*.9
     });
   }
 }
 initBg();
 
-/* ═══════════════ GAME STATE ═══════════════ */
-var G = null;
+/* ══════════════════════════════════════════
+   GAME STATE
+══════════════════════════════════════════ */
+var G=null;
 
 function newGame(){
-  G = {
-    px: W/2, py: H-90, pr: 22,
-    vx: 0,
-    bullets: [],
-    items:   [],
-    powerups:[],
-    parts:   [],
-    floats:  [],
-    lives:  3,
-    score:  0,
-    level:  1,
-    kills:  0,
-    dmg:    0,
-    scd:    0,   /* shoot cooldown */
-    spcd:   0,   /* shoot pulse visual */
-    spawnT: Date.now(),
-    puSpawnT: Date.now(),
-    over:   false,
-    shield: false,
-    double: false, doubleTmr: 0,
-    fast:   false, fastTmr:   0,
-    left: false, right: false, up: false, down: false, shoot: false,
+  G={
+    phase:'idle', levelIdx:0,
+    px:W/2, py:H-90, pr:22,
+    bullets:[], items:[], powerups:[], pathogens:[], parts:[], floats:[],
+    lives:LIVES_START, score:0,
+    combo:0, bestCombo:0,
+    enemyKilled:0, allyCollected:0, allyHit:0, quizWrong:0,
+    dmg:0, shake:0, valveFlash:0, scd:0, spcd:0,
+    spawnT:Date.now(), puSpawnT:Date.now(),
+    over:false,
+    shield:false, double:false, doubleTmr:0, fast:false, fastTmr:0,
+    left:false, right:false, up:false, down:false, shoot:false,
+    ecgBuf:new Array(52).fill(0), ecgPhase:0,
+    boss:null,
+    bossClones:[],
+    shockwave:null,
+    turrets:[], turretNextAt:380,
+    /* mecánicas de nivel */
+    visionLevel:100,   // L1 Anemia / L5 Talasemia
+    shootCdMod:1,      // L3 Leucopenia: multiplicador de cooldown (1=normal, 2=doble lentitud)
+    leucoTimer:0,      // L3 tiempo sin recoger leucocitos
+    moveMult:1,        // L4 Policitemia: multiplicador de velocidad
+    obstacles:[],      // L4 eritrocitos flotantes
+    /* L6 Hemofilia */
+    bleeding:false, bleedTimer:0, bleedInterval:4000, bleedHits:0, bleedDropT:0,
+    /* L7 Trombocitopenia */
+    wounds:[], carryingPlatelet:false, woundSpawnTimer:7000,
+    /* L8 Sepsis */
+    bulletRange:1.0, sepsisProgress:0, sepsisSpawnT:0,
+    /* flight */
+    scrollY:0,
+    flightProg:0,  // 0–100 : progress toward valve
+    flightTime:0,
+    /* valve */
+    valveOpen:0,   // 0=closed … 1=open
+    valveAnimating:false
   };
 }
 
-/* ═══════════════ SPAWN ITEMS ═══════════════ */
+/* ══════════════════════════════════════════
+   PHASE MANAGEMENT
+══════════════════════════════════════════ */
+function showOnlyOverlay(id){
+  ['ov-start','ov-intro','ov-quiz','ov-lwin','ov-go','ov-win'].forEach(function(i){
+    document.getElementById(i).classList.add('hidden');
+  });
+  if(id) document.getElementById(id).classList.remove('hidden');
+}
+
+function startLevel(idx){
+  G.levelIdx=idx; G.phase='idle';
+  G.flightProg=0; G.flightTime=0; G.valveOpen=0; G.valveAnimating=false;
+  var lv=LD[idx];
+  document.getElementById('oi-num').textContent='NIVEL '+(idx+1)+' DE 8';
+  document.getElementById('oi-name').textContent=lv.disease;
+  document.getElementById('oi-name').style.color=lv.col;
+  document.getElementById('oi-desc').textContent=lv.desc;
+  var c=document.getElementById('oi-comps'); c.innerHTML='';
+  lv.affected.forEach(function(a){
+    var t=document.createElement('span');
+    t.className='comp-tag'; t.textContent='🩸 '+a; c.appendChild(t);
+  });
+  var m=document.getElementById('oi-mechanic');
+  if(m) m.innerHTML=MECHS[idx]||'';
+  m.style.display=MECHS[idx]?'block':'none';
+  /* caja dorada con mecánica del nivel */
+  var ib=document.getElementById('oi-intro-box');
+  var it2=document.getElementById('oi-intro-txt');
+  if(lv.intro){ib.style.display='block';it2.textContent=lv.intro;}
+  else{ib.style.display='none';}
+  showOnlyOverlay('ov-intro');
+}
+
+function startMiniPhase(){
+  G.phase='mini';
+  G.flightProg=0; G.flightTime=0;
+  G.items=[]; G.pathogens=[];
+  G.turrets=[]; G.turretNextAt=380;
+  applyLevelMechanics();
+  showOnlyOverlay(null);
+}
+
+function applyLevelMechanics(){
+  var lv=LD[G.levelIdx];
+  G.visionLevel=100; G.shootCdMod=1; G.leucoTimer=0;
+  G.moveMult=1; G.obstacles=[];
+  G.bleeding=false; G.bleedTimer=0; G.bleedInterval=4000; G.bleedHits=0; G.bleedDropT=0;
+  G.wounds=[]; G.carryingPlatelet=false; G.woundSpawnTimer=7000;
+  G.bulletRange=1.0; G.sepsisProgress=0; G.sepsisSpawnT=0;
+  G._bleedDrops=[];
+  if(lv.mechanic==='anemia')       { G.visionLevel=80; }
+  if(lv.mechanic==='leucopenia')   { G.shootCdMod=2; }
+  if(lv.mechanic==='policitemia')  { G.moveMult=0.62; spawnObstacles(); }
+  if(lv.mechanic==='talasemia')    { G.visionLevel=100; }
+  if(lv.mechanic==='hemofilia')    { G.bleedInterval=4000; }
+  if(lv.mechanic==='trombocitopenia'){ G.woundSpawnTimer=7000; }
+  if(lv.mechanic==='sepsis')       { G.bulletRange=1.0; G.sepsisProgress=0; }
+}
+
+function spawnObstacles(){
+  G.obstacles=[];
+  for(var i=0;i<10;i++){
+    G.obstacles.push({
+      x:30+Math.random()*(W-60),
+      y:90+Math.random()*(H-160),
+      vx:(Math.random()-.5)*.9,
+      vy:(Math.random()-.5)*.5+.25,
+      r:13+Math.random()*9,
+      ang:Math.random()*Math.PI
+    });
+  }
+}
+
+function spawnAbscess(){
+  var side=Math.random()<.5?'l':'r';
+  G.turrets.push({
+    side:side,
+    y:-18,                          // entra por arriba
+    timer:1400,                     // primer disparo tras 1.4 s en pantalla
+    interval:2800+Math.random()*600,
+    flash:0
+  });
+  /* siguiente absceso: 550-800 unidades de scroll más adelante */
+  G.turretNextAt=G.scrollY+550+Math.random()*250;
+}
+
+function startQuizPhase(){
+  G.phase='idle';
+  /* valve-arrival effect — destello dorado positivo */
+  G.shake=320; G.valveFlash=680;
+  var lv=LD[G.levelIdx];
+  var badge=document.getElementById('qz-badge');
+  badge.textContent='NIVEL '+(G.levelIdx+1)+' · '+lv.disease;
+  badge.style.background=lv.col;
+  showQuizQuestion(0);
+  setTimeout(function(){ showOnlyOverlay('ov-quiz'); },600);
+}
+
+var QZ_IDX=0;
+function showQuizQuestion(idx){
+  QZ_IDX=idx;
+  var lv=LD[G.levelIdx]; var q=lv.qs[idx];
+  document.getElementById('qz-prog').textContent='Pregunta '+(idx+1)+' de '+lv.qs.length;
+  document.getElementById('qz-q').textContent=q.q;
+  document.getElementById('qz-fb').textContent='';
+  var opts=document.getElementById('qz-opts'); opts.innerHTML='';
+  var lb=['A','B','C','D'];
+  q.opts.forEach(function(o,i){
+    var btn=document.createElement('button');
+    btn.className='qz-btn'; btn.textContent=lb[i]+') '+o;
+    btn.addEventListener('click',function(){handleAnswer(i,q.a,1);});
+    opts.appendChild(btn);
+  });
+}
+
+function handleAnswer(chosen,correct,total){
+  var btns=document.querySelectorAll('.qz-btn');
+  btns.forEach(function(b){b.disabled=true;});
+  btns[correct].classList.add('ok');
+  var fb=document.getElementById('qz-fb');
+  if(chosen===correct){fb.style.color='#22c55e';fb.textContent='✓ ¡Correcto!';}
+  else{btns[chosen].classList.add('bad');G.quizWrong++;fb.style.color='#ef4444';
+    fb.textContent='✗ Incorrecto. Respuesta: '+document.querySelectorAll('.qz-btn')[correct].textContent.slice(3);}
+  setTimeout(function(){
+    if(QZ_IDX+1<total) showQuizQuestion(QZ_IDX+1);
+    else{showOnlyOverlay(null); startBossPhase();}
+  },1600);
+}
+
+function startBossPhase(){
+  G.phase='boss';
+  G.items=[]; G.pathogens=[];
+  G.valveOpen=0; G.valveAnimating=true;
+  toast('🫀 ¡Válvula abriéndose…','r');
+  setTimeout(function(){ spawnBoss(); G.valveAnimating=false; },1500);
+  showOnlyOverlay(null);
+}
+
+function showLevelWin(){
+  G.phase='idle';
+  var lv=LD[G.levelIdx];
+  document.getElementById('lw-name').textContent='☠️ '+lv.disease+' eliminada';
+  document.getElementById('lw-name').style.color=lv.col;
+  document.getElementById('lw-fact').textContent=lv.fact;
+  document.getElementById('lw-score').textContent='Puntuación total: '+G.score+' pts';
+  document.getElementById('btn-lwin').textContent=G.levelIdx>=7?'¡Ver resultados! 🏆':'Siguiente nivel →';
+  showOnlyOverlay('ov-lwin');
+}
+
+function advanceLevel(){G.levelIdx>=7?showWinAll():startLevel(G.levelIdx+1);}
+function showWinAll(){G.over=true;document.getElementById('win-sc').textContent=G.score+' puntos';buildStats(document.getElementById('win-stats'));showOnlyOverlay('ov-win');}
+function showOver(){G.over=true;document.getElementById('go-sc').textContent=G.score+' puntos';buildStats(document.getElementById('go-stats'));showOnlyOverlay('ov-go');}
+
+/* ══════════════════════════════════════════
+   SPAWN
+══════════════════════════════════════════ */
+function spawnBoss(){
+  var lv=LD[G.levelIdx], d=G.levelIdx;
+  var bt=lv.bossType||'generic';
+  G.bossClones=[];
+
+  /* base config (used by generic / L5-L8) */
+  var cfg={
+    x:W/2, y:118, r:40,
+    hp:Math.min(18,10+d), maxHp:Math.min(18,10+d),
+    phase:0,
+    speed:Math.min(1.6,.85+d*.1), amplitude:W/2-72,
+    fireTimer:2400, fireInterval:Math.max(1600,2800-d*160),
+    hit:0, col:lv.col, name:lv.disease,
+    dying:false, dyingTimer:0, burstCd:0,
+    bossType:bt
+  };
+
+  /* ── Jefe 1: Anemia — eritrocito pálido sin proyectiles ── */
+  if(bt==='anemia'){
+    cfg.r=45; cfg.hp=12; cfg.maxHp=12;
+    cfg.speed=0.5; cfg.amplitude=W/2-84;
+    cfg.fireTimer=999999; cfg.fireInterval=999999;
+    cfg.anemiaTimer=2000;
+  }
+  /* ── Jefe 2: Leucemia — leucocito deforme con clones ── */
+  if(bt==='leucemia'){
+    cfg.r=38; cfg.hp=14; cfg.maxHp=14;
+    cfg.cloneTimer=5000; cfg.cloneInterval=5000;
+  }
+  /* ── Jefe 3: Leucopenia — bacteria con flagelos, ráfagas ── */
+  if(bt==='leucopenia'){
+    cfg.r=35; cfg.hp=13; cfg.maxHp=13;
+    cfg.speed=Math.min(1.6,.85+d*.1)*1.5;
+    cfg.amplitude=W/2-60;
+    cfg.fireTimer=0; cfg.fireInterval=2500;
+    cfg.burstMode=false; cfg.burstCount=0; cfg.burstCooldown=0;
+    cfg.vertPhase=0;
+  }
+  /* ── Jefe 4: Policitemia — coágulo enorme con oleadas ── */
+  if(bt==='policitemia'){
+    cfg.r=60; cfg.hp=20; cfg.maxHp=20;
+    cfg.speed=Math.min(1.6,.85+d*.1)*0.4;
+    cfg.amplitude=W/2-90;
+    cfg.fireTimer=999999; cfg.fireInterval=999999;
+    cfg.waveTimer=4000; cfg.waveInterval=4000;
+  }
+  /* ── Jefe 5: Talasemia — hemoglobina deformada, balas rebotan ── */
+  if(bt==='talasemia'){
+    cfg.r=42; cfg.hp=14; cfg.maxHp=14;
+    cfg.fireTimer=3000; cfg.fireInterval=3000;
+    cfg.bossState='normal'; cfg.stateTimer=3500;
+  }
+  /* ── Jefe 6: Hemofilia — herida gigante, salpicaduras ── */
+  if(bt==='hemofilia'){
+    cfg.r=44; cfg.hp=15; cfg.maxHp=15;
+    cfg.fireTimer=3200; cfg.fireInterval=3200;
+  }
+  /* ── Jefe 7: Trombocitopenia — plaqueta agrietada, abre grietas ── */
+  if(bt==='trombocitopenia'){
+    cfg.r=46; cfg.hp=16; cfg.maxHp=16;
+    cfg.fireTimer=999999; cfg.fireInterval=999999;
+    cfg.woundTimer=3000+Math.random()*1000; cfg.woundInterval=3500;
+  }
+  /* ── Jefe 8: Sepsis — blob infeccioso, Lissajous, onda expansiva ── */
+  if(bt==='sepsis'){
+    cfg.r=55; cfg.hp=22; cfg.maxHp=22;
+    cfg.speed=1.4; cfg.amplitude=W/2-80;
+    cfg.fireTimer=2000; cfg.fireInterval=2000;
+    cfg.shockTimer=8000+Math.random()*2000;
+  }
+
+  G.boss=cfg;
+}
+
 function spawnItem(){
-  var lv = LVL[G.level];
-  if(G.items.length >= lv.max) return;
-  var isEnemy = Math.random() < lv.ec;
-  var pool    = isEnemy ? ENEMIES : ALLIES;
-  var word    = pool[Math.floor(Math.random()*pool.length)];
-  ctx.font = 'bold 15px Nunito,sans-serif';
-  var tw = ctx.measureText(word).width;
-  var iw = tw + 28;
-  var x  = Math.random()*(W - iw - 16) + iw/2 + 8;
-  G.items.push({word:word, enemy:isEnemy, x:x, y:-30, w:iw,
-    spd: lv.spd + (Math.random()*.4-.2)});
-}
-
-/* ═══════════════ SPAWN POWERUP ═══════════════ */
-function spawnPowerup(){
-  var t = PU_TYPES[Math.floor(Math.random()*PU_TYPES.length)];
-  var x = Math.random()*(W-60)+30;
-  G.powerups.push({id:t.id, label:t.label, col:t.col, dur:t.dur,
-    x:x, y:-28, spd:1.2, r:18});
-}
-
-/* ═══════════════ SHOOT ═══════════════ */
-function doShoot(){
-  var cooldown = G.fast ? 130 : 280;
-  if(G.scd>0) return;
-  if(G.double){
-    G.bullets.push({x:G.px-10, y:G.py-G.pr-4});
-    G.bullets.push({x:G.px+10, y:G.py-G.pr-4});
+  var lv=LD[G.levelIdx], max=G.phase==='mini'?4:5;
+  if(G.items.length>=max) return;
+  var isE, word;
+  /* Leucemia (L2): 30% de chance de leucocito anormal (trampa) */
+  if(G.levelIdx===1 && G.phase==='mini' && Math.random()<.30){
+    isE=true; word='Leucocito anormal';
   } else {
-    G.bullets.push({x:G.px, y:G.py-G.pr-4});
+    isE=Math.random()<.5;
+    var pool=isE?[lv.disease]:lv.affected;
+    word=pool[Math.floor(Math.random()*pool.length)];
   }
-  G.scd  = cooldown;
-  G.spcd = 140;
+  /* L5 Talasemia: marcar hemoglobina defectuosa (40% de aliadas) */
+  var defective=false;
+  if(lv.mechanic==='talasemia'&&!isE&&word==='Hemoglobina'&&Math.random()<.40){
+    defective=true;
+  }
+  /* L6 Hemofilia: más plaquetas/plasma para curar el sangrado */
+  if(lv.mechanic==='hemofilia'&&!isE&&Math.random()<.35){
+    word=Math.random()<.5?'Plaqueta':'Plasma';
+  }
+  /* L8 Sepsis: bias hacia enemigos al avanzar la infección */
+  if(lv.mechanic==='sepsis'&&!isE&&Math.random()<G.sepsisProgress*.006){
+    isE=true; word=lv.disease;
+  }
+  ctx.font='bold 15px Nunito,sans-serif';
+  var tw=ctx.measureText(word).width, iw=tw+28;
+  var x=Math.random()*(W-iw-16)+iw/2+8;
+  G.items.push({word:word,enemy:isE,defective:defective,x:x,y:-30,w:iw,spd:1.2+G.levelIdx*.18+(Math.random()*.3-.15)});
 }
 
-/* ═══════════════ LOSE LIFE ═══════════════ */
+function spawnPowerup(){
+  var t=PU_TYPES[Math.floor(Math.random()*PU_TYPES.length)];
+  G.powerups.push({id:t.id,label:t.label,col:t.col,dur:t.dur,x:Math.random()*(W-60)+30,y:-28,spd:1.2,r:18});
+}
+
+/* ══════════════════════════════════════════
+   MECHANICS
+══════════════════════════════════════════ */
+function doShoot(){
+  if(G.scd>0) return;
+  var cd=Math.round((G.fast?130:280)*(G.shootCdMod||1));
+  var sy=G.py-G.pr-4;
+  if(G.double){G.bullets.push({x:G.px-10,y:sy,startY:sy});G.bullets.push({x:G.px+10,y:sy,startY:sy});}
+  else G.bullets.push({x:G.px,y:sy,startY:sy});
+  G.scd=cd; G.spcd=140;
+}
+
 function hitLife(msg){
-  if(G.shield){
-    G.shield = false;
-    toast('🛡️ ¡Escudo absorbió el golpe!','g');
-    G.dmg = 300;
-    return;
+  if(G.shield){G.shield=false;G.dmg=250;G.shake=180;toast('🛡️ ¡Escudo absorbió el golpe!','g');return;}
+  /* L6 Hemofilia: golpes activan sangrado en lugar de daño instantáneo */
+  if(LD[G.levelIdx].mechanic==='hemofilia'){
+    G.bleedHits++; G.bleedTimer=G.bleedInterval; G.bleeding=true;
+    G.dmg=400; G.shake=240; G.combo=0;
+    toast('🩸 ¡Sangrado activado! Recoge Plaqueta o Plasma','r'); return;
   }
-  G.lives--;
-  G.dmg = 650;
+  G.lives--; G.dmg=720; G.shake=420; G.combo=0;
   toast(msg,'r');
-  if(G.lives<=0){ G.lives=0; G.over=true; setTimeout(showOver,700); }
+  if(G.lives<=0){G.lives=0;setTimeout(showOver,700);}
 }
 
-/* ═══════════════ LEVEL CHECK ═══════════════ */
-function checkLevel(){
-  var next = Math.min(3, Math.floor(G.kills/5)+1);
-  if(next > G.level){
-    G.level = next;
-    toast('🔥 ¡NIVEL '+G.level+'!','y');
-  }
+function updateECG(dt){
+  var f=1+(LIVES_MAX-G.lives)*.22;
+  G.ecgPhase+=dt*.0016*f; if(G.ecgPhase>=1) G.ecgPhase-=1;
+  var t=G.ecgPhase,v=0;
+  if(t>.08&&t<.22) v=Math.sin((t-.08)/.14*Math.PI)*.2;
+  if(t>.30&&t<.34) v=-.15;
+  if(t>=.34&&t<.36) v=1;
+  if(t>=.36&&t<.43) v=1-(t-.36)/.07*1.25;
+  if(t>.50&&t<.66) v=Math.sin((t-.50)/.16*Math.PI)*.28;
+  if(G.lives<=2) v+=(Math.random()-.5)*.14;
+  G.ecgBuf.push(v); if(G.ecgBuf.length>52) G.ecgBuf.shift();
 }
 
-/* ═══════════════ PARTICLES ═══════════════ */
 function burst(x,y,col,n){
-  for(var i=0;i<n;i++){
-    var a=(i/n)*Math.PI*2, s=2.5+Math.random()*2;
-    G.parts.push({x:x,y:y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-1.5,
-      col:col,r:2.5+Math.random()*2,life:420,max:420,a:1});
-  }
+  for(var i=0;i<n;i++){var a=i/n*Math.PI*2,s=2.5+Math.random()*2.5;
+    G.parts.push({x:x,y:y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-1.5,col:col,r:2.5+Math.random()*2,life:460,max:460});}
 }
-function floatTxt(x,y,txt,col){
-  G.floats.push({x:x,y:y,txt:txt,col:col,life:900,max:900,a:1});
+function floatTxt(x,y,txt,col){G.floats.push({x:x,y:y,txt:txt,col:col,life:950,max:950});}
+
+function applyPowerup(pu){
+  burst(pu.x,pu.y,pu.col,10); floatTxt(pu.x,pu.y-14,pu.label,pu.col);
+  if(pu.id==='double'){G.double=true;G.doubleTmr=pu.dur;toast('💛 ¡Disparo doble!','p');}
+  if(pu.id==='fast')  {G.fast=true;G.fastTmr=pu.dur;toast('⚡ ¡Disparo veloz!','p');}
+  if(pu.id==='shield'){G.shield=true;toast('🛡️ ¡Escudo activado!','g');}
 }
 
-/* ═══════════════ UPDATE ═══════════════ */
+/* ══════════════════════════════════════════
+   UPDATE
+══════════════════════════════════════════ */
 function update(dt){
-  /* player */
-  var spd=5;
-  if(G.left)  G.px-=spd;
-  if(G.right) G.px+=spd;
-  if(G.up)    G.py-=spd;
-  if(G.down)  G.py+=spd;
-  if(G.px<G.pr)    G.px=G.pr;
-  if(G.px>W-G.pr)  G.px=W-G.pr;
-  if(G.py<54)      G.py=54;
-  if(G.py>H-78)    G.py=H-78;
+  if(G.phase!=='mini'&&G.phase!=='boss') return;
 
-  /* shoot */
-  G.scd  = Math.max(0,G.scd-dt);
-  G.spcd = Math.max(0,G.spcd-dt);
+  /* ── player movement ── */
+  var ms=5*G.moveMult;
+  if(G.left)  G.px-=ms;
+  if(G.right) G.px+=ms;
+  if(G.up)    G.py-=ms;
+  if(G.down)  G.py+=ms;
+  G.px=Math.max(G.pr,Math.min(W-G.pr,G.px));
+  G.py=Math.max(56,Math.min(H-78,G.py));
+
+  G.scd=Math.max(0,G.scd-dt); G.spcd=Math.max(0,G.spcd-dt);
   if(G.shoot) doShoot();
+  if(G.double){G.doubleTmr-=dt;if(G.doubleTmr<=0){G.double=false;toast('2x terminó','y');}}
+  if(G.fast)  {G.fastTmr-=dt; if(G.fastTmr<=0)  {G.fast=false;  toast('⚡ terminó','y');}}
+  if(G.dmg>0) G.dmg-=dt;
+  if(G.valveFlash>0) G.valveFlash-=dt;
+  if(G.shake>0) G.shake-=dt;
+  updateECG(dt);
 
-  /* power-up timers */
-  if(G.double){ G.doubleTmr-=dt; if(G.doubleTmr<=0){G.double=false;toast('2x terminó','y');} }
-  if(G.fast)  { G.fastTmr-=dt;   if(G.fastTmr<=0)  {G.fast=false;  toast('⚡ terminó','y');} }
+  /* ── scroll / flight progress ── */
+  var scrollSpd=1.8+G.levelIdx*.14;
+  G.scrollY+=scrollSpd;
 
-  /* bullets */
+  if(G.phase==='mini'){
+    G.flightTime+=dt;
+    var timeProg=G.flightTime*0.0028;
+    G.flightProg=Math.min(100, Math.max(G.flightProg, timeProg));
+
+    /* ── L1 Anemia: oscurecer visión (3 pts/seg → mínimo en ~22s) ── */
+    if(LD[G.levelIdx].mechanic==='anemia'){
+      G.visionLevel=Math.max(15, G.visionLevel-dt*0.003);
+    }
+
+    /* ── L3 Leucopenia: regenerar patógenos extra + penalización al no recoger ── */
+    if(LD[G.levelIdx].mechanic==='leucopenia'){
+      G.leucoTimer+=dt;
+      if(G.leucoTimer>=8000){ G.leucoTimer=0; G.shootCdMod=Math.min(2.5,G.shootCdMod+0.1); }
+      /* patógenos extra desde arriba */
+      G.lPathT=(G.lPathT||0)+dt;
+      if(G.lPathT>1500){
+        G.lPathT=0;
+        G.pathogens.push({x:30+Math.random()*(W-60),y:-10,vx:(Math.random()-.5)*1.5,vy:(2.5+Math.random()*1.5)*1.3,r:7,spin:0});
+      }
+    }
+
+    /* ── L4 Policitemia: actualizar obstáculos ── */
+    if(G.levelIdx===3){
+      for(var oi=0;oi<G.obstacles.length;oi++){
+        var ob=G.obstacles[oi];
+        ob.x+=ob.vx; ob.y+=ob.vy; ob.ang+=0.005;
+        if(ob.x<ob.r||ob.x>W-ob.r) ob.vx*=-1;
+        if(ob.y<60+ob.r||ob.y>H-ob.r) ob.vy*=-1;
+        /* empujar nave si se superpone */
+        var odx=G.px-ob.x, ody=G.py-ob.y;
+        var od=Math.sqrt(odx*odx+ody*ody)||1;
+        var ov=G.pr+ob.r;
+        if(od<ov){
+          var push=(ov-od)*0.55;
+          G.px+=odx/od*push; G.py+=ody/od*push;
+        }
+      }
+      G.px=Math.max(G.pr,Math.min(W-G.pr,G.px));
+      G.py=Math.max(56,Math.min(H-78,G.py));
+    }
+
+    /* ── L5 Talasemia: visión se recupera lentamente (8%/seg) ── */
+    if(LD[G.levelIdx].mechanic==='talasemia'){
+      G.visionLevel=Math.min(100, G.visionLevel+dt*0.008);
+    }
+
+    /* ── L6 Hemofilia: sangrado activo drena 1 vida cada 1.2 s ── */
+    if(LD[G.levelIdx].mechanic==='hemofilia'&&G.bleeding){
+      G.bleedTimer-=dt;
+      G.bleedDropT+=dt;
+      if(G.bleedDropT>=1200){
+        G.bleedDropT=0;
+        G.lives=Math.max(0,G.lives-1);
+        G.dmg=320; G.shake=160;
+        floatTxt(G.px,G.py-35,'🩸 -1 vida','#ef4444');
+        if(G.lives<=0){G.lives=0;setTimeout(showOver,700);}
+      }
+      if(G.bleedTimer<=0){ G.bleeding=false; G.bleedDropT=0; toast('🩹 Sangrado detenido','g'); }
+    }
+
+    /* ── L7 Trombocitopenia: heridas en pared + sellado con plaqueta ── */
+    if(LD[G.levelIdx].mechanic==='trombocitopenia'){
+      G.woundSpawnTimer-=dt;
+      if(G.woundSpawnTimer<=0){
+        G.woundSpawnTimer=7000+Math.random()*4000;
+        var wallW7=W*.14;
+        var side7=Math.random()<.5?'l':'r';
+        var wx7=side7==='l'?wallW7*(0.4+Math.random()*.4):W-wallW7*(0.4+Math.random()*.4);
+        G.wounds.push({x:wx7,y:80+Math.random()*(H-160),side:side7,bleedT:0,sealed:false,sealAnim:0});
+        toast('🔴 ¡Nueva herida en la pared! Recoge Plaqueta','r');
+      }
+      for(var wi=0;wi<G.wounds.length;wi++){
+        var wo=G.wounds[wi];
+        if(wo.sealed){wo.sealAnim=Math.min(1,wo.sealAnim+dt*.002);continue;}
+        wo.bleedT+=dt;
+        if(wo.bleedT>=2500){
+          wo.bleedT=0;
+          G.lives=Math.max(0,G.lives-1);
+          G.dmg=280; G.shake=140;
+          floatTxt(wo.x,wo.y-15,'🩸 herida -1','#ef4444');
+          if(G.lives<=0){G.lives=0;setTimeout(showOver,700);}
+        }
+        /* nave cerca con plaqueta → sellar */
+        if(G.carryingPlatelet){
+          var wdx=G.px-wo.x, wdy=G.py-wo.y;
+          if(wdx*wdx+wdy*wdy<38*38){
+            wo.sealed=true; G.carryingPlatelet=false;
+            G.score+=12; floatTxt(wo.x,wo.y-20,'🩹 Sellada +12','#22c55e');
+            burst(wo.x,wo.y,'#22c55e',10);
+            toast('🩹 ¡Herida sellada!','g');
+          }
+        }
+      }
+      /* limpiar heridas selladas tras animación completa */
+      G.wounds=G.wounds.filter(function(w){return !w.sealed||w.sealAnim<1;});
+    }
+
+    /* ── L8 Sepsis: progresión + spawn lateral + deterioro de alcance ── */
+    if(LD[G.levelIdx].mechanic==='sepsis'){
+      G.sepsisProgress=Math.min(100,G.sepsisProgress+dt*0.008);
+      G.bulletRange=Math.max(0.35, 1.0-G.sepsisProgress*0.006);
+      G.sepsisSpawnT+=dt;
+      var sInterval=Math.max(800,2000-G.sepsisProgress*12);
+      if(G.sepsisSpawnT>=sInterval){
+        G.sepsisSpawnT=0;
+        var sside=Math.floor(Math.random()*3);
+        var px8,py8,vx8,vy8;
+        if(sside===0){px8=30+Math.random()*(W-60);py8=-10;vx8=(Math.random()-.5)*2;vy8=2.5+Math.random()*1.5;}
+        else if(sside===1){px8=-10;py8=80+Math.random()*(H-150);vx8=2.5+Math.random()*1.5;vy8=(Math.random()-.5)*1.5;}
+        else{px8=W+10;py8=80+Math.random()*(H-150);vx8=-(2.5+Math.random()*1.5);vy8=(Math.random()-.5)*1.5;}
+        G.pathogens.push({x:px8,y:py8,vx:vx8,vy:vy8,r:7,spin:0,toxic:true});
+      }
+    }
+  }
+
+  /* valve opening during boss phase */
+  if(G.phase==='boss'){
+    if(G.valveOpen<1) G.valveOpen=Math.min(1,G.valveOpen+dt/1400);
+  }
+
+  /* ── FLYING PHASE — torretas de pared + transición a válvula ── */
+  if(G.phase==='mini'){
+    if(G.flightProg>=100){
+      /* llegamos a la válvula */
+      G.phase='idle';
+      toast('🫀 ¡Válvula cardíaca! — Quiz de acceso','r');
+      setTimeout(startQuizPhase,700);
+      return;
+    }
+
+    /* ── abscesos: scroll + disparo + spawn por distancia ── */
+    var wallWt=W*0.14, st=G.scrollY*0.01;
+    var scrollSpd2=1.8+G.levelIdx*.14;
+    var aLive=[];
+    for(var ti=0;ti<G.turrets.length;ti++){
+      var tu=G.turrets[ti];
+      tu.y+=scrollSpd2;             // baja con el vaso
+      if(tu.y>H+30) continue;       // salió de pantalla → descartado
+      if(tu.flash>0) tu.flash-=dt;
+      tu.timer-=dt;
+      if(tu.timer<=0){
+        tu.timer=tu.interval;
+        tu.flash=320;
+        var tX=tu.side==='l'
+          ? wallWt+Math.sin(tu.y/50+st)*12+10
+          : W-wallWt-Math.sin(tu.y/50+st+Math.PI)*12-10;
+        var ddx=G.px-tX, ddy=G.py-tu.y;
+        var dist=Math.sqrt(ddx*ddx+ddy*ddy)||1;
+        var spd=2.4+G.levelIdx*0.18;
+        G.pathogens.push({x:tX,y:tu.y,vx:ddx/dist*spd,vy:ddy/dist*spd,r:7,spin:0});
+      }
+      aLive.push(tu);
+    }
+    G.turrets=aLive;
+    /* spawn siguiente si no hay ninguno en pantalla y se cumplió la distancia */
+    if(G.turrets.length===0 && G.scrollY>=G.turretNextAt) spawnAbscess();
+  }
+
+  /* ── BOSS PHASE ── */
+  if(G.phase==='boss'&&G.boss){
+    var b2=G.boss;
+    if(b2.dying){
+      b2.dyingTimer-=dt; b2.burstCd-=dt;
+      if(b2.burstCd<=0){b2.burstCd=75;
+        burst(b2.x+(Math.random()-.5)*75,b2.y+(Math.random()-.5)*55,b2.col,8);
+        burst(b2.x+(Math.random()-.5)*55,b2.y+(Math.random()-.5)*38,'#fbbf24',6);}
+      if(b2.dyingTimer<=0){
+        burst(b2.x,b2.y,'#fbbf24',35); burst(b2.x,b2.y,'#fff',20);
+        G.bossClones=[];  /* todos los clones mueren con el jefe */
+        G.boss=null; G.phase='idle';
+        setTimeout(showLevelWin,300); return;
+      }
+    } else if(!G.valveAnimating){
+      /* base: movimiento lateral oscilante */
+      b2.phase+=dt*.001*b2.speed;
+      b2.x=W/2+Math.cos(b2.phase)*b2.amplitude;
+      if(b2.hit>0) b2.hit-=dt;
+
+      /* ── Anemia: nube de oscuridad cada 2 s ── */
+      if(b2.bossType==='anemia'){
+        b2.anemiaTimer-=dt;
+        if(b2.anemiaTimer<=0){
+          b2.anemiaTimer=2000;
+          G.visionLevel=Math.max(5, G.visionLevel-8);
+          floatTxt(b2.x, b2.y+b2.r+14, '🌑 Oscuridad…', '#8a5050');
+        }
+      }
+
+      /* ── Leucemia: disparo + clonación ── */
+      else if(b2.bossType==='leucemia'){
+        b2.fireTimer-=dt;
+        if(b2.fireTimer<=0){
+          b2.fireTimer=b2.fireInterval;
+          var vxL=(G.px-b2.x)/Math.max(1,Math.abs(G.px-b2.x))*2.5+(Math.random()-.5)*2;
+          G.pathogens.push({x:b2.x,y:b2.y+b2.r+8,vx:vxL,vy:3.5+G.levelIdx*.35,r:8,spin:0});
+        }
+        b2.cloneTimer-=dt;
+        if(b2.cloneTimer<=0&&G.bossClones.length<3){
+          b2.cloneTimer=b2.cloneInterval;
+          G.bossClones.push({
+            x:b2.x+(Math.random()-.5)*60, y:b2.y+40+Math.random()*30,
+            r:22, hp:4, maxHp:4,
+            phase:Math.random()*Math.PI*2,
+            speed:b2.speed*1.3, amplitude:(W*.38),
+            fireTimer:3000, fireInterval:3000, hit:0
+          });
+          floatTxt(b2.x, b2.y-b2.r-14, '⚠️ ¡Clon!', '#a855f7');
+          toast('🧬 ¡Leucemia creó un clon!','p');
+        }
+        /* actualizar clones */
+        for(var ci=0;ci<G.bossClones.length;ci++){
+          var cl=G.bossClones[ci];
+          cl.phase+=dt*.001*cl.speed;
+          cl.x=W/2+Math.cos(cl.phase)*cl.amplitude;
+          if(cl.hit>0) cl.hit-=dt;
+          cl.fireTimer-=dt;
+          if(cl.fireTimer<=0){
+            cl.fireTimer=cl.fireInterval;
+            var cvx=(G.px-cl.x)/Math.max(1,Math.abs(G.px-cl.x))*2.2+(Math.random()-.5)*1.5;
+            G.pathogens.push({x:cl.x,y:cl.y+cl.r+6,vx:cvx,vy:3+G.levelIdx*.25,r:7,spin:0});
+          }
+        }
+      }
+
+      /* ── Leucopenia: movimiento errático + ráfagas de 3 ── */
+      else if(b2.bossType==='leucopenia'){
+        b2.vertPhase+=dt*.0018;
+        b2.y=Math.max(80, Math.min(H*.36, 118+Math.sin(b2.vertPhase)*55));
+        if(b2.burstMode){
+          b2.burstCooldown-=dt;
+          if(b2.burstCooldown<=0&&b2.burstCount>0){
+            b2.burstCount--;
+            b2.burstCooldown=200;
+            var vxP=(G.px-b2.x)/Math.max(1,Math.abs(G.px-b2.x))*3+(Math.random()-.5)*1.5;
+            G.pathogens.push({x:b2.x,y:b2.y+b2.r+8,vx:vxP,vy:3.5+G.levelIdx*.35,r:8,spin:0});
+          }
+          if(b2.burstCount<=0){ b2.burstMode=false; b2.fireTimer=b2.fireInterval; }
+        } else {
+          b2.fireTimer-=dt;
+          if(b2.fireTimer<=0){ b2.burstMode=true; b2.burstCount=3; b2.burstCooldown=0; }
+        }
+      }
+
+      /* ── Policitemia: oleadas de obstáculos + obstáculos se mueven ── */
+      else if(b2.bossType==='policitemia'){
+        b2.waveTimer-=dt;
+        if(b2.waveTimer<=0){
+          b2.waveTimer=b2.waveInterval;
+          var wCount=4+Math.floor(Math.random()*2);
+          for(var wk=0;wk<wCount;wk++){
+            G.obstacles.push({
+              x:b2.x+(Math.random()-.5)*90,
+              y:b2.y+b2.r+8,
+              vx:(Math.random()-.5)*3.5,
+              vy:2+Math.random()*2.5,
+              r:13+Math.random()*9,
+              ang:Math.random()*Math.PI
+            });
+          }
+          floatTxt(b2.x, b2.y+b2.r+12, '🌊 ¡Oleada!', '#dc2626');
+        }
+        /* obstáculos siguen moviéndose y empujando durante la pelea */
+        for(var oi=0;oi<G.obstacles.length;oi++){
+          var ob=G.obstacles[oi];
+          ob.x+=ob.vx; ob.y+=ob.vy; ob.ang+=0.005;
+          if(ob.x<ob.r||ob.x>W-ob.r) ob.vx*=-1;
+          if(ob.y<60+ob.r||ob.y>H-ob.r) ob.vy*=-1;
+          var odx=G.px-ob.x, ody=G.py-ob.y;
+          var od=Math.sqrt(odx*odx+ody*ody)||1;
+          var ov2=G.pr+ob.r;
+          if(od<ov2){ var push=(ov2-od)*0.55; G.px+=odx/od*push; G.py+=ody/od*push; }
+        }
+        G.px=Math.max(G.pr,Math.min(W-G.pr,G.px));
+        G.py=Math.max(56,Math.min(H-78,G.py));
+      }
+
+      /* ── Talasemia: alterna normal/deformado; disparo diagonal ── */
+      else if(b2.bossType==='talasemia'){
+        b2.stateTimer-=dt;
+        if(b2.stateTimer<=0){
+          b2.bossState=b2.bossState==='normal'?'deformed':'normal';
+          b2.stateTimer=3000+Math.random()*1000;
+          if(b2.bossState==='deformed') toast('⚠️ ¡Deformada! — ¡Dispara ahora!','r');
+          else toast('🛑 Estabilizada — balas rebotan','y');
+        }
+        b2.fireTimer-=dt;
+        if(b2.fireTimer<=0){
+          b2.fireTimer=b2.fireInterval;
+          G.pathogens.push({x:b2.x,y:b2.y+b2.r,vx: 2.8,vy:3.2,r:7,spin:0});
+          G.pathogens.push({x:b2.x,y:b2.y+b2.r,vx:-2.8,vy:3.2,r:7,spin:0});
+        }
+      }
+
+      /* ── Hemofilia: proyectil que activa sangrado + sangre constante ── */
+      else if(b2.bossType==='hemofilia'){
+        b2.fireTimer-=dt;
+        if(b2.fireTimer<=0){
+          b2.fireTimer=b2.fireInterval;
+          var vx6=(G.px-b2.x)/Math.max(1,Math.abs(G.px-b2.x))*2.5+(Math.random()-.5)*1.5;
+          G.pathogens.push({x:b2.x,y:b2.y+b2.r+8,vx:vx6,vy:3.5+G.levelIdx*.35,r:8,spin:0});
+        }
+      }
+
+      /* ── Trombocitopenia: abre grietas en la pared ── */
+      else if(b2.bossType==='trombocitopenia'){
+        b2.woundTimer-=dt;
+        if(b2.woundTimer<=0&&G.wounds.length<6){
+          b2.woundTimer=b2.woundInterval;
+          var wallW7b=W*.14;
+          var side7b=Math.random()<.5?'l':'r';
+          var wx7b=side7b==='l'?wallW7b*(0.35+Math.random()*.45):W-wallW7b*(0.35+Math.random()*.45);
+          G.wounds.push({x:wx7b,y:80+Math.random()*(H-160),side:side7b,bleedT:0,sealed:false,sealAnim:0});
+          floatTxt(b2.x,b2.y+b2.r+14,'💢 ¡Grieta!','#db2777');
+          toast('🔴 ¡Jefe abrió una grieta!','r');
+        }
+      }
+
+      /* ── Sepsis: movimiento Lissajous + ráfagas + onda expansiva ── */
+      else if(b2.bossType==='sepsis'){
+        /* sobrescribir movimiento base con Lissajous full-screen */
+        b2.x=W/2+Math.cos(b2.phase*0.7)*(W/2-80);
+        b2.y=Math.max(82, Math.min(H*.54, 90+Math.sin(b2.phase*1.1)*(H*.24)));
+        /* disparos desde ángulo de fase */
+        b2.fireTimer-=dt;
+        if(b2.fireTimer<=0){
+          b2.fireTimer=b2.fireInterval;
+          for(var sk=0;sk<3;sk++){
+            var sang=sk/3*Math.PI*2+b2.phase;
+            G.pathogens.push({x:b2.x,y:b2.y,vx:Math.cos(sang)*3,vy:Math.sin(sang)*3+1,r:7,spin:0,toxic:true});
+          }
+        }
+        /* onda expansiva */
+        b2.shockTimer-=dt;
+        if(b2.shockTimer<=0){
+          b2.shockTimer=8000+Math.random()*2000;
+          G.shockwave={x:b2.x,y:b2.y,r:0,maxR:W*.85,speed:4};
+          burst(b2.x,b2.y,'#22c55e',22); burst(b2.x,b2.y,'#bbf7d0',12);
+          toast('☢️ ¡Onda expansiva!','r');
+        }
+      }
+
+      /* ── Fallback genérico (no debería usarse) ── */
+      else {
+        b2.fireTimer-=dt;
+        if(b2.fireTimer<=0){
+          b2.fireTimer=b2.fireInterval;
+          var vx3g=(G.px-b2.x)/Math.max(1,Math.abs(G.px-b2.x))*2.5+(Math.random()-.5)*2;
+          G.pathogens.push({x:b2.x,y:b2.y+b2.r+8,vx:vx3g,vy:3.5+G.levelIdx*.35,r:8,spin:0});
+        }
+      }
+    }
+  }
+
+  /* ── bullets move ── */
   var nb=[];
   for(var i=0;i<G.bullets.length;i++){
-    var b=G.bullets[i]; b.y-=11;
-    if(b.y>-10) nb.push(b);
+    var b=G.bullets[i]; b.y-=12;
+    var bTraveled=b.startY!==undefined?(b.startY-b.y):0;
+    var bMaxRange=H*(G.bulletRange||1)*0.9;
+    if(b.y>-10 && (b.startY===undefined||bTraveled<bMaxRange)) nb.push(b);
   }
   G.bullets=nb;
+
+  /* bullet → boss + clones */
+  if(G.phase==='boss'&&G.boss&&!G.boss.dying&&!G.valveAnimating){
+    var fbb=[],b2=G.boss;
+    for(var i=0;i<G.bullets.length;i++){
+      var b=G.bullets[i], bHit=false;
+      /* check clones first (Leucemia) */
+      for(var ci=0;ci<G.bossClones.length;ci++){
+        var cl=G.bossClones[ci];
+        var cdx=b.x-cl.x, cdy=b.y-cl.y;
+        if(cdx*cdx+cdy*cdy<cl.r*cl.r){
+          cl.hp--; cl.hit=200; burst(b.x,b.y,'#a855f7',4);
+          if(cl.hp<=0){
+            burst(cl.x,cl.y,'#a855f7',12); burst(cl.x,cl.y,'#fbbf24',8);
+            G.score+=15; floatTxt(cl.x,cl.y-18,'💀 Clon +15','#a855f7');
+            G.bossClones.splice(ci,1);
+          }
+          bHit=true; break;
+        }
+      }
+      /* check main boss */
+      if(!bHit){
+        var dx=b.x-b2.x, dy=b.y-b2.y;
+        if(dx*dx+dy*dy<b2.r*b2.r){
+          /* Talasemia: rebote si está en estado normal */
+          if(b2.bossType==='talasemia'&&b2.bossState==='normal'){
+            G.pathogens.push({x:b.x,y:b.y,vx:(Math.random()-.5)*3,vy:3+Math.random()*2,r:6,spin:0});
+            burst(b.x,b.y,'#991b1b',6);
+            bHit=true;
+          } else {
+            b2.hp--; b2.hit=240; burst(b.x,b.y,b2.col,4);
+            /* Hemofilia: salpicadura radial al recibir impacto */
+            if(b2.bossType==='hemofilia'){
+              for(var hk=0;hk<5;hk++){
+                var ha=hk/5*Math.PI*2;
+                G.pathogens.push({x:b2.x,y:b2.y,vx:Math.cos(ha)*2.5,vy:Math.sin(ha)*2.5,r:5,spin:0});
+              }
+            }
+            if(b2.hp<=0){
+              for(var k=0;k<5;k++) burst(b2.x+(Math.random()-.5)*70,b2.y+(Math.random()-.5)*45,b2.col,14);
+              burst(b2.x,b2.y,'#fbbf24',25);
+              G.score+=60; floatTxt(b2.x,b2.y-38,'💀 JEFE CAÍDO +60','#fbbf24');
+              toast('🏆 ¡'+b2.name+' derrotado! +60','p');
+              b2.dying=true; b2.dyingTimer=1500; b2.burstCd=0;
+            }
+            bHit=true;
+          }
+        }
+      }
+      if(!bHit) fbb.push(b);
+    }
+    G.bullets=fbb;
+  }
+
+  /* bullet → turrets */
+  if(G.phase==='mini'&&G.turrets.length){
+    var wallWb=W*0.14, stb=G.scrollY*0.01;
+    var survivingT=[];
+    for(var ti=0;ti<G.turrets.length;ti++){
+      var tu=G.turrets[ti];
+      var tY2=tu.y;
+      var tX2=tu.side==='l'
+        ? wallWb+Math.sin(tY2/50+stb)*12+10
+        : W-wallWb-Math.sin(tY2/50+stb+Math.PI)*12-10;
+      var hit2=false;
+      var fb3=[];
+      for(var bi=0;bi<G.bullets.length;bi++){
+        var b=G.bullets[bi];
+        var dx=b.x-tX2, dy=b.y-tY2;
+        if(!hit2&&dx*dx+dy*dy<14*14){
+          hit2=true;
+          burst(tX2,tY2,'#ff4020',12);
+          burst(tX2,tY2,'#fbbf24',7);
+          floatTxt(tX2,tY2-18,'+5','#fbbf24');
+          G.score+=5;
+          toast('💥 Torreta destruida +5','y');
+        } else fb3.push(b);
+      }
+      G.bullets=fb3;
+      if(!hit2) survivingT.push(tu);
+    }
+    G.turrets=survivingT;
+  }
 
   /* items fall */
   var ni=[];
   for(var i=0;i<G.items.length;i++){
-    var it=G.items[i]; it.y+=it.spd;
-    if(it.y>H+40){ if(it.enemy) hitLife('🦠 ¡Enfermedad escapó!'); }
+    var it=G.items[i];it.y+=it.spd;
+    if(it.y>H+40){if(it.enemy){G.combo=0;hitLife('🦠 ¡Enfermedad escapó!');}}
     else ni.push(it);
   }
   G.items=ni;
 
-  /* powerups fall + collect */
-  var npu=[];
-  for(var i=0;i<G.powerups.length;i++){
-    var pu=G.powerups[i]; pu.y+=pu.spd;
-    if(pu.y>H+30){ npu.push(pu); continue; }
-    /* collect: ship overlaps powerup */
-    var dx=G.px-pu.x, dy=G.py-pu.y;
-    if(Math.sqrt(dx*dx+dy*dy)<G.pr+pu.r){
-      applyPowerup(pu);
-    } else {
-      npu.push(pu);
-    }
-  }
-  G.powerups=npu;
-
-  /* bullet-item collision */
-  var usedB={}, usedI={};
+  /* bullet → item */
+  var uB={},uI={};
   for(var bi=0;bi<G.bullets.length;bi++){
     var b=G.bullets[bi];
     for(var ii=0;ii<G.items.length;ii++){
-      if(usedI[ii]) continue;
+      if(uI[ii]) continue;
       var it=G.items[ii];
-      if(b.x>it.x-it.w/2-4 && b.x<it.x+it.w/2+4 && b.y>it.y-22 && b.y<it.y+22){
-        usedB[bi]=true; usedI[ii]=true;
+      if(b.x>it.x-it.w/2-4&&b.x<it.x+it.w/2+4&&b.y>it.y-22&&b.y<it.y+22){
+        uB[bi]=true;uI[ii]=true;
         if(it.enemy){
-          G.score+=10; G.kills++;
-          burst(it.x,it.y,'#00d4ff',9);
-          floatTxt(it.x,it.y-12,'+10','#fbbf24');
-          checkLevel();
-          if(G.score>=250){ G.over=true; setTimeout(showWin,600); }
+          G.enemyKilled++;G.combo++;if(G.combo>G.bestCombo)G.bestCombo=G.combo;
+          var bon=G.combo>=5?5:G.combo>=3?2:0;G.score+=10+bon;
+          if(G.phase==='mini') G.flightProg=Math.min(100,G.flightProg+4);
+          burst(it.x,it.y,'#00d4ff',10);
+          floatTxt(it.x,it.y-14,bon>0?'+'+(10+bon)+' 🔥x'+G.combo:'+10','#fbbf24');
+          toast('🦠 '+it.word+' eliminada','g');
         } else {
-          burst(it.x,it.y,'#ef4444',7);
-          floatTxt(it.x,it.y-12,'¡Aliado!','#f87171');
-          hitLife('💔 ¡Aliado eliminado!');
+          G.allyHit++;G.combo=0;burst(it.x,it.y,'#ef4444',8);
+          floatTxt(it.x,it.y-14,'¡Aliado!','#f87171');
+          toast('💔 ¡Disparaste a '+it.word+'!','r');
+          hitLife('💔 ¡Componente dañado!');
         }
         break;
       }
     }
   }
-  var fb=[],fi=[];
-  for(var i=0;i<G.bullets.length;i++) if(!usedB[i]) fb.push(G.bullets[i]);
-  for(var i=0;i<G.items.length;i++)   if(!usedI[i]) fi.push(G.items[i]);
-  G.bullets=fb; G.items=fi;
+  var fb2=[],fi2=[];
+  for(var i=0;i<G.bullets.length;i++) if(!uB[i]) fb2.push(G.bullets[i]);
+  for(var i=0;i<G.items.length;i++)   if(!uI[i]) fi2.push(G.items[i]);
+  G.bullets=fb2;G.items=fi2;
 
-  /* ship-item collision */
+  /* ship → item */
   var ni2=[];
   for(var i=0;i<G.items.length;i++){
     var it=G.items[i];
-    var cx=Math.max(it.x-it.w/2, Math.min(G.px, it.x+it.w/2));
-    var cy=Math.max(it.y-19,      Math.min(G.py, it.y+19));
-    var dx=G.px-cx, dy=G.py-cy;
-    if(dx*dx+dy*dy < G.pr*G.pr){
-      if(it.enemy){
-        burst(it.x,it.y,'#ef4444',10);
-        floatTxt(it.x,it.y-14,'💥 IMPACTO','#f87171');
-        hitLife('💥 ¡La nave fue golpeada!');
-        /* item destruido al chocar */
-      } else {
-        ni2.push(it); /* aliados: nave los atraviesa */
+    var cx=Math.max(it.x-it.w/2,Math.min(G.px,it.x+it.w/2));
+    var cy=Math.max(it.y-19,Math.min(G.py,it.y+19));
+    var dx=G.px-cx,dy=G.py-cy;
+    if(dx*dx+dy*dy<G.pr*G.pr){
+      if(it.enemy){G.combo=0;burst(it.x,it.y,'#ef4444',10);floatTxt(it.x,it.y-14,'💥','#f87171');hitLife('💥 ¡La nave fue golpeada!');}
+      else {
+        G.allyCollected++;G.score+=8;burst(it.x,it.y,'#22c55e',9);
+        if(G.phase==='mini') G.flightProg=Math.min(100,G.flightProg+2);
+        /* L1 Anemia: restaurar visión */
+        if(G.levelIdx===0&&(it.word==='Eritrocito'||it.word==='Hemoglobina')){
+          G.visionLevel=Math.min(100,G.visionLevel+15);
+          floatTxt(it.x,it.y-28,'👁 +15','#fbbf24');
+        }
+        /* L3 Leucopenia: restaurar velocidad de disparo (mín 0.7 = 30% más rápido que normal) */
+        if(LD[G.levelIdx].mechanic==='leucopenia'&&it.word==='Leucocito'){
+          G.shootCdMod=Math.max(0.7,G.shootCdMod-0.2);
+          G.leucoTimer=0;
+          floatTxt(it.x,it.y-28,'⚡ disparo +','#a78bfa');
+        }
+        /* L5 Talasemia: hemoglobina defectuosa penaliza visión −20 */
+        if(LD[G.levelIdx].mechanic==='talasemia'&&it.defective){
+          G.visionLevel=Math.max(15,G.visionLevel-20);
+          floatTxt(it.x,it.y-28,'⚠️ Hb defectuosa −20%','#f59e0b');
+        }
+        /* L6 Hemofilia: Plaqueta o Plasma detiene el sangrado */
+        if(LD[G.levelIdx].mechanic==='hemofilia'&&(it.word==='Plaqueta'||it.word==='Plasma')){
+          if(G.bleeding){
+            G.bleeding=false; G.bleedTimer=0; G.bleedDropT=0;
+            floatTxt(it.x,it.y-28,'🩹 Sangrado curado','#22c55e');
+            toast('🩹 ¡'+it.word+' detuvo el sangrado!','g');
+          }
+        }
+        /* L7 Trombocitopenia: recoger Plaqueta la equipa */
+        if(LD[G.levelIdx].mechanic==='trombocitopenia'&&it.word==='Plaqueta'){
+          G.carryingPlatelet=true;
+          floatTxt(it.x,it.y-28,'🩹 ¡Lleva a la herida!','#a78bfa');
+          toast('🩹 Plaqueta recogida — ve a la grieta roja','y');
+        }
+        /* L8 Sepsis: Leucocito restaura alcance y reduce progresión */
+        if(LD[G.levelIdx].mechanic==='sepsis'&&it.word==='Leucocito'){
+          G.bulletRange=Math.min(1.0,G.bulletRange+0.15);
+          G.sepsisProgress=Math.max(0,G.sepsisProgress-8);
+          floatTxt(it.x,it.y-28,'⚡ alcance +','#22c55e');
+        }
+        if(G.allyCollected%6===0&&G.lives<LIVES_MAX){
+          G.lives++;burst(it.x,it.y-22,'#ef4444',10);
+          floatTxt(it.x,it.y-38,'❤️ +VIDA','#ef4444');
+          toast('❤️ ¡Vida extra! ('+G.allyCollected+' rescates)','g');
+        } else {floatTxt(it.x,it.y-14,'🩸 +8','#22c55e');toast('🩸 '+it.word+' recolectado','g');}
       }
-    } else {
-      ni2.push(it);
-    }
+    } else ni2.push(it);
   }
   G.items=ni2;
 
-  /* spawn items */
-  var now=Date.now();
-  if(now-G.spawnT > LVL[G.level].ms){ spawnItem(); G.spawnT=now; }
+  /* pathogens */
+  var np=[];
+  for(var i=0;i<G.pathogens.length;i++){
+    var p=G.pathogens[i];p.x+=p.vx;p.y+=p.vy;p.spin+=.08;
+    if(p.y>H+20) continue;
+    var dx=G.px-p.x,dy=G.py-p.y;
+    if(dx*dx+dy*dy<(G.pr+p.r)*(G.pr+p.r)){burst(p.x,p.y,'#f97316',8);hitLife('☣️ ¡Patógeno impactó!');}
+    else np.push(p);
+  }
+  G.pathogens=np;
 
-  /* spawn powerup every ~12s randomly */
-  if(now-G.puSpawnT > 11000+Math.random()*4000){ spawnPowerup(); G.puSpawnT=now; }
+  /* ── onda expansiva de Sepsis ── */
+  if(G.shockwave){
+    var sw=G.shockwave;
+    sw.r+=sw.speed*dt/16;
+    var sdx=G.px-sw.x, sdy=G.py-sw.y;
+    var sdist=Math.sqrt(sdx*sdx+sdy*sdy);
+    if(sdist<sw.r&&sdist>sw.r-18){
+      G.shockwave=null;
+      hitLife('☢️ ¡Onda expansiva de Sepsis!');
+    } else if(sw.r>=sw.maxR){
+      G.shockwave=null;
+    }
+  }
+
+  /* powerups */
+  var npu=[];
+  for(var i=0;i<G.powerups.length;i++){
+    var pu=G.powerups[i];pu.y+=pu.spd;
+    if(pu.y>H+30){npu.push(pu);continue;}
+    var dx=G.px-pu.x,dy=G.py-pu.y;
+    if(Math.sqrt(dx*dx+dy*dy)<G.pr+pu.r) applyPowerup(pu);
+    else npu.push(pu);
+  }
+  G.powerups=npu;
+
+  /* spawn timers */
+  var now=Date.now(), spMs=Math.max(1400,2800-G.levelIdx*200);
+  if(now-G.spawnT>spMs){spawnItem();G.spawnT=now;}
+  if(now-G.puSpawnT>11000+Math.random()*4000){spawnPowerup();G.puSpawnT=now;}
 
   /* particles */
-  var np=[];
-  for(var i=0;i<G.parts.length;i++){
-    var p=G.parts[i];
-    p.x+=p.vx; p.y+=p.vy; p.vy+=.12;
-    p.life-=dt; p.a=p.life/p.max;
-    if(p.life>0) np.push(p);
-  }
-  G.parts=np;
-
-  /* floats */
-  var nf=[];
-  for(var i=0;i<G.floats.length;i++){
-    var f=G.floats[i];
-    f.y-=1.5; f.life-=dt; f.a=f.life/f.max;
-    if(f.life>0) nf.push(f);
-  }
-  G.floats=nf;
-
-  if(G.dmg>0) G.dmg-=dt;
+  var npa=[]; for(var i=0;i<G.parts.length;i++){var p=G.parts[i];p.x+=p.vx;p.y+=p.vy;p.vy+=.12;p.life-=dt;if(p.life>0)npa.push(p);} G.parts=npa;
+  var nf=[];  for(var i=0;i<G.floats.length;i++){var f=G.floats[i];f.y-=1.4;f.life-=dt;if(f.life>0)nf.push(f);} G.floats=nf;
 }
 
-function applyPowerup(pu){
-  burst(pu.x,pu.y,pu.col,10);
-  floatTxt(pu.x,pu.y-14,pu.label,pu.col);
-  if(pu.id==='double'){ G.double=true; G.doubleTmr=pu.dur; toast('💛 ¡Disparo doble!','p'); }
-  if(pu.id==='fast')  { G.fast=true;   G.fastTmr=pu.dur;   toast('⚡ ¡Disparo veloz!','p'); }
-  if(pu.id==='shield'){ G.shield=true;                      toast('🛡️ ¡Escudo activado!','g'); }
+/* ══════════════════════════════════════════
+   DRAW — BACKGROUND (scrolling vessel)
+══════════════════════════════════════════ */
+function drawBackground(){
+  var sY=G?G.scrollY:0;
+
+  /* 1 — base */
+  ctx.fillStyle='#110104'; ctx.fillRect(0,0,W,H);
+
+  /* 2 — warm interior glow */
+  var gc=ctx.createRadialGradient(W*.5,H*.55,0,W*.5,H*.55,W*.62);
+  gc.addColorStop(0,'rgba(155,15,15,.18)'); gc.addColorStop(.6,'rgba(90,5,5,.10)'); gc.addColorStop(1,'transparent');
+  ctx.fillStyle=gc; ctx.fillRect(0,0,W,H);
+
+  /* 3 — RBCs with parallax */
+  for(var i=0;i<RBC.length;i++){
+    var d=RBC[i];
+    var ey=((d.by + sY*d.spd) % (H+20));
+    if(ey<-12) ey+=H+24;
+    ctx.save(); ctx.translate(d.bx%W, ey); ctx.rotate(d.ang+sY*.0005);
+    ctx.beginPath(); ctx.ellipse(0,0,d.rx,d.ry,0,0,Math.PI*2);
+    ctx.fillStyle='rgba(195,45,55,'+d.alpha+')'; ctx.fill();
+    ctx.beginPath(); ctx.ellipse(0,0,d.rx*.48,d.ry*.42,0,0,Math.PI*2);
+    ctx.fillStyle='rgba(80,8,12,'+(d.alpha*.65)+')'; ctx.fill();
+    ctx.restore();
+  }
+
+  /* 4 — speed fibers near vessel walls */
+  if(G&&(G.phase==='mini'||G.phase==='boss')){
+    for(var i=0;i<FIBERS.length;i++){
+      var f=FIBERS[i];
+      var fy=((f.by + sY*1.0) % (H+50));
+      if(fy<-f.len) fy+=H+f.len+10;
+      ctx.save();
+      ctx.globalAlpha=f.alpha;
+      ctx.strokeStyle='rgba(200,30,30,.8)';
+      ctx.lineWidth=f.w;
+      ctx.beginPath(); ctx.moveTo(f.bx,fy); ctx.lineTo(f.bx,fy-f.len);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  /* 5 — vessel walls (animated sinusoidal, scrolling) */
+  var t=sY*.01;
+  var wallW=W*.14;
+  /* L8 Sepsis: paredes se vuelven verdes tóxicas según progresión */
+  var sepsisWall=G&&LD[G.levelIdx]&&LD[G.levelIdx].mechanic==='sepsis'?G.sepsisProgress/100:0;
+  var wR=Math.round(120*(1-sepsisWall)+10*sepsisWall);
+  var wG=Math.round(5*(1-sepsisWall)+160*sepsisWall);
+  var wB=Math.round(5*(1-sepsisWall)+10*sepsisWall);
+  var wallC1='rgba('+wR+','+wG+','+wB+',.97)';
+  var wallC2='rgba('+Math.round(wR*.67)+','+Math.round(wG*.67)+','+Math.round(wB*.67)+',.55)';
+  /* left wall */
+  ctx.beginPath(); ctx.moveTo(0,0);
+  for(var wy=0;wy<=H+6;wy+=5){ctx.lineTo(wallW+Math.sin(wy/50+t)*12,wy);}
+  ctx.lineTo(0,H); ctx.closePath();
+  var lg=ctx.createLinearGradient(0,0,wallW+18,0);
+  lg.addColorStop(0,wallC1); lg.addColorStop(.55,wallC2); lg.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=lg; ctx.fill();
+  /* right wall */
+  ctx.beginPath(); ctx.moveTo(W,0);
+  for(var wy=0;wy<=H+6;wy+=5){ctx.lineTo(W-wallW-Math.sin(wy/50+t+Math.PI)*12,wy);}
+  ctx.lineTo(W,H); ctx.closePath();
+  var rg=ctx.createLinearGradient(W,0,W-wallW-18,0);
+  rg.addColorStop(0,wallC1); rg.addColorStop(.55,wallC2); rg.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=rg; ctx.fill();
+
+  /* wall highlight lines */
+  var hlCol=sepsisWall>.3?'rgba(40,200,40,.1)':'rgba(200,40,40,.1)';
+  ctx.save(); ctx.strokeStyle=hlCol; ctx.lineWidth=1.8;
+  ctx.beginPath();
+  for(var wy=0;wy<=H+6;wy+=5){var wx=wallW+Math.sin(wy/50+t)*12; wy===0?ctx.moveTo(wx,wy):ctx.lineTo(wx,wy);}
+  ctx.stroke();
+  ctx.beginPath();
+  for(var wy=0;wy<=H+6;wy+=5){var wx2=W-wallW-Math.sin(wy/50+t+Math.PI)*12; wy===0?ctx.moveTo(wx2,wy):ctx.lineTo(wx2,wy);}
+  ctx.stroke();
+  ctx.restore();
+
+  /* 6 — far-ahead valve glow during flying */
+  if(G&&G.phase==='mini'&&G.flightProg>20){
+    var ap=Math.max(0,(G.flightProg-20)/80); // 0→1 as you approach
+    var vgy=Math.max(-40, 80-ap*120); // starts above canvas, moves into view
+    var vgr=30+ap*30;
+    var vgg=ctx.createRadialGradient(W/2,vgy,0,W/2,vgy,vgr+40);
+    vgg.addColorStop(0,'rgba(255,80,60,'+(ap*.55)+')');
+    vgg.addColorStop(.5,'rgba(200,20,10,'+(ap*.22)+')');
+    vgg.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=vgg; ctx.fillRect(0,0,W,H);
+    /* distant valve silhouette */
+    if(ap>.25){
+      var vs=0.12+ap*.45;
+      ctx.save(); ctx.translate(W/2,vgy); ctx.scale(vs,vs);
+      drawValveShape(0,0,0.05,ap*.6);
+      ctx.restore();
+    }
+  }
 }
 
-/* ═══════════════ DRAW ═══════════════ */
+/* ══════════════════════════════════════════
+   VALVE
+══════════════════════════════════════════ */
+function drawValveShape(cx,cy,openAmt,gAlpha){
+  /* called in two contexts:
+     - distant preview (small, scaled externally)
+     - full boss entrance (actual size) */
+  var R=54, now=Date.now(), pulse=Math.sin(now/550)*.5+.5;
+  gAlpha = gAlpha||1;
+
+  ctx.save(); ctx.translate(cx,cy);
+
+  /* chamber background */
+  ctx.beginPath(); ctx.arc(0,0,R+6,0,Math.PI*2);
+  ctx.fillStyle='rgba(20,2,2,'+gAlpha+')'; ctx.fill();
+
+  /* outer ring */
+  ctx.beginPath(); ctx.arc(0,0,R+8,0,Math.PI*2);
+  var rg=ctx.createRadialGradient(0,0,R-2,0,0,R+8);
+  rg.addColorStop(0,'rgba(0,0,0,0)');
+  rg.addColorStop(.4,'rgba(160,10,10,'+(.85*gAlpha)+')');
+  rg.addColorStop(1,'rgba(80,3,3,'+(.95*gAlpha)+')');
+  ctx.fillStyle=rg; ctx.fill();
+  ctx.strokeStyle='rgba(180,12,12,'+(gAlpha)+')';
+  ctx.lineWidth=3+pulse*1.5;
+  ctx.shadowColor='rgba(255,20,20,'+(gAlpha)+')'; ctx.shadowBlur=14+pulse*6;
+  ctx.stroke(); ctx.shadowBlur=0;
+
+  /* 3 cusps — semilunar valve */
+  for(var k=0;k<3;k++){
+    var baseA=k/3*Math.PI*2-Math.PI/2;
+    var rot=baseA+openAmt*Math.PI*.60;
+    ctx.save(); ctx.rotate(rot);
+    var cL=R*.9*(1-openAmt*.68);
+    var cW=R*.56;
+    if(cL>3){
+      ctx.beginPath();
+      ctx.moveTo(0,0);
+      ctx.bezierCurveTo(-cW*.38,cL*.28,-cW*.48,cL*.68,-cW*.22,cL*.98);
+      ctx.bezierCurveTo(-cW*.06,cL*1.06, cW*.06,cL*1.06, cW*.22,cL*.98);
+      ctx.bezierCurveTo( cW*.48,cL*.68,  cW*.38,cL*.28,  0,0);
+      ctx.closePath();
+      var cg=ctx.createLinearGradient(-cW*.25,0,cW*.25,cL);
+      cg.addColorStop(0,'rgba(95,8,8,'+gAlpha+')');
+      cg.addColorStop(.35,'rgba(185,20,20,'+gAlpha+')');
+      cg.addColorStop(.75,'rgba(155,14,14,'+gAlpha+')');
+      cg.addColorStop(1,'rgba(80,6,6,'+gAlpha+')');
+      ctx.fillStyle=cg;
+      ctx.shadowColor='rgba(220,15,15,'+(.6*gAlpha)+')'; ctx.shadowBlur=7;
+      ctx.fill();
+      ctx.strokeStyle='rgba(50,4,4,'+(.9*gAlpha)+')'; ctx.lineWidth=1.2; ctx.stroke();
+      ctx.shadowBlur=0;
+    }
+    ctx.restore();
+  }
+
+  /* opening aperture glow */
+  if(openAmt>.12){
+    var aR=R*.72*Math.min(1,(openAmt-.12)/.88);
+    var ag=ctx.createRadialGradient(0,0,0,0,0,aR);
+    ag.addColorStop(0,'rgba(255,130,80,'+(.7*gAlpha)+')');
+    ag.addColorStop(.45,'rgba(200,40,20,'+(.3*gAlpha)+')');
+    ag.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=ag; ctx.beginPath(); ctx.arc(0,0,aR,0,Math.PI*2); ctx.fill();
+  }
+
+  /* pulsing outer ring */
+  ctx.strokeStyle='rgba(200,25,25,'+(.12+pulse*.18)*gAlpha+')';
+  ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(0,0,R+14+pulse*4,0,Math.PI*2); ctx.stroke();
+
+  ctx.restore();
+}
+
+/* ══════════════════════════════════════════
+   MAIN DRAW
+══════════════════════════════════════════ */
 function draw(){
-  ctx.fillStyle='#060e1e'; ctx.fillRect(0,0,W,H);
-
-  /* radial glow */
-  var g1=ctx.createRadialGradient(W*.5,H*.4,0,W*.5,H*.4,W*.7);
-  g1.addColorStop(0,'rgba(0,140,180,.07)'); g1.addColorStop(1,'transparent');
-  ctx.fillStyle=g1; ctx.fillRect(0,0,W,H);
-
-  /* bg dots */
-  for(var i=0;i<BGDOTS.length;i++){
-    var d=BGDOTS[i]; d.y+=d.dy; if(d.y>H+4) d.y=-4;
-    ctx.beginPath(); ctx.arc(d.x%W,d.y,d.r,0,Math.PI*2);
-    ctx.fillStyle='rgba(0,180,204,'+d.a+')'; ctx.fill();
-  }
-
+  drawBackground();
   if(!G) return;
 
-  /* damage flash */
-  if(G.dmg>0){
-    ctx.fillStyle='rgba(239,68,68,'+(G.dmg/650*.22)+')';
-    ctx.fillRect(0,0,W,H);
+  var shaking=G.shake>0;
+  if(shaking){var si=G.shake/420;ctx.save();ctx.translate((Math.random()-.5)*8*si,(Math.random()-.5)*7*si);}
+  if(G.dmg>0){ctx.fillStyle='rgba(239,68,68,'+(G.dmg/720*.22)+')';ctx.fillRect(0,0,W,H);}
+  if(G.valveFlash>0){ctx.fillStyle='rgba(251,191,36,'+(G.valveFlash/680*.28)+')';ctx.fillRect(0,0,W,H);}
+  if(G.combo>=3){
+    var ci=Math.min(1,(G.combo-3)/8);
+    var cg2=ctx.createLinearGradient(0,0,0,H);
+    cg2.addColorStop(0,'rgba(249,115,22,'+(ci*.18+.04)+')');
+    cg2.addColorStop(.45,'transparent');cg2.addColorStop(.55,'transparent');
+    cg2.addColorStop(1,'rgba(249,115,22,'+(ci*.18+.04)+')');
+    ctx.fillStyle=cg2; ctx.fillRect(0,0,W,H);
   }
 
-  drawPowerups();
-  drawItems();
-  drawBullets();
-  drawParts();
-  drawShip();
-  drawFloats();
+  /* valve at boss entrance */
+  if(G.phase==='boss'||(G.phase==='idle'&&G.boss)){
+    drawValveShape(W/2,118,G.valveOpen,1);
+  }
+
+  if(G.phase==='boss')  drawBoss();
+
+  drawObstacles();
+  drawWounds();
+  drawTurrets();
+  drawPathogens(); drawPowerups(); drawItems();
+  drawBullets(); drawParts(); drawShip(); drawFloats();
+  if(shaking) ctx.restore();
+
+  /* ── L1 Anemia: viñeta de oscuridad (centrada en pantalla) ── */
+  if(LD[G.levelIdx].mechanic==='anemia'&&(G.phase==='mini'||G.phase==='boss')){
+    var vl=G.visionLevel/100;
+    var clearR=Math.max(W*.07, W*.54*vl);
+    var vg=ctx.createRadialGradient(W/2,H/2,clearR*.65,W/2,H/2,Math.max(W,H)*.82);
+    vg.addColorStop(0,'rgba(0,0,0,0)');
+    vg.addColorStop(.35,'rgba(0,0,0,'+(0.45*(1-vl))+')');
+    vg.addColorStop(1,'rgba(0,0,0,'+(0.55+0.4*(1-vl))+')');
+    ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
+  }
+
+  /* ── L5 Talasemia: viñeta centrada en el jugador ── */
+  if(LD[G.levelIdx].mechanic==='talasemia'&&(G.phase==='mini'||G.phase==='boss')){
+    var vl5=G.visionLevel/100;
+    var cr5=Math.max(W*.07, W*.54*vl5);
+    var vg5=ctx.createRadialGradient(G.px,G.py,cr5*.65,G.px,G.py,Math.max(W,H)*.82);
+    vg5.addColorStop(0,'rgba(0,0,0,0)');
+    vg5.addColorStop(.35,'rgba(0,0,0,'+(0.45*(1-vl5))+')');
+    vg5.addColorStop(1,'rgba(0,0,0,'+(0.55+0.4*(1-vl5))+')');
+    ctx.fillStyle=vg5; ctx.fillRect(0,0,W,H);
+  }
+
+  /* ── L6 Hemofilia: overlay rojo pulsante + gotas de sangre ── */
+  if(LD[G.levelIdx].mechanic==='hemofilia'&&G.bleeding&&(G.phase==='mini'||G.phase==='boss')){
+    var bAlphaOv=0.10+0.07*Math.sin(Date.now()*.004);
+    ctx.fillStyle='rgba(180,0,0,'+bAlphaOv+')'; ctx.fillRect(0,0,W,H);
+    if(!G._bleedDrops) G._bleedDrops=[];
+    G._bleedDrops=G._bleedDrops.filter(function(d){d.y+=d.spd;d.life-=16;return d.life>0;});
+    if(Math.random()<.25) G._bleedDrops.push({x:Math.random()*W,y:0,spd:3+Math.random()*2,life:400,r:2+Math.random()*2});
+    ctx.fillStyle='rgba(200,0,0,.65)';
+    for(var di=0;di<G._bleedDrops.length;di++){
+      var dp=G._bleedDrops[di];
+      ctx.beginPath();ctx.arc(dp.x,dp.y,dp.r,0,Math.PI*2);ctx.fill();
+    }
+  }
+
+  /* ── L8 Sepsis: velo tóxico verde ── */
+  if(LD[G.levelIdx].mechanic==='sepsis'&&G.sepsisProgress>20&&(G.phase==='mini'||G.phase==='boss')){
+    var sAlpha=(G.sepsisProgress-20)/80*0.18;
+    ctx.fillStyle='rgba(30,180,20,'+sAlpha+')'; ctx.fillRect(0,0,W,H);
+  }
+
+  /* ── Onda expansiva (Sepsis jefe) ── */
+  if(G.shockwave&&G.phase==='boss'){
+    var sw=G.shockwave;
+    var swFade=Math.max(0,1-sw.r/sw.maxR);
+    ctx.save();
+    ctx.shadowColor='#22c55e'; ctx.shadowBlur=22;
+    ctx.strokeStyle='rgba(34,197,94,'+(swFade*.65)+')';
+    ctx.lineWidth=14;
+    ctx.beginPath(); ctx.arc(sw.x,sw.y,sw.r,0,Math.PI*2); ctx.stroke();
+    ctx.strokeStyle='rgba(187,247,208,'+(swFade*.4)+')';
+    ctx.lineWidth=5;
+    ctx.beginPath(); ctx.arc(sw.x,sw.y,sw.r-9,0,Math.PI*2); ctx.stroke();
+    ctx.shadowBlur=0;
+    ctx.restore();
+  }
+
   drawHUD();
 }
 
-/* ── Ship (nave con alas rojas) ── */
+/* ── Obstáculos flotantes (Policitemia L4) ── */
+function drawObstacles(){
+  if(!G||G.levelIdx!==3) return;
+  if(G.phase!=='mini'&&G.phase!=='boss') return;
+  for(var i=0;i<G.obstacles.length;i++){
+    var ob=G.obstacles[i];
+    ctx.save();
+    ctx.globalAlpha=0.38;
+    ctx.translate(ob.x,ob.y); ctx.rotate(ob.ang);
+    ctx.shadowColor='rgba(195,30,30,.6)'; ctx.shadowBlur=8;
+    ctx.fillStyle='rgba(200,35,35,1)';
+    ctx.beginPath(); ctx.ellipse(0,0,ob.r,ob.r*.62,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(70,5,5,.75)';
+    ctx.beginPath(); ctx.ellipse(0,0,ob.r*.44,ob.r*.27,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+}
+
+/* ── Heridas de pared (Trombocitopenia L7) ── */
+function drawWounds(){
+  if(!G||LD[G.levelIdx].mechanic!=='trombocitopenia') return;
+  if(G.phase!=='mini'&&G.phase!=='boss') return;
+  var now=Date.now();
+  for(var i=0;i<G.wounds.length;i++){
+    var wo=G.wounds[i];
+    ctx.save();
+    ctx.translate(wo.x, wo.y);
+    if(wo.sealed){
+      /* animación de sellado */
+      var sa=wo.sealAnim;
+      ctx.globalAlpha=1-sa;
+      ctx.fillStyle='rgba(34,197,94,.8)';
+      ctx.beginPath();ctx.arc(0,0,10+sa*8,0,Math.PI*2);ctx.fill();
+      ctx.restore(); continue;
+    }
+    /* grieta pulsante */
+    var pulse=Math.sin(now*.006+i)*.5+.5;
+    ctx.shadowColor='rgba(239,68,68,.8)'; ctx.shadowBlur=10+pulse*8;
+    ctx.strokeStyle='rgba(239,68,68,'+(0.7+pulse*0.3)+')';
+    ctx.lineWidth=2.5;
+    /* forma de grieta irregular (3 segmentos) */
+    ctx.beginPath();
+    ctx.moveTo(-8,-6); ctx.lineTo(-2,0); ctx.lineTo(-6,8);
+    ctx.moveTo(-2,0);  ctx.lineTo( 6,2);ctx.lineTo(2,10);
+    ctx.stroke();
+    /* gotas de sangre */
+    ctx.fillStyle='rgba(200,0,0,'+(0.5+pulse*0.3)+')';
+    ctx.beginPath();ctx.arc(0+pulse*2,6+pulse*4,2.5,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(-4,10+pulse*2,1.8,0,Math.PI*2);ctx.fill();
+    /* halo indicador */
+    ctx.globalAlpha=0.25+pulse*0.15;
+    ctx.strokeStyle='#ef4444'; ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.arc(0,0,14,0,Math.PI*2);ctx.stroke();
+    ctx.restore();
+  }
+}
+
+/* ── Torretas de pared ── */
+function drawTurrets(){
+  if(!G||G.phase!=='mini') return;
+  var wallW=W*0.14, t=G.scrollY*0.01;
+  for(var i=0;i<G.turrets.length;i++){
+    var tu=G.turrets[i];
+    if(tu.y<-18||tu.y>H+20) continue;
+    var tY=tu.y;
+    var wallX=tu.side==='l'
+      ? wallW+Math.sin(tY/50+t)*12
+      : W-wallW-Math.sin(tY/50+t+Math.PI)*12;
+    /* la boca del cañón sobresale ligeramente hacia el interior */
+    var dir=tu.side==='l'?1:-1;
+    var cx=wallX+dir*4;
+    var firing=tu.flash>0;
+    var fAlp=firing?(tu.flash/320):0;
+
+    ctx.save(); ctx.translate(cx,tY);
+
+    /* base — protuberancia orgánica de la pared */
+    ctx.shadowColor='rgba(180,10,10,'+(0.5+fAlp*0.5)+')';
+    ctx.shadowBlur=firing?18+fAlp*14:8;
+    var bg=ctx.createRadialGradient(0,0,2,0,0,13);
+    bg.addColorStop(0, firing?'rgba(255,90,60,.9)':'rgba(140,10,10,.9)');
+    bg.addColorStop(0.55,'rgba(90,5,5,.85)');
+    bg.addColorStop(1,'rgba(40,2,2,.6)');
+    ctx.fillStyle=bg;
+    ctx.beginPath();
+    /* forma irregular tipo verruga biológica */
+    ctx.ellipse(0,0, 10,8, 0,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0;
+
+    /* detalles — segmentos del cañón */
+    ctx.strokeStyle=firing?'rgba(255,120,80,.85)':'rgba(160,20,20,.7)';
+    ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.ellipse(0,0,10,8,0,0,Math.PI*2); ctx.stroke();
+
+    /* boca del cañón (tubo que apunta al interior) */
+    ctx.fillStyle=firing?'rgba(255,140,90,.95)':'rgba(110,8,8,.9)';
+    ctx.beginPath();
+    ctx.roundRect
+      ? ctx.roundRect(dir*2,-3,dir*8,6,3)
+      : (function(){ctx.rect(dir*2,-3,dir*8,6);})();
+    ctx.fill();
+
+    /* orificio interior oscuro */
+    ctx.fillStyle='rgba(10,0,0,.92)';
+    ctx.beginPath(); ctx.ellipse(dir*10,0,3,2.5,0,0,Math.PI*2); ctx.fill();
+
+    /* destellos de disparo */
+    if(firing){
+      ctx.globalAlpha=fAlp*0.85;
+      ctx.fillStyle='rgba(255,200,100,1)';
+      ctx.beginPath(); ctx.arc(dir*12,0,5+fAlp*4,0,Math.PI*2); ctx.fill();
+      ctx.globalAlpha=fAlp*0.4;
+      ctx.fillStyle='rgba(255,255,200,1)';
+      ctx.beginPath(); ctx.arc(dir*12,0,9+fAlp*6,0,Math.PI*2); ctx.fill();
+      ctx.globalAlpha=1;
+    }
+
+    ctx.restore();
+  }
+}
+
+/* ════════════════════════════════════════════
+   BOSS DRAW — dispatcher + bodies por tipo
+════════════════════════════════════════════ */
+/* shared dying animation (same for all types) */
+function drawBossDying(b2,now){
+  var prog=1-b2.dyingTimer/1500, scl=1+prog*.75;
+  var flash=Math.floor(now/55)%2===0, alp=prog>.6?Math.max(0,1-(prog-.6)/.4):1;
+  ctx.save(); ctx.globalAlpha=alp; ctx.translate(b2.x,b2.y); ctx.scale(scl,scl);
+  ctx.shadowColor=flash?'#fff':'#fbbf24'; ctx.shadowBlur=45+prog*35;
+  var oc=ctx.createRadialGradient(0,0,b2.r*.6,0,0,b2.r*1.5+prog*20);
+  oc.addColorStop(0,'rgba(0,0,0,0)');
+  oc.addColorStop(.4,flash?'rgba(255,200,150,.35)':'rgba(251,191,36,.28)');
+  oc.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=oc; ctx.beginPath();ctx.arc(0,0,b2.r*1.5+prog*20,0,Math.PI*2);ctx.fill();
+  var dg=ctx.createRadialGradient(0,0,0,0,0,b2.r+5);
+  dg.addColorStop(0,flash?'#fff':'#ffe066');
+  dg.addColorStop(.35,flash?'#ffcccc':b2.col);
+  dg.addColorStop(1,'#200008');
+  ctx.fillStyle=dg; ctx.beginPath();ctx.arc(0,0,b2.r+4,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+}
+
+/* shared HP bar below boss */
+function drawBossHPBar(b2){
+  var bw=b2.r*2.4, bh=5, bx=b2.x-bw/2, by=b2.y-b2.r-24;
+  ctx.fillStyle='rgba(0,0,0,.55)'; rr(bx-1,by-1,bw+2,bh+2,3); ctx.fill();
+  ctx.fillStyle='#200008'; rr(bx,by,bw,bh,2); ctx.fill();
+  var hpPct=b2.hp/b2.maxHp, hpCol=hpPct>.6?b2.col:hpPct>.3?'#f59e0b':'#ef4444';
+  if(b2.hp>0){ctx.fillStyle=hpCol; rr(bx,by,bw*hpPct,bh,2); ctx.fill();}
+  ctx.font='bold 9px Nunito,sans-serif'; ctx.textAlign='center'; ctx.fillStyle='#e2f0ff';
+  ctx.fillText('JEFE: '+b2.name+' · '+b2.hp+'/'+b2.maxHp+'💀', b2.x, by-3);
+}
+
+/* ── Jefe 1: Anemia — eritrocito gigante pálido ── */
+function drawBossAnemia(b2,now){
+  var pulse=Math.sin(now/400)*.5+.5, hf=b2.hit>0;
+  var rx=b2.r*1.42, ry=b2.r*0.62;
+  ctx.save(); ctx.translate(b2.x,b2.y);
+  /* aura de oscuridad pulsante */
+  var aur=ctx.createRadialGradient(0,0,rx*.7,0,0,rx*2.2);
+  aur.addColorStop(0,'rgba(0,0,0,0)');
+  aur.addColorStop(.5,'rgba(30,0,0,'+(0.18+pulse*.12)+')');
+  aur.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=aur; ctx.fillRect(-rx*2.5,-rx*2.5,rx*5,rx*5);
+  /* sombra */
+  ctx.shadowColor=hf?'#ff6060':'rgba(212,160,160,.6)'; ctx.shadowBlur=18+pulse*10;
+  /* cuerpo aplastado — eritrocito descolorido */
+  var gr=ctx.createRadialGradient(-rx*.25,-ry*.3,ry*.1,0,0,rx);
+  gr.addColorStop(0,hf?'#ffcccc':'#d4a0a0');
+  gr.addColorStop(.55,hf?'#c07070':'#b07878');
+  gr.addColorStop(1,'#8a5050');
+  ctx.fillStyle=gr;
+  ctx.beginPath(); ctx.ellipse(0,0,rx,ry,0,0,Math.PI*2); ctx.fill();
+  ctx.shadowBlur=0;
+  /* borde */
+  ctx.strokeStyle=hf?'#ff8080':'rgba(200,140,140,.55)'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.ellipse(0,0,rx,ry,0,0,Math.PI*2); ctx.stroke();
+  /* concavidad central (eritrocito bicóncavo) */
+  var cg=ctx.createRadialGradient(0,0,0,0,0,rx*.42);
+  cg.addColorStop(0,'rgba(80,20,20,.72)');
+  cg.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=cg;
+  ctx.beginPath(); ctx.ellipse(0,0,rx*.42,ry*.52,0,0,Math.PI*2); ctx.fill();
+  /* brillo superior */
+  ctx.fillStyle='rgba(255,220,220,.22)';
+  ctx.beginPath(); ctx.ellipse(-rx*.22,-ry*.28,rx*.32,ry*.22,-.3,0,Math.PI*2); ctx.fill();
+  /* texto nombre */
+  ctx.fillStyle='rgba(240,200,200,.75)'; ctx.font='bold 10px Nunito,sans-serif'; ctx.textAlign='center';
+  ctx.fillText(b2.name,0,4);
+  ctx.restore();
+}
+
+/* ── Jefe 2: Leucemia — leucocito deforme con núcleos múltiples ── */
+function drawBossLeucemia(b2,now){
+  var pulse=Math.sin(now/320)*.5+.5, hf=b2.hit>0;
+  var af=b2.fireTimer<500;
+  ctx.save(); ctx.translate(b2.x,b2.y);
+  ctx.shadowColor=hf?'#ff66ff':'#a855f7'; ctx.shadowBlur=20+pulse*14+(af?12:0);
+  /* cuerpo irregular — radio varía por ángulo usando seededRandom */
+  ctx.beginPath();
+  var steps=28;
+  for(var k=0;k<steps;k++){
+    var ang=k/steps*Math.PI*2;
+    var jitter=(seededRandom(k*7+Math.floor(now/1200)*31)-.5)*b2.r*.28;
+    var rr2=b2.r+jitter+Math.sin(ang*3+now*.001)*b2.r*.08;
+    var px2=Math.cos(ang)*rr2, py2=Math.sin(ang)*rr2;
+    k===0?ctx.moveTo(px2,py2):ctx.lineTo(px2,py2);
+  }
+  ctx.closePath();
+  var gr=ctx.createRadialGradient(-b2.r*.3,-b2.r*.3,2,0,0,b2.r+4);
+  gr.addColorStop(0,hf?'#ee88ff':'#c084fc');
+  gr.addColorStop(.45,hf?'#b040e0':'#a855f7');
+  gr.addColorStop(.8,'#6b21a8');
+  gr.addColorStop(1,'#2e1065');
+  ctx.fillStyle=gr; ctx.fill();
+  ctx.strokeStyle=hf?'#ff99ff':'#c084fc'; ctx.lineWidth=2; ctx.stroke();
+  ctx.shadowBlur=0;
+  /* manchas oscuras (células dañadas) */
+  var spotSeeds=[13,47,83,121];
+  for(var si=0;si<4;si++){
+    var sAng=seededRandom(spotSeeds[si])*Math.PI*2;
+    var sR=b2.r*(0.35+seededRandom(spotSeeds[si]+5)*.3);
+    ctx.fillStyle='rgba(30,0,60,.45)';
+    ctx.beginPath();
+    ctx.ellipse(Math.cos(sAng)*sR, Math.sin(sAng)*sR, 7+seededRandom(spotSeeds[si]+11)*6, 5+seededRandom(spotSeeds[si]+17)*4, seededRandom(spotSeeds[si]+23)*Math.PI, 0, Math.PI*2);
+    ctx.fill();
+  }
+  /* núcleos múltiples */
+  var nucleiDefs=[
+    {ox:-8, oy:-6,  rx:9, ry:7,  col:'#7c3aed'},
+    {ox: 9, oy: 4,  rx:8, ry:6,  col:'#6d28d9'},
+    {ox:-4, oy: 9,  rx:6, ry:5,  col:'#5b21b6'},
+    {ox: 2, oy:-10, rx:5, ry:4,  col:'#4c1d95'}
+  ];
+  for(var ni=0;ni<nucleiDefs.length;ni++){
+    var nd=nucleiDefs[ni];
+    ctx.shadowColor=nd.col; ctx.shadowBlur=8;
+    ctx.fillStyle=nd.col;
+    ctx.beginPath(); ctx.ellipse(nd.ox,nd.oy,nd.rx,nd.ry,0,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0;
+    ctx.fillStyle='rgba(200,160,255,.5)';
+    ctx.beginPath(); ctx.ellipse(nd.ox-nd.rx*.3,nd.oy-nd.ry*.3,nd.rx*.3,nd.ry*.25,0,0,Math.PI*2); ctx.fill();
+  }
+  ctx.fillStyle='rgba(255,255,255,.8)'; ctx.font='bold 9px Nunito,sans-serif'; ctx.textAlign='center';
+  ctx.fillText(b2.name,0,4);
+  ctx.restore();
+
+  /* clones */
+  for(var ci=0;ci<G.bossClones.length;ci++){
+    var cl=G.bossClones[ci];
+    var clP=Math.sin(now/280+ci)*.5+.5;
+    ctx.save(); ctx.translate(cl.x,cl.y); ctx.globalAlpha=0.72;
+    ctx.shadowColor=cl.hit>0?'#ff88ff':'#a855f7'; ctx.shadowBlur=12+clP*6;
+    ctx.beginPath();
+    for(var k=0;k<20;k++){
+      var ang2=k/20*Math.PI*2;
+      var rr3=cl.r+(seededRandom(k*11+ci*99)-.5)*cl.r*.25;
+      k===0?ctx.moveTo(Math.cos(ang2)*rr3,Math.sin(ang2)*rr3):ctx.lineTo(Math.cos(ang2)*rr3,Math.sin(ang2)*rr3);
+    }
+    ctx.closePath();
+    var clGr=ctx.createRadialGradient(0,0,0,0,0,cl.r);
+    clGr.addColorStop(0,'#c084fc'); clGr.addColorStop(.6,'#7e22ce'); clGr.addColorStop(1,'#3b0764');
+    ctx.fillStyle=clGr; ctx.fill();
+    ctx.strokeStyle='#a855f7'; ctx.lineWidth=1.5; ctx.stroke();
+    ctx.shadowBlur=0;
+    /* HP bar del clon */
+    var cbw=cl.r*2.2, cbh=3, cbx=-cbw/2, cby=-cl.r-12;
+    ctx.globalAlpha=0.65;
+    ctx.fillStyle='rgba(0,0,0,.5)'; ctx.fillRect(cbx,cby,cbw,cbh);
+    ctx.fillStyle=cl.hp/cl.maxHp>.5?'#a855f7':'#ef4444';
+    ctx.fillRect(cbx,cby,cbw*(cl.hp/cl.maxHp),cbh);
+    ctx.restore();
+  }
+}
+
+/* ── Jefe 3: Leucopenia — bacteria con flagelos ── */
+function drawBossLeucopenia(b2,now){
+  var pulse=Math.sin(now/260)*.5+.5, hf=b2.hit>0;
+  var af=b2.burstMode&&b2.burstCount>0;
+  ctx.save(); ctx.translate(b2.x,b2.y);
+  ctx.shadowColor=hf?'#ffe000':'#a3e635'; ctx.shadowBlur=18+pulse*10+(af?16:0);
+  /* flagelos animados */
+  var flagellaCount=4;
+  for(var fi=0;fi<flagellaCount;fi++){
+    var baseAng=(fi/flagellaCount)*Math.PI*2+(now*.0014);
+    var bx2=Math.cos(baseAng)*b2.r*.85, by2=Math.sin(baseAng)*b2.r*.85;
+    ctx.strokeStyle='rgba(163,230,53,'+(0.55+pulse*.2)+')';
+    ctx.lineWidth=2+pulse*.8; ctx.lineCap='round';
+    ctx.shadowColor='#a3e635'; ctx.shadowBlur=6;
+    ctx.beginPath(); ctx.moveTo(bx2,by2);
+    /* curva ondulante con 4 puntos de control */
+    var len=b2.r*1.45, phase2=now*.0032+fi*1.8;
+    for(var fk=1;fk<=8;fk++){
+      var t=fk/8;
+      var fx2=bx2+Math.cos(baseAng)*len*t+Math.sin(phase2+t*Math.PI*1.5)*12*(1-t);
+      var fy2=by2+Math.sin(baseAng)*len*t+Math.cos(phase2+t*Math.PI*1.5)*12*(1-t);
+      ctx.lineTo(fx2,fy2);
+    }
+    ctx.stroke();
+    ctx.shadowBlur=0;
+  }
+  /* cuerpo ovalado */
+  var gr=ctx.createRadialGradient(-b2.r*.3,-b2.r*.35,2,0,0,b2.r);
+  gr.addColorStop(0,hf?'#f0ff80':'#d9f99d');
+  gr.addColorStop(.45,hf?'#84cc16':'#a3e635');
+  gr.addColorStop(.8,'#4d7c0f');
+  gr.addColorStop(1,'#1a2e05');
+  ctx.fillStyle=gr;
+  ctx.beginPath(); ctx.ellipse(0,0,b2.r,b2.r*.78,0,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle=hf?'#d9f99d':'#a3e635'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.ellipse(0,0,b2.r,b2.r*.78,0,0,Math.PI*2); ctx.stroke();
+  ctx.shadowBlur=0;
+  /* ojos rojos furiosos */
+  var eyeY=-b2.r*.22;
+  ctx.fillStyle='#ff2222';
+  ctx.beginPath(); ctx.ellipse(-b2.r*.32,eyeY,b2.r*.15,b2.r*.12,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( b2.r*.32,eyeY,b2.r*.15,b2.r*.12,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#1a0000';
+  ctx.beginPath(); ctx.ellipse(-b2.r*.32,eyeY,b2.r*.07,b2.r*.09,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( b2.r*.32,eyeY,b2.r*.07,b2.r*.09,0,0,Math.PI*2); ctx.fill();
+  /* cejas entrecerradas */
+  ctx.strokeStyle='#ff3333'; ctx.lineWidth=2.5; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(-b2.r*.44,eyeY-b2.r*.14); ctx.lineTo(-b2.r*.20,eyeY-b2.r*.06); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo( b2.r*.20,eyeY-b2.r*.06); ctx.lineTo( b2.r*.44,eyeY-b2.r*.14); ctx.stroke();
+  /* destello de ráfaga */
+  if(af){
+    ctx.globalAlpha=0.6+pulse*.3;
+    ctx.strokeStyle='#fde047'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.arc(0,0,b2.r+7+pulse*5,0,Math.PI*2); ctx.stroke();
+    ctx.globalAlpha=1;
+  }
+  ctx.fillStyle='rgba(255,255,200,.8)'; ctx.font='bold 9px Nunito,sans-serif'; ctx.textAlign='center';
+  ctx.fillText(b2.name,0,b2.r*.28);
+  ctx.restore();
+}
+
+/* ── Jefe 4: Policitemia — coágulo de eritrocitos aglomerados ── */
+function drawBossPolicitemia(b2,now){
+  var pulse=Math.sin(now/480)*.5+.5, hf=b2.hit>0;
+  ctx.save(); ctx.translate(b2.x,b2.y);
+  ctx.shadowColor=hf?'#ff4444':'rgba(220,38,38,.6)'; ctx.shadowBlur=22+pulse*12;
+  /* cluster: 7 eritrocitos superpuestos */
+  var clusterDef=[
+    {ox: 0,  oy: 0,   rx:b2.r*.72, ry:b2.r*.50, col:'#991b1b'},
+    {ox:-b2.r*.48,oy:-b2.r*.28,rx:b2.r*.52,ry:b2.r*.37,col:'#7f1d1d'},
+    {ox: b2.r*.44,oy:-b2.r*.24,rx:b2.r*.50,ry:b2.r*.35,col:'#991b1b'},
+    {ox:-b2.r*.38,oy: b2.r*.30,rx:b2.r*.48,ry:b2.r*.34,col:'#b91c1c'},
+    {ox: b2.r*.40,oy: b2.r*.28,rx:b2.r*.46,ry:b2.r*.33,col:'#dc2626'},
+    {ox: 0,       oy:-b2.r*.46,rx:b2.r*.44,ry:b2.r*.30,col:'#7f1d1d'},
+    {ox: 0,       oy: b2.r*.46,rx:b2.r*.42,ry:b2.r*.28,col:'#b91c1c'}
+  ];
+  for(var ci2=0;ci2<clusterDef.length;ci2++){
+    var cd=clusterDef[ci2];
+    var wobble=Math.sin(now*.0008+ci2*.9)*2.5;
+    var gr2=ctx.createRadialGradient(cd.ox-cd.rx*.25,cd.oy-cd.ry*.25,cd.ry*.1,cd.ox,cd.oy,cd.rx);
+    gr2.addColorStop(0,hf?'#ff6666':'#ef4444');
+    gr2.addColorStop(.45,cd.col);
+    gr2.addColorStop(1,'#450a0a');
+    ctx.fillStyle=gr2;
+    ctx.beginPath();
+    ctx.ellipse(cd.ox+wobble*.3,cd.oy+wobble*.2, cd.rx+pulse*2, cd.ry+pulse*1.4, 0,0,Math.PI*2);
+    ctx.fill();
+    /* concavidad interior (forma eritrocito) */
+    ctx.fillStyle='rgba(50,0,0,.48)';
+    ctx.beginPath();
+    ctx.ellipse(cd.ox+wobble*.3,cd.oy+wobble*.2, cd.rx*.4, cd.ry*.42, 0,0,Math.PI*2);
+    ctx.fill();
+  }
+  /* borde exterior */
+  ctx.strokeStyle=hf?'#ff6666':'rgba(220,38,38,.55)'; ctx.lineWidth=2.5;
+  ctx.beginPath(); ctx.arc(0,0,b2.r-.5,0,Math.PI*2); ctx.stroke();
+  ctx.shadowBlur=0;
+  /* texto */
+  ctx.fillStyle='rgba(255,200,200,.8)'; ctx.font='bold 9px Nunito,sans-serif'; ctx.textAlign='center';
+  ctx.fillText(b2.name,0,4);
+  ctx.restore();
+}
+
+/* ── Jefe genérico (espinas + ojos, para L5-L8) ── */
+function drawBossGeneric(b2,now){
+  var pulse=Math.sin(now/300)*.5+.5, hf=b2.hit>0, af=b2.fireTimer<600;
+  ctx.save(); ctx.translate(b2.x,b2.y);
+  ctx.shadowColor=hf?'#ff3333':af?'#f97316':b2.col;
+  ctx.shadowBlur=22+pulse*12+(af?15:0);
+  for(var k=0;k<12;k++){
+    var a=k/12*Math.PI*2+now*.0005;
+    var lx=Math.cos(a-.2)*(b2.r-3),ly=Math.sin(a-.2)*(b2.r-3);
+    var rxv=Math.cos(a+.2)*(b2.r-3),ryv=Math.sin(a+.2)*(b2.r-3);
+    var tx=Math.cos(a)*(b2.r+13+pulse*3),ty=Math.sin(a)*(b2.r+13+pulse*3);
+    ctx.fillStyle=hf?'#ff6666':b2.col;
+    ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(tx,ty);ctx.lineTo(rxv,ryv);ctx.closePath();ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.7)'; ctx.beginPath();ctx.arc(tx,ty,4,0,Math.PI*2);ctx.fill();
+  }
+  var grad=ctx.createRadialGradient(-10,-10,3,0,0,b2.r);
+  grad.addColorStop(0,hf?'#ff5555':af?'#ea580c':b2.col);
+  grad.addColorStop(.55,'rgba(0,0,8,.8)'); grad.addColorStop(1,'#200008');
+  ctx.fillStyle=grad; ctx.beginPath();ctx.arc(0,0,b2.r,0,Math.PI*2);ctx.fill();
+  ctx.shadowBlur=0; ctx.strokeStyle=hf?'#ff4444':b2.col; ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(0,0,b2.r,0,Math.PI*2);ctx.stroke();
+  ctx.fillStyle='#ff4444';
+  ctx.beginPath();ctx.ellipse(-10,-8,6,5,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(10,-8,6,5,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#200008';
+  ctx.beginPath();ctx.ellipse(-9,-8,3,3.5,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(11,-8,3,3.5,0,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle=af?'#f97316':'#ff4444'; ctx.lineWidth=2.5;
+  ctx.beginPath();
+  if(af){ctx.moveTo(-12,10);ctx.quadraticCurveTo(0,18,12,10);}
+  else  {ctx.moveTo(-11,10);ctx.quadraticCurveTo(0,6,11,10);}
+  ctx.stroke();
+  ctx.fillStyle='rgba(255,255,255,.85)'; ctx.font='bold 9px Nunito,sans-serif'; ctx.textAlign='center';
+  var nm=b2.name; if(nm.length>10) nm=nm.slice(0,8)+'..';
+  ctx.fillText(nm,0,4);
+  ctx.restore();
+}
+
+/* ── Jefe 5: Talasemia — hemoglobina deformada, alterna estados ── */
+function drawBossTalasemia(b2,now){
+  var pulse=Math.sin(now/300)*.5+.5, hf=b2.hit>0;
+  var deformed=b2.bossState==='deformed';
+  /* shake cuando está deformado */
+  var sx=deformed?(Math.random()-.5)*5:0, sy=deformed?(Math.random()-.5)*5:0;
+  ctx.save(); ctx.translate(b2.x+sx, b2.y+sy);
+  /* aura: blanco suave en normal, rojo agresivo en deformado */
+  ctx.shadowColor=deformed?(hf?'#ff4444':'#cc1111'):'rgba(255,240,240,.7)';
+  ctx.shadowBlur=deformed?22+pulse*14:10+pulse*6;
+  /* cuerpo — 4 "subunidades" entrelazadas */
+  var subDefs=[
+    {ox:-b2.r*.32,oy:-b2.r*.22,rx:b2.r*.58,ry:b2.r*.42,rot:-.4},
+    {ox: b2.r*.30,oy:-b2.r*.20,rx:b2.r*.55,ry:b2.r*.40,rot: .35},
+    {ox:-b2.r*.28,oy: b2.r*.24,rx:b2.r*.52,ry:b2.r*.38,rot: .5},
+    {ox: b2.r*.26,oy: b2.r*.22,rx:b2.r*.50,ry:b2.r*.36,rot:-.45}
+  ];
+  for(var si=0;si<subDefs.length;si++){
+    var sd=subDefs[si];
+    var wobble=deformed?Math.sin(now*.006+si*1.4)*b2.r*.12:0;
+    var gr=ctx.createRadialGradient(sd.ox-sd.rx*.3,sd.oy-sd.ry*.3,sd.ry*.1,sd.ox+wobble,sd.oy+wobble,sd.rx);
+    gr.addColorStop(0,deformed?(hf?'#ff8888':'#ef4444'):'#c84040');
+    gr.addColorStop(.5,'#991b1b');
+    gr.addColorStop(1,'#450a0a');
+    ctx.fillStyle=gr;
+    ctx.beginPath();
+    ctx.ellipse(sd.ox+wobble, sd.oy+wobble, sd.rx+pulse*2, sd.ry+pulse*1.5, sd.rot,0,Math.PI*2);
+    ctx.fill();
+  }
+  /* borde: limpio en normal, irregular en deformado */
+  if(deformed){
+    ctx.strokeStyle='rgba(239,68,68,'+(0.7+pulse*.25)+')'; ctx.lineWidth=2.5;
+    drawSketchyRect(-b2.r,-b2.r,b2.r*2,b2.r*2,b2.r*.35,now*.0002);
+    ctx.stroke();
+  } else {
+    ctx.strokeStyle='rgba(255,230,230,.45)'; ctx.lineWidth=1.8;
+    ctx.beginPath(); ctx.arc(0,0,b2.r,0,Math.PI*2); ctx.stroke();
+    /* brillo blanco sutil en estado normal */
+    ctx.fillStyle='rgba(255,255,255,.10)';
+    ctx.beginPath(); ctx.arc(0,0,b2.r,0,Math.PI*2); ctx.fill();
+  }
+  ctx.shadowBlur=0;
+  /* indicador de estado */
+  ctx.font='bold 9px Nunito,sans-serif'; ctx.textAlign='center';
+  ctx.fillStyle=deformed?'rgba(255,130,130,.9)':'rgba(255,255,255,.6)';
+  ctx.fillText(deformed?'⚠️ DEFORMADA':'🔒 ESTABLE',0,4);
+  ctx.restore();
+}
+
+/* ── Jefe 6: Hemofilia — herida/desgarro gigante ── */
+function drawBossHemofilia(b2,now){
+  var pulse=Math.sin(now/280)*.5+.5, hf=b2.hit>0;
+  ctx.save(); ctx.translate(b2.x, b2.y);
+  ctx.shadowColor=hf?'#ff0000':'#dc2626'; ctx.shadowBlur=24+pulse*14;
+  /* forma de desgarro con bezier curves */
+  ctx.beginPath();
+  ctx.moveTo(0,-b2.r*.9);
+  ctx.bezierCurveTo( b2.r*.7,-b2.r*.6,  b2.r*.95,-b2.r*.1,  b2.r*.8,  b2.r*.4);
+  ctx.bezierCurveTo( b2.r*.55, b2.r*.9,  b2.r*.1,  b2.r*.95, -b2.r*.2, b2.r*.8);
+  ctx.bezierCurveTo(-b2.r*.65, b2.r*.6, -b2.r*.9,  b2.r*.15,-b2.r*.85,-b2.r*.3);
+  ctx.bezierCurveTo(-b2.r*.7, -b2.r*.65,-b2.r*.3, -b2.r*.88, 0,       -b2.r*.9);
+  ctx.closePath();
+  var gr=ctx.createRadialGradient(0,0,b2.r*.08,0,0,b2.r);
+  gr.addColorStop(0,'#ff2222');
+  gr.addColorStop(.3,hf?'#ff4444':'#dc2626');
+  gr.addColorStop(.7,'#7f1d1d');
+  gr.addColorStop(1,'#450a0a');
+  ctx.fillStyle=gr; ctx.fill();
+  ctx.strokeStyle=hf?'#ff6666':'#991b1b'; ctx.lineWidth=2.5; ctx.stroke();
+  ctx.shadowBlur=0;
+  /* grieta central — línea de desgarro */
+  ctx.strokeStyle='rgba(255,255,255,.22)'; ctx.lineWidth=2; ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(-b2.r*.18,-b2.r*.55);
+  ctx.lineTo( b2.r*.08,-b2.r*.12);
+  ctx.lineTo(-b2.r*.10, b2.r*.28);
+  ctx.lineTo( b2.r*.14, b2.r*.58);
+  ctx.stroke();
+  /* gotas de sangre animadas */
+  var dropCount=6;
+  for(var di=0;di<dropCount;di++){
+    var dPhase=(now*.0018+di*1.05)%(Math.PI*2);
+    var dr=b2.r*(0.3+seededRandom(di*13)*.5);
+    var da=seededRandom(di*7)*Math.PI*2;
+    var ddx=Math.cos(da)*dr, ddy=Math.sin(da)*dr+Math.sin(dPhase)*16;
+    var dAlpha=Math.max(0,Math.sin(dPhase)*.8);
+    ctx.fillStyle='rgba(220,0,0,'+dAlpha+')';
+    ctx.beginPath(); ctx.arc(ddx,ddy,2.5+seededRandom(di*17)*2,0,Math.PI*2); ctx.fill();
+  }
+  ctx.fillStyle='rgba(255,200,200,.75)'; ctx.font='bold 9px Nunito,sans-serif'; ctx.textAlign='center';
+  ctx.fillText(b2.name,0,4);
+  ctx.restore();
+}
+
+/* ── Jefe 7: Trombocitopenia — plaqueta agrietada ── */
+function drawBossTrombocitopenia(b2,now){
+  var pulse=Math.sin(now/350)*.5+.5, hf=b2.hit>0;
+  ctx.save(); ctx.translate(b2.x, b2.y);
+  ctx.shadowColor=hf?'#ff88cc':'#db2777'; ctx.shadowBlur=18+pulse*10;
+  /* cuerpo disc */
+  var gr=ctx.createRadialGradient(-b2.r*.3,-b2.r*.25,b2.r*.05,0,0,b2.r);
+  gr.addColorStop(0,hf?'#fff3c4':'#fde68a');
+  gr.addColorStop(.45,'#fbbf24');
+  gr.addColorStop(.75,'#92400e');
+  gr.addColorStop(1,'#451a03');
+  ctx.fillStyle=gr;
+  ctx.beginPath(); ctx.arc(0,0,b2.r,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle=hf?'#fef9c3':'rgba(253,230,138,.6)'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(0,0,b2.r,0,Math.PI*2); ctx.stroke();
+  ctx.shadowBlur=0;
+  /* líneas de fractura */
+  var crackSeeds=[[13,41],[29,67],[53,19],[73,83],[97,37]];
+  ctx.strokeStyle='rgba(30,10,0,.72)'; ctx.lineWidth=2; ctx.lineCap='round';
+  for(var ci3=0;ci3<5;ci3++){
+    var cSeed=crackSeeds[ci3];
+    var cAng=seededRandom(cSeed[0])*Math.PI*2;
+    var cLen=b2.r*(0.4+seededRandom(cSeed[1])*.55);
+    var cMid=cLen*.5;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(cAng)*cMid*0.2, Math.sin(cAng)*cMid*0.2);
+    ctx.lineTo(Math.cos(cAng+.25)*cMid, Math.sin(cAng+.25)*cMid);
+    ctx.lineTo(Math.cos(cAng-.1)*cLen,  Math.sin(cAng-.1)*cLen);
+    ctx.stroke();
+  }
+  /* fragmentos que se caen */
+  for(var fi2=0;fi2<8;fi2++){
+    var fPhase=(now*.0015+fi2*.8)%(Math.PI*2);
+    var fAng=seededRandom(fi2*23)*Math.PI*2;
+    var fR=b2.r*(0.85+seededRandom(fi2*37)*.25);
+    var fx2=Math.cos(fAng)*fR, fy2=Math.sin(fAng)*fR+Math.sin(fPhase)*10;
+    var fAlpha=Math.max(0,(1-Math.sin(fPhase)*.5)*.65);
+    ctx.fillStyle='rgba(251,191,36,'+fAlpha+')';
+    ctx.beginPath(); ctx.arc(fx2,fy2,2+seededRandom(fi2*41)*.5,0,Math.PI*2); ctx.fill();
+  }
+  ctx.fillStyle='rgba(80,20,0,.85)'; ctx.font='bold 9px Nunito,sans-serif'; ctx.textAlign='center';
+  ctx.fillText(b2.name,0,4);
+  ctx.restore();
+}
+
+/* ── Jefe 8: Sepsis — blob infeccioso deformable ── */
+function drawBossSepsis(b2,now){
+  var pulse=Math.sin(now/320)*.5+.5, hf=b2.hit>0;
+  var af=b2.fireTimer<500;
+  ctx.save(); ctx.translate(b2.x, b2.y);
+  ctx.shadowColor=hf?'#86efac':'#22c55e'; ctx.shadowBlur=26+pulse*16+(af?18:0);
+  /* tentáculos animados */
+  var tentCount=5;
+  for(var ti2=0;ti2<tentCount;ti2++){
+    var tBase=ti2/tentCount*Math.PI*2+now*.0012;
+    var tbx=Math.cos(tBase)*b2.r*.85, tby=Math.sin(tBase)*b2.r*.85;
+    ctx.strokeStyle='rgba(34,197,94,'+(0.55+pulse*.2)+')';
+    ctx.lineWidth=3+pulse; ctx.lineCap='round';
+    ctx.shadowColor='#22c55e'; ctx.shadowBlur=8;
+    ctx.beginPath(); ctx.moveTo(tbx,tby);
+    var tLen=b2.r*1.5, tPhase=now*.003+ti2*1.3;
+    for(var tk=1;tk<=7;tk++){
+      var tt=tk/7;
+      var tfx=tbx+Math.cos(tBase)*tLen*tt+Math.sin(tPhase+tt*Math.PI*2)*14*(1-tt*.5);
+      var tfy=tby+Math.sin(tBase)*tLen*tt+Math.cos(tPhase+tt*Math.PI*2)*14*(1-tt*.5);
+      ctx.lineTo(tfx,tfy);
+    }
+    ctx.stroke(); ctx.shadowBlur=0;
+  }
+  /* cuerpo amorfо — contorno orgánico multifrequency */
+  ctx.beginPath();
+  var bSteps=32;
+  for(var bk=0;bk<bSteps;bk++){
+    var bang=bk/bSteps*Math.PI*2;
+    var br2=b2.r
+      +Math.sin(bang*3+now*.0014)*b2.r*.14
+      +Math.sin(bang*5+now*.0022)*b2.r*.08
+      +Math.cos(bang*2+now*.0018)*b2.r*.10;
+    var bpx=Math.cos(bang)*br2, bpy=Math.sin(bang)*br2;
+    bk===0?ctx.moveTo(bpx,bpy):ctx.lineTo(bpx,bpy);
+  }
+  ctx.closePath();
+  var gr=ctx.createRadialGradient(-b2.r*.3,-b2.r*.3,b2.r*.05,0,0,b2.r+8);
+  gr.addColorStop(0,hf?'#4ade80':'#16a34a');
+  gr.addColorStop(.4,hf?'#15803d':'#166534');
+  gr.addColorStop(.75,'#052e16');
+  gr.addColorStop(1,'#020d07');
+  ctx.fillStyle=gr; ctx.fill();
+  ctx.strokeStyle=hf?'#4ade80':'#22c55e'; ctx.lineWidth=2.2; ctx.stroke();
+  ctx.shadowBlur=0;
+  /* manchas tóxicas amarillas */
+  var spotDefs=[{ox:-11,oy:-8,r:5},{ox:9,oy:6,r:4},{ox:-5,oy:11,r:3.5},{ox:13,oy:-9,r:3}];
+  for(var spi=0;spi<spotDefs.length;spi++){
+    var sp=spotDefs[spi];
+    ctx.fillStyle='rgba(253,224,71,'+(0.55+pulse*.2)+')';
+    ctx.shadowColor='#fde047'; ctx.shadowBlur=6;
+    ctx.beginPath(); ctx.arc(sp.ox,sp.oy,sp.r+pulse,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0;
+  }
+  /* partículas orbitantes */
+  for(var oi2=0;oi2<6;oi2++){
+    var oAng=oi2/6*Math.PI*2+now*.0025;
+    var or2=b2.r+14+Math.sin(now*.004+oi2)*5;
+    ctx.fillStyle='rgba(74,222,128,'+(0.5+pulse*.3)+')';
+    ctx.shadowColor='#22c55e'; ctx.shadowBlur=7;
+    ctx.beginPath(); ctx.arc(Math.cos(oAng)*or2,Math.sin(oAng)*or2,3.5,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0;
+  }
+  ctx.fillStyle='rgba(187,247,208,.85)'; ctx.font='bold 9px Nunito,sans-serif'; ctx.textAlign='center';
+  ctx.fillText(b2.name,0,4);
+  ctx.restore();
+}
+
+/* ── Dispatcher principal ── */
+function drawBoss(){
+  if(!G.boss) return;
+  var b2=G.boss, now=Date.now();
+  if(b2.dying){ drawBossDying(b2,now); return; }
+
+  var bt=b2.bossType||'generic';
+  if     (bt==='anemia')          drawBossAnemia(b2,now);
+  else if(bt==='leucemia')        drawBossLeucemia(b2,now);
+  else if(bt==='leucopenia')      drawBossLeucopenia(b2,now);
+  else if(bt==='policitemia')     drawBossPolicitemia(b2,now);
+  else if(bt==='talasemia')       drawBossTalasemia(b2,now);
+  else if(bt==='hemofilia')       drawBossHemofilia(b2,now);
+  else if(bt==='trombocitopenia') drawBossTrombocitopenia(b2,now);
+  else if(bt==='sepsis')          drawBossSepsis(b2,now);
+  else                            drawBossGeneric(b2,now);
+
+  drawBossHPBar(b2);
+}
+
+/* ── Pathogens ── */
+function drawPathogens(){
+  for(var i=0;i<G.pathogens.length;i++){
+    var p=G.pathogens[i];
+    ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.spin);
+    ctx.shadowColor='#f97316';ctx.shadowBlur=12;ctx.fillStyle='#f97316';
+    for(var k=0;k<4;k++){
+      var a=k/4*Math.PI*2;
+      ctx.beginPath();ctx.moveTo(Math.cos(a-.3)*p.r,Math.sin(a-.3)*p.r);
+      ctx.lineTo(Math.cos(a)*(p.r+7),Math.sin(a)*(p.r+7));
+      ctx.lineTo(Math.cos(a+.3)*p.r,Math.sin(a+.3)*p.r);ctx.closePath();ctx.fill();
+    }
+    var pg=ctx.createRadialGradient(-2,-2,1,0,0,p.r);
+    pg.addColorStop(0,'#fcd34d');pg.addColorStop(.6,'#ef4444');pg.addColorStop(1,'#7f1d1d');
+    ctx.fillStyle=pg; ctx.beginPath();ctx.arc(0,0,p.r,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  }
+}
+
+/* ── seededRandom: PRNG determinista para bordes estables ── */
+function seededRandom(seed){
+  var x=Math.sin(seed+1)*10000;
+  return x-Math.floor(x);
+}
+
+/* ── drawSketchyRect: borde irregular tipo "defectuoso" ── */
+function drawSketchyRect(x,y,w,h,r,seed){
+  var steps=14, sx=w/steps, jitter=3;
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  for(var k=0;k<=steps;k++){
+    var jx=(seededRandom(seed+k*7)-.5)*jitter;
+    var jy=(seededRandom(seed+k*13)-.5)*jitter;
+    ctx.lineTo(x+k*sx+jx, y+jy);
+  }
+  ctx.lineTo(x+w, y+r);
+  for(var k=0;k<=steps;k++){
+    var jx2=(seededRandom(seed+k*17)-.5)*jitter;
+    var jy2=(seededRandom(seed+k*23)-.5)*jitter;
+    ctx.lineTo(x+w+jx2, y+k*(h/steps)+jy2);
+  }
+  ctx.lineTo(x+w-r, y+h);
+  for(var k=steps;k>=0;k--){
+    var jx3=(seededRandom(seed+k*31)-.5)*jitter;
+    var jy3=(seededRandom(seed+k*37)-.5)*jitter;
+    ctx.lineTo(x+k*sx+jx3, y+h+jy3);
+  }
+  ctx.closePath();
+}
+
+/* ── Items (todos neutros — el jugador debe leer la etiqueta) ── */
+function drawItems(){
+  var IH=42, now=Date.now();
+  for(var i=0;i<G.items.length;i++){
+    var it=G.items[i], x=it.x-it.w/2, y=it.y-IH/2;
+    var pulse=Math.sin(now/280+i)*.5+.5;
+    ctx.save();
+    ctx.shadowColor='rgba(180,175,178,.22)';
+    ctx.shadowBlur=6+pulse*3;
+    ctx.fillStyle='rgba(20,15,18,.94)';
+    rr(x,y,it.w,IH,9); ctx.fill();
+    if(it.defective){
+      /* borde irregular ámbar para hemoglobina defectuosa (L5) */
+      ctx.shadowColor='rgba(245,158,11,.55)'; ctx.shadowBlur=8+pulse*4;
+      ctx.strokeStyle='rgba(245,158,11,'+(0.55+pulse*0.25)+')';
+      ctx.lineWidth=2.2;
+      drawSketchyRect(x,y,it.w,IH,9,i*97+Math.floor(now/8000));
+      ctx.stroke();
+    } else {
+      ctx.strokeStyle='rgba(180,170,175,'+(0.42+pulse*0.13)+')';
+      ctx.lineWidth=1.6; rr(x,y,it.w,IH,9); ctx.stroke();
+    }
+    ctx.shadowBlur=0;
+    ctx.fillStyle=it.defective?'#f59e0b':'#e2e0e1';
+    ctx.font='bold 15px Nunito,sans-serif'; ctx.textAlign='center';
+    ctx.fillText(it.word, it.x, it.y+6);
+    ctx.restore();
+  }
+}
+
+/* ── Ship (Glóbulo Blanco / Leucocito) ── */
 function drawShip(){
   var x=G.px, y=G.py;
   ctx.save(); ctx.translate(x,y);
 
-  /* engine glow */
-  var eg=ctx.createRadialGradient(0,18,0,0,18,22);
-  eg.addColorStop(0,'rgba(0,200,255,.55)');
-  eg.addColorStop(1,'transparent');
-  ctx.fillStyle=eg; ctx.fillRect(-22,4,44,32);
+  /* ── aura de movimiento ── */
+  var mg=ctx.createRadialGradient(0,8,0,0,8,30);
+  mg.addColorStop(0,'rgba(80,170,255,.28)'); mg.addColorStop(1,'transparent');
+  ctx.fillStyle=mg; ctx.fillRect(-30,0,60,30);
 
-  /* shoot pulse */
-  if(G.spcd>0){
-    ctx.beginPath(); ctx.arc(0,-G.pr-2,6,0,Math.PI*2);
-    ctx.fillStyle='rgba(251,191,36,'+(G.spcd/140*.7)+')'; ctx.fill();
+  /* ── PSEUDÓPODOS (detrás del cuerpo) ── */
+  ctx.fillStyle='#cce8ff';
+  ctx.shadowColor='rgba(80,160,255,.5)'; ctx.shadowBlur=9;
+
+  /* pseudópodo frontal central (cañón principal) */
+  ctx.beginPath();
+  ctx.moveTo(-5,-G.pr+2);
+  ctx.bezierCurveTo(-8,-G.pr-4, -7,-G.pr-14, -2,-G.pr-22);
+  ctx.lineTo(0,-G.pr-25);
+  ctx.bezierCurveTo(2,-G.pr-22, 7,-G.pr-14, 5,-G.pr+2);
+  ctx.closePath(); ctx.fill();
+
+  /* pseudópodo frontal izquierdo */
+  ctx.beginPath();
+  ctx.moveTo(-G.pr+2,-5);
+  ctx.bezierCurveTo(-G.pr-4,-9, -G.pr-15,-14, -G.pr-22,-9);
+  ctx.bezierCurveTo(-G.pr-25,-5, -G.pr-21,1, -G.pr-12,5);
+  ctx.bezierCurveTo(-G.pr-3,8, -G.pr+2,3, -G.pr+2,-3);
+  ctx.closePath(); ctx.fill();
+
+  /* pseudópodo frontal derecho */
+  ctx.beginPath();
+  ctx.moveTo(G.pr-2,-5);
+  ctx.bezierCurveTo(G.pr+4,-9, G.pr+15,-14, G.pr+22,-9);
+  ctx.bezierCurveTo(G.pr+25,-5, G.pr+21,1, G.pr+12,5);
+  ctx.bezierCurveTo(G.pr+3,8, G.pr-2,3, G.pr-2,-3);
+  ctx.closePath(); ctx.fill();
+
+  /* pseudópodos traseros (propulsión) */
+  ctx.globalAlpha=0.75;
+  for(var k=0;k<2;k++){
+    var s=k===0?-1:1;
+    ctx.beginPath();
+    ctx.moveTo(s*(G.pr-5),7);
+    ctx.bezierCurveTo(s*(G.pr+3),12, s*(G.pr+10),18, s*(G.pr+5),24);
+    ctx.bezierCurveTo(s*(G.pr+1),27, s*(G.pr-4),22, s*(G.pr-5),16);
+    ctx.closePath(); ctx.fill();
+  }
+  ctx.globalAlpha=1; ctx.shadowBlur=0;
+
+  /* ── CUERPO CELULAR ── */
+  var cg=ctx.createRadialGradient(-6,-6,2, 0,0, G.pr);
+  cg.addColorStop(0,'#f5fbff');
+  cg.addColorStop(0.3,'#dff0ff');
+  cg.addColorStop(0.65,'#bad6f5');
+  cg.addColorStop(1,'#88b4dc');
+  ctx.fillStyle=cg;
+  ctx.shadowColor='rgba(80,165,255,.58)'; ctx.shadowBlur=18;
+  ctx.beginPath(); ctx.arc(0,0,G.pr,0,Math.PI*2); ctx.fill();
+  ctx.shadowBlur=0;
+
+  /* membrana exterior */
+  ctx.strokeStyle='rgba(160,215,255,.45)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.arc(0,0,G.pr,0,Math.PI*2); ctx.stroke();
+
+  /* gránulos superficiales (textura de leucocito) */
+  for(var k=0;k<13;k++){
+    var ba=k/13*Math.PI*2;
+    var gx=Math.cos(ba)*(G.pr-3), gy=Math.sin(ba)*(G.pr-3);
+    ctx.fillStyle='rgba(205,232,255,.72)';
+    ctx.beginPath(); ctx.arc(gx,gy,2.2,0,Math.PI*2); ctx.fill();
   }
 
-  /* ── RED WINGS ── */
-  ctx.fillStyle='#b91c1c';
-  /* left wing */
-  ctx.beginPath();
-  ctx.moveTo(-6,4); ctx.lineTo(-28,20); ctx.lineTo(-22,28); ctx.lineTo(-6,16);
-  ctx.closePath(); ctx.fill();
-  /* right wing */
-  ctx.beginPath();
-  ctx.moveTo(6,4); ctx.lineTo(28,20); ctx.lineTo(22,28); ctx.lineTo(6,16);
-  ctx.closePath(); ctx.fill();
-  /* wing accents */
-  ctx.fillStyle='#ef4444';
-  ctx.beginPath();
-  ctx.moveTo(-8,8); ctx.lineTo(-24,20); ctx.lineTo(-20,24); ctx.lineTo(-8,14);
-  ctx.closePath(); ctx.fill();
-  ctx.beginPath();
-  ctx.moveTo(8,8); ctx.lineTo(24,20); ctx.lineTo(20,24); ctx.lineTo(8,14);
-  ctx.closePath(); ctx.fill();
+  /* ── NÚCLEO MULTILOBULADO (neutrófilo) ── */
+  ctx.shadowColor='rgba(50,135,255,.85)'; ctx.shadowBlur=11;
+  ctx.fillStyle='rgba(52,118,210,.68)';
+  ctx.beginPath(); ctx.ellipse(-5,-2, 7,5, -.3,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( 5, 1, 6,4.5, .3,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( 0, 5, 5,3.5, .05,0,Math.PI*2); ctx.fill();
+  ctx.shadowBlur=0;
+  /* brillo del núcleo */
+  ctx.fillStyle='rgba(155,215,255,.55)';
+  ctx.beginPath(); ctx.ellipse(-7,-5, 2.5,1.8, -.3,0,Math.PI*2); ctx.fill();
+  /* destello central */
+  var ng=ctx.createRadialGradient(0,0,0,0,0,8);
+  ng.addColorStop(0,'rgba(145,205,255,.68)'); ng.addColorStop(1,'rgba(40,125,255,0)');
+  ctx.fillStyle=ng; ctx.beginPath(); ctx.arc(0,0,8,0,Math.PI*2); ctx.fill();
 
-  /* ── FUSELAGE ── */
-  /* shadow/base */
-  ctx.fillStyle='#0d2a4a';
-  ctx.beginPath();
-  ctx.moveTo(0,-26); ctx.lineTo(10,0); ctx.lineTo(10,24); ctx.lineTo(-10,24); ctx.lineTo(-10,0);
-  ctx.closePath(); ctx.fill();
-  /* main hull */
-  var hg=ctx.createLinearGradient(-10,0,10,0);
-  hg.addColorStop(0,'#1e4a7a'); hg.addColorStop(.5,'#2d6aa8'); hg.addColorStop(1,'#1e4a7a');
-  ctx.fillStyle=hg;
-  ctx.beginPath();
-  ctx.moveTo(0,-24); ctx.lineTo(9,2); ctx.lineTo(9,22); ctx.lineTo(-9,22); ctx.lineTo(-9,2);
-  ctx.closePath(); ctx.fill();
-  /* cockpit */
-  var cg=ctx.createRadialGradient(0,-10,1,0,-10,8);
-  cg.addColorStop(0,'#a0e8ff'); cg.addColorStop(1,'#00aacc');
-  ctx.fillStyle=cg;
-  ctx.beginPath();
-  ctx.moveTo(0,-22); ctx.lineTo(6,-4); ctx.lineTo(-6,-4);
-  ctx.closePath(); ctx.fill();
-  /* cockpit shine */
-  ctx.fillStyle='rgba(255,255,255,.35)';
-  ctx.beginPath();
-  ctx.moveTo(-1,-18); ctx.lineTo(2,-10); ctx.lineTo(-2,-10);
-  ctx.closePath(); ctx.fill();
-  /* hull stripe */
-  ctx.fillStyle='rgba(0,212,255,.25)';
-  ctx.fillRect(-9,4,18,3);
-
-  /* engine nozzles */
-  ctx.fillStyle='#0d2a4a';
-  ctx.fillRect(-7,20,5,6); ctx.fillRect(2,20,5,6);
-  /* engine flames */
-  var fl=ctx.createLinearGradient(0,26,0,36);
-  fl.addColorStop(0,'rgba(0,200,255,.9)'); fl.addColorStop(1,'transparent');
-  ctx.fillStyle=fl;
-  ctx.beginPath(); ctx.ellipse(-4,28,3,5+Math.random()*3,0,0,Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(4,28,3,5+Math.random()*3,0,0,Math.PI*2); ctx.fill();
-
-  /* shield ring */
-  if(G.shield){
-    ctx.strokeStyle='rgba(34,197,94,.7)';
-    ctx.lineWidth=2;
-    ctx.shadowColor='#22c55e'; ctx.shadowBlur=12;
-    ctx.beginPath(); ctx.arc(0,0,G.pr+8,0,Math.PI*2); ctx.stroke();
+  /* ── DISPARO: flash en punta del pseudópodo central ── */
+  if(G.spcd>0){
+    var sa=G.spcd/140;
+    ctx.shadowColor='#90ddff'; ctx.shadowBlur=14;
+    ctx.fillStyle='rgba(160,225,255,'+( sa*.9)+')';
+    ctx.beginPath(); ctx.arc(0,-G.pr-22,5,0,Math.PI*2); ctx.fill();
+    if(G.double){
+      ctx.fillStyle='rgba(255,225,80,'+(sa*.9)+')';
+      ctx.beginPath(); ctx.arc(-G.pr-18,-6,4,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc( G.pr+18,-6,4,0,Math.PI*2); ctx.fill();
+    }
     ctx.shadowBlur=0;
+  }
+
+  /* ── ESCUDO ── */
+  if(G.shield){
+    ctx.strokeStyle='rgba(34,197,94,.72)'; ctx.lineWidth=2.5;
+    ctx.shadowColor='#22c55e'; ctx.shadowBlur=16;
+    ctx.beginPath(); ctx.arc(0,0,G.pr+11,0,Math.PI*2); ctx.stroke();
+    ctx.shadowBlur=0;
+  }
+
+  /* ── PLAQUETA EQUIPADA (L7 Trombocitopenia) ── */
+  if(G.carryingPlatelet){
+    var now7=Date.now(), pulse7=Math.sin(now7*.006)*.5+.5;
+    ctx.strokeStyle='rgba(251,191,36,'+(0.6+pulse7*0.35)+')'; ctx.lineWidth=2;
+    ctx.shadowColor='#fbbf24'; ctx.shadowBlur=12+pulse7*8;
+    ctx.beginPath(); ctx.arc(0,0,G.pr+15,0,Math.PI*2); ctx.stroke();
+    ctx.shadowBlur=0;
+    ctx.fillStyle='rgba(251,191,36,.9)';
+    ctx.font='bold 12px Nunito,sans-serif'; ctx.textAlign='center';
+    ctx.fillText('🩹',0,-G.pr-20);
   }
 
   ctx.restore();
 }
 
-/* ── Bullets ── */
+/* ── Bullets (anticuerpos en forma de Y) ── */
 function drawBullets(){
   for(var i=0;i<G.bullets.length;i++){
     var b=G.bullets[i];
+    var bc=G.double?'#ffd060':'#7dd8ff';
+    /* L8 Sepsis: anticuerpos se debilitan al alejarse */
+    var bFade=1;
+    if(LD[G.levelIdx].mechanic==='sepsis'&&b.startY!==undefined){
+      var bTrav=b.startY-b.y;
+      var bMax=H*(G.bulletRange||1)*0.9;
+      bFade=Math.max(0.08, 1-bTrav/bMax);
+    }
     ctx.save();
-    ctx.shadowColor=G.double?'#fbbf24':'#00d4ff';
-    ctx.shadowBlur=10;
-    ctx.fillStyle=G.double?'#fbbf24':'#00d4ff';
-    ctx.beginPath(); ctx.ellipse(b.x,b.y,3,9,0,0,Math.PI*2); ctx.fill();
-    ctx.globalAlpha=.3;
-    ctx.beginPath(); ctx.ellipse(b.x,b.y+11,2,5,0,0,Math.PI*2); ctx.fill();
-    ctx.restore();
-  }
-}
-
-/* ── Falling Items (same color) ── */
-function drawItems(){
-  var IH=38;
-  for(var i=0;i<G.items.length;i++){
-    var it=G.items[i];
-    var x=it.x-it.w/2, y=it.y-IH/2;
-    ctx.save();
-    ctx.shadowColor='#00d4ff'; ctx.shadowBlur=8;
-    ctx.fillStyle='rgba(5,20,50,.92)';
-    rr(x,y,it.w,IH,8); ctx.fill();
-    ctx.strokeStyle='#00d4ff'; ctx.lineWidth=1.6;
-    rr(x,y,it.w,IH,8); ctx.stroke();
+    ctx.globalAlpha=bFade;
+    ctx.translate(b.x,b.y);
+    ctx.shadowColor=bc; ctx.shadowBlur=11;
+    ctx.strokeStyle=bc; ctx.lineWidth=2.2; ctx.lineCap='round';
+    /* tallo */
+    ctx.beginPath(); ctx.moveTo(0,7); ctx.lineTo(0,-1); ctx.stroke();
+    /* brazo izquierdo */
+    ctx.beginPath(); ctx.moveTo(0,-1); ctx.lineTo(-5,-9); ctx.stroke();
+    /* brazo derecho */
+    ctx.beginPath(); ctx.moveTo(0,-1); ctx.lineTo(5,-9); ctx.stroke();
+    /* nódulos en los extremos */
+    ctx.fillStyle=bc;
+    ctx.beginPath(); ctx.arc(-5,-9,2,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc( 5,-9,2,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, 7,2,0,Math.PI*2); ctx.fill();
     ctx.shadowBlur=0;
-    ctx.fillStyle='#e2f0ff';
-    ctx.font='bold 15px Nunito,sans-serif'; ctx.textAlign='center';
-    ctx.fillText(it.word, it.x, it.y+6);
     ctx.restore();
   }
 }
@@ -639,133 +2409,233 @@ function drawItems(){
 function drawPowerups(){
   for(var i=0;i<G.powerups.length;i++){
     var pu=G.powerups[i];
-    ctx.save();
-    ctx.shadowColor=pu.col; ctx.shadowBlur=14;
-    /* hexagon */
-    ctx.fillStyle='rgba(10,22,40,.9)';
-    ctx.strokeStyle=pu.col; ctx.lineWidth=2;
+    ctx.save();ctx.shadowColor=pu.col;ctx.shadowBlur=14;
+    ctx.fillStyle='rgba(18,2,5,.9)';ctx.strokeStyle=pu.col;ctx.lineWidth=2;
     ctx.beginPath();
-    for(var k=0;k<6;k++){
-      var a=k/6*Math.PI*2-Math.PI/6;
-      var kx=pu.x+pu.r*Math.cos(a), ky=pu.y+pu.r*Math.sin(a);
-      k===0?ctx.moveTo(kx,ky):ctx.lineTo(kx,ky);
-    }
-    ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.shadowBlur=0;
-    /* label */
-    ctx.fillStyle=pu.col;
-    ctx.font='bold 9px Nunito,sans-serif'; ctx.textAlign='center';
-    ctx.fillText(pu.label,pu.x,pu.y+4);
-    ctx.restore();
+    for(var k=0;k<6;k++){var a=k/6*Math.PI*2-Math.PI/6;k===0?ctx.moveTo(pu.x+pu.r*Math.cos(a),pu.y+pu.r*Math.sin(a)):ctx.lineTo(pu.x+pu.r*Math.cos(a),pu.y+pu.r*Math.sin(a));}
+    ctx.closePath();ctx.fill();ctx.stroke();ctx.shadowBlur=0;
+    ctx.fillStyle=pu.col;ctx.font='bold 8px Nunito,sans-serif';ctx.textAlign='center';
+    ctx.fillText(pu.label,pu.x,pu.y+3);ctx.restore();
   }
 }
 
-/* ── Particles ── */
+/* ── Particles / Floats ── */
 function drawParts(){
   for(var i=0;i<G.parts.length;i++){
-    var p=G.parts[i];
-    ctx.save(); ctx.globalAlpha=p.a;
-    ctx.fillStyle=p.col; ctx.shadowColor=p.col; ctx.shadowBlur=5;
-    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
-    ctx.restore();
+    var p=G.parts[i],a=p.life/p.max;
+    ctx.save();ctx.globalAlpha=a;ctx.fillStyle=p.col;ctx.shadowColor=p.col;ctx.shadowBlur=5;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();ctx.restore();
+  }
+}
+function drawFloats(){
+  for(var i=0;i<G.floats.length;i++){
+    var f=G.floats[i],a=f.life/f.max;
+    ctx.save();ctx.globalAlpha=a;ctx.fillStyle=f.col;ctx.shadowColor=f.col;ctx.shadowBlur=8;
+    ctx.font='bold 16px Nunito,sans-serif';ctx.textAlign='center';
+    ctx.fillText(f.txt,f.x,f.y);ctx.restore();
   }
 }
 
-/* ── Float texts ── */
-function drawFloats(){
-  for(var i=0;i<G.floats.length;i++){
-    var f=G.floats[i];
-    ctx.save(); ctx.globalAlpha=f.a;
-    ctx.fillStyle=f.col; ctx.shadowColor=f.col; ctx.shadowBlur=8;
-    ctx.font='bold 16px Nunito,sans-serif'; ctx.textAlign='center';
-    ctx.fillText(f.txt,f.x,f.y);
-    ctx.restore();
-  }
+/* ── ECG ── */
+function drawECG(x,y,w,h){
+  var col=G.lives>=5?'#22c55e':G.lives>=3?'#f59e0b':'#ef4444';
+  ctx.save();ctx.fillStyle='rgba(0,0,0,.38)';rr(x,y,w,h,4);ctx.fill();
+  ctx.beginPath();ctx.rect(x+1,y+1,w-2,h-2);ctx.clip();
+  ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.shadowColor=col;ctx.shadowBlur=5;
+  ctx.beginPath();
+  var buf=G.ecgBuf;
+  for(var i=0;i<buf.length;i++){var px2=x+(i/buf.length)*w,py2=y+h/2-buf[i]*h*.42;i===0?ctx.moveTo(px2,py2):ctx.lineTo(px2,py2);}
+  ctx.stroke();ctx.restore();
 }
 
 /* ── HUD ── */
 function drawHUD(){
-  /* bar */
-  ctx.fillStyle='rgba(6,14,30,.7)'; ctx.fillRect(0,0,W,46);
+  /* HUD bg */
+  ctx.fillStyle='rgba(16,1,3,.92)';ctx.fillRect(0,0,W,54);
+  ctx.strokeStyle='rgba(180,20,10,.20)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(0,54);ctx.lineTo(W,54);ctx.stroke();
 
-  /* lives */
-  ctx.font='18px serif';
-  for(var i=0;i<3;i++){
-    ctx.globalAlpha=i<G.lives?1:.18;
-    ctx.fillText('❤️',10+i*26,34);
-  }
+  /* hearts */
+  var hw=17;ctx.font='13px serif';
+  for(var i=0;i<LIVES_MAX;i++){ctx.globalAlpha=i<G.lives?1:.12;ctx.fillText('❤️',10+i*hw,36);}
   ctx.globalAlpha=1;
 
-  /* power indicators */
-  var px=W/2-40;
-  if(G.shield){ ctx.font='16px serif'; ctx.fillText('🛡️',px,33); px+=26; }
-  if(G.double){ ctx.font='13px Nunito,sans-serif'; ctx.fillStyle='#fbbf24'; ctx.fillText('2x',px,34); px+=22; }
-  if(G.fast)  { ctx.font='16px serif'; ctx.fillText('⚡',px,33); }
+  /* ECG */
+  drawECG(10+LIVES_MAX*hw+4,12,54,28);
 
   /* score */
-  ctx.font='bold 18px Nunito,sans-serif'; ctx.textAlign='center';
-  ctx.fillStyle='#fbbf24';
-  ctx.shadowColor='#fbbf24'; ctx.shadowBlur=5;
-  ctx.fillText('⭐ '+G.score, W/2, 34);
-  ctx.shadowBlur=0;
+  ctx.font='bold 17px Nunito,sans-serif';ctx.textAlign='center';
+  ctx.fillStyle='#fbbf24';ctx.shadowColor='#fbbf24';ctx.shadowBlur=6;
+  ctx.fillText('⭐ '+G.score,W/2,34);ctx.shadowBlur=0;
 
-  /* level */
-  var lc=G.level===1?'#22c55e':G.level===2?'#f59e0b':'#ef4444';
-  ctx.font='bold 14px Nunito,sans-serif'; ctx.textAlign='right';
-  ctx.fillStyle=lc; ctx.shadowColor=lc; ctx.shadowBlur=5;
-  ctx.fillText('NIVEL '+G.level, W-10, 34);
-  ctx.shadowBlur=0;
+  /* power indicators */
+  var pi=W/2+46;
+  if(G.shield){ctx.font='12px serif';ctx.fillText('🛡️',pi,34);pi+=20;}
+  if(G.double){ctx.font='11px Nunito,sans-serif';ctx.fillStyle='#fbbf24';ctx.fillText('2x',pi,35);pi+=18;}
+  if(G.fast)  {ctx.font='12px serif';ctx.fillText('⚡',pi,34);}
 
-  /* progress bar */
-  var prog=(G.kills%5)/5, bw=60, bh=3, bx=W-10-bw, by=38;
-  ctx.fillStyle='#1a3a5c'; rr(bx,by,bw,bh,2); ctx.fill();
-  if(prog>0){ctx.fillStyle=lc; rr(bx,by,bw*prog,bh,2); ctx.fill();}
+  /* combo */
+  if(G.combo>=3){
+    ctx.font='bold 11px Nunito,sans-serif';ctx.textAlign='center';
+    ctx.fillStyle='#f97316';ctx.shadowColor='#f97316';ctx.shadowBlur=7;
+    ctx.fillText('🔥 x'+G.combo,W/2,50);ctx.shadowBlur=0;
+  }
+
+  /* top-right: level name */
+  var lv=LD[G.levelIdx];
+  ctx.font='bold 11px Nunito,sans-serif';ctx.textAlign='right';
+  ctx.fillStyle=lv.col;ctx.shadowColor=lv.col;ctx.shadowBlur=5;
+  ctx.fillText('LV '+(G.levelIdx+1)+' · '+lv.disease,W-10,22);ctx.shadowBlur=0;
+
+  /* phase label */
+  var phLbl=G.phase==='mini'?'Volando al vaso…':G.phase==='boss'?'⚔️ Jefe en válvula':'';
+  if(phLbl){ctx.font='9px Nunito,sans-serif';ctx.fillStyle='#cc7070';ctx.fillText(phLbl,W-10,36);}
+
+  /* ── BARRA DE PROGRESO AL VUELO (derecha) ── */
+  if(G.phase==='mini'){
+    var barX=W-11, barY=60, barH=H-130, barW=6;
+    var prog=Math.min(1,G.flightProg/100);
+    /* pista */
+    ctx.fillStyle='rgba(60,5,5,.7)'; rr(barX-barW,barY,barW,barH,3); ctx.fill();
+    /* relleno */
+    var fillH=barH*prog;
+    if(fillH>2){
+      var fgrd=ctx.createLinearGradient(0,barY+barH,0,barY+barH-fillH);
+      fgrd.addColorStop(0,'#cc1010'); fgrd.addColorStop(.6,'#ff4030'); fgrd.addColorStop(1,'#ff8060');
+      ctx.fillStyle=fgrd;
+      rr(barX-barW,barY+barH-fillH,barW,fillH,3); ctx.fill();
+      /* punto de avance */
+      ctx.shadowColor='#ff3020'; ctx.shadowBlur=8;
+      ctx.fillStyle='rgba(255,110,70,.8)';
+      ctx.beginPath();ctx.arc(barX-barW/2,barY+barH-fillH,4,0,Math.PI*2);ctx.fill();
+      ctx.shadowBlur=0;
+    }
+    /* ícono válvula arriba */
+    ctx.font='11px serif';ctx.textAlign='center';
+    ctx.fillText('🫀',barX-barW/2,barY-4);
+    /* porcentaje abajo */
+    ctx.font='bold 8px Nunito,sans-serif';ctx.fillStyle='#cc7070';
+    ctx.fillText(Math.floor(prog*100)+'%',barX-barW/2,barY+barH+11);
+  }
+
+  /* ── indicadores de mecánica especial ── */
+  if(G.phase==='mini'||G.phase==='boss'){
+    var mi=10;
+    /* L1 Anemia: barra de visión */
+    if(G.levelIdx===0){
+      var vPct=G.visionLevel/100;
+      var vCol=G.visionLevel<35?'#ef4444':G.visionLevel<60?'#f59e0b':'#a78bfa';
+      ctx.fillStyle='rgba(0,0,0,.45)'; rr(mi,H-28,80,10,4); ctx.fill();
+      ctx.fillStyle=vCol; rr(mi,H-28,80*vPct,10,4); ctx.fill();
+      ctx.font='bold 9px Nunito,sans-serif'; ctx.textAlign='left';
+      ctx.fillStyle=vCol; ctx.fillText('👁 VISIÓN '+Math.floor(G.visionLevel)+'%',mi,H-32);
+    }
+    /* L3 Leucopenia: indicador de velocidad de disparo (1.0=máx velocidad, 0=mínimo) */
+    if(LD[G.levelIdx].mechanic==='leucopenia'){
+      var cdPct=Math.max(0,(2.5-G.shootCdMod)/1.8);
+      var cdCol=cdPct<.4?'#ef4444':cdPct<.7?'#f59e0b':'#22c55e';
+      ctx.fillStyle='rgba(0,0,0,.45)'; rr(mi,H-28,80,10,4); ctx.fill();
+      ctx.fillStyle=cdCol; rr(mi,H-28,80*cdPct,10,4); ctx.fill();
+      ctx.font='bold 9px Nunito,sans-serif'; ctx.textAlign='left';
+      ctx.fillStyle=cdCol; ctx.fillText('⚡ DISPARO '+Math.floor(cdPct*100)+'%',mi,H-32);
+    }
+    /* L4 Policitemia: indicador de velocidad de nave */
+    if(LD[G.levelIdx].mechanic==='policitemia'){
+      ctx.font='bold 9px Nunito,sans-serif'; ctx.textAlign='left';
+      ctx.fillStyle='#f59e0b';
+      ctx.fillText('🩸 SANGRE ESPESA — nave lenta',mi,H-28);
+    }
+    /* L5 Talasemia: barra de visión */
+    if(LD[G.levelIdx].mechanic==='talasemia'){
+      var vPct5=G.visionLevel/100;
+      var vCol5=G.visionLevel<35?'#ef4444':G.visionLevel<60?'#f59e0b':'#a78bfa';
+      ctx.fillStyle='rgba(0,0,0,.45)'; rr(mi,H-28,80,10,4); ctx.fill();
+      ctx.fillStyle=vCol5; rr(mi,H-28,80*vPct5,10,4); ctx.fill();
+      ctx.font='bold 9px Nunito,sans-serif'; ctx.textAlign='left';
+      ctx.fillStyle=vCol5; ctx.fillText('👁 VISIÓN '+Math.floor(G.visionLevel)+'%',mi,H-32);
+    }
+    /* L6 Hemofilia: indicador de sangrado */
+    if(LD[G.levelIdx].mechanic==='hemofilia'){
+      ctx.font='bold 9px Nunito,sans-serif'; ctx.textAlign='left';
+      if(G.bleeding){
+        var bPulse=Math.sin(Date.now()*.006)*.5+.5;
+        ctx.fillStyle='rgba(239,68,68,'+(0.7+bPulse*0.3)+')';
+        ctx.fillText('🩸 SANGRANDO — Recoge Plaqueta/Plasma',mi,H-28);
+      } else {
+        ctx.fillStyle='#22c55e';
+        ctx.fillText('🩹 Coagulación normal',mi,H-28);
+      }
+    }
+    /* L7 Trombocitopenia: contador de heridas activas */
+    if(LD[G.levelIdx].mechanic==='trombocitopenia'){
+      var activeW=G.wounds.filter(function(w){return !w.sealed;}).length;
+      ctx.font='bold 9px Nunito,sans-serif'; ctx.textAlign='left';
+      ctx.fillStyle=activeW>0?'#ef4444':'#22c55e';
+      var platLbl=G.carryingPlatelet?' · 🩹 LLEVA':'';
+      ctx.fillText('🔴 Heridas: '+activeW+platLbl,mi,H-28);
+    }
+    /* L8 Sepsis: barra de alcance de balas */
+    if(LD[G.levelIdx].mechanic==='sepsis'){
+      var rPct=G.bulletRange;
+      var rCol=rPct<.45?'#ef4444':rPct<.7?'#f59e0b':'#22c55e';
+      ctx.fillStyle='rgba(0,0,0,.45)'; rr(mi,H-28,80,10,4); ctx.fill();
+      ctx.fillStyle=rCol; rr(mi,H-28,80*rPct,10,4); ctx.fill();
+      ctx.font='bold 9px Nunito,sans-serif'; ctx.textAlign='left';
+      ctx.fillStyle=rCol; ctx.fillText('☣️ ALCANCE '+Math.floor(rPct*100)+'%',mi,H-32);
+    }
+  }
+
   ctx.textAlign='left';
 }
 
-/* roundRect */
+/* ── roundRect helper ── */
 function rr(x,y,w,h,r){
   ctx.beginPath();
-  ctx.moveTo(x+r,y);
-  ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
-  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
-  ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
-  ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
-  ctx.closePath();
+  ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
 }
 
-/* ═══════════════ GAME LOOP ═══════════════ */
+/* ══════════════════════════════════════════
+   GAME LOOP
+══════════════════════════════════════════ */
 var lastT=0;
 function loop(ts){
-  var dt=ts-lastT; if(dt>60)dt=60; lastT=ts;
-  if(G && !G.over) update(dt);
+  var dt=ts-lastT;if(dt>60)dt=60;lastT=ts;
+  if(G) update(dt);
   draw();
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
 
-/* ═══════════════ OVERLAYS ═══════════════ */
-function showOver(){
-  document.getElementById('go-sc').textContent = G.score + ' puntos';
-  document.getElementById('go-msg').textContent = '☠️ El paciente no sobrevivió. Las enfermedades de la sangre lograron su cometido. ¡Inténtalo de nuevo!';
-  document.getElementById('ov-go').classList.remove('hidden');
+/* ══════════════════════════════════════════
+   STATS
+══════════════════════════════════════════ */
+function buildStats(el){
+  el.innerHTML=
+    '<div class="stat-box good"><div class="stat-num">'+G.enemyKilled+'</div><div class="stat-lbl">Enfermedades ☠️</div></div>'+
+    '<div class="stat-box good"><div class="stat-num">'+G.allyCollected+'</div><div class="stat-lbl">Componentes 🩸</div></div>'+
+    '<div class="stat-box bad"><div class="stat-num">'+G.allyHit+'</div><div class="stat-lbl">Aliados dañados</div></div>'+
+    '<div class="stat-box"><div class="stat-num">'+(G.levelIdx+1)+'/8</div><div class="stat-lbl">Niveles superados</div></div>';
 }
-function showWin(){
-  document.getElementById('win-sc').textContent = G.score + ' puntos';
-  document.getElementById('ov-win').classList.remove('hidden');
-}
-function doStart(){ document.getElementById('ov-start').classList.add('hidden'); newGame(); }
-function doRetry(){ document.getElementById('ov-go').classList.add('hidden'); newGame(); }
-function doRetryWin(){ document.getElementById('ov-win').classList.add('hidden'); newGame(); }
-document.getElementById('btn-start').addEventListener('click', doStart);
-document.getElementById('btn-retry').addEventListener('click', doRetry);
-document.getElementById('btn-retry-win').addEventListener('click', doRetryWin);
 
-/* ═══════════════ KEYBOARD ═══════════════ */
+/* ══════════════════════════════════════════
+   BUTTON EVENTS
+══════════════════════════════════════════ */
+document.getElementById('btn-start').addEventListener('click',function(){newGame();startLevel(0);});
+document.getElementById('btn-intro').addEventListener('click',function(){showOnlyOverlay(null);startMiniPhase();});
+document.getElementById('btn-lwin').addEventListener('click',function(){showOnlyOverlay(null);advanceLevel();});
+document.getElementById('btn-retry').addEventListener('click',function(){newGame();startLevel(0);});
+document.getElementById('btn-win').addEventListener('click',function(){newGame();startLevel(0);});
+
+/* ══════════════════════════════════════════
+   KEYBOARD
+══════════════════════════════════════════ */
 window.addEventListener('keydown',function(e){
-  var GAME_KEYS=['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' ','w','a','s','d'];
-  if(GAME_KEYS.indexOf(e.key)!==-1) e.preventDefault();
-  if(!G||G.over)return;
+  var GK=['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' ','w','a','s','d'];
+  if(GK.indexOf(e.key)!==-1) e.preventDefault();
+  if(!G)return;
   if(e.key==='ArrowLeft' ||e.key==='a') G.left =true;
   if(e.key==='ArrowRight'||e.key==='d') G.right=true;
   if(e.key===' ')                        G.shoot=true;
@@ -781,7 +2651,9 @@ window.addEventListener('keyup',function(e){
   if(e.key==='ArrowDown'||e.key==='s')  G.down =false;
 },false);
 
-/* ═══════════════ TOUCH BUTTONS ═══════════════ */
+/* ══════════════════════════════════════════
+   TOUCH
+══════════════════════════════════════════ */
 function bindCtrl(id,prop){
   var btn=document.getElementById(id);
   function on(e){e.preventDefault();if(G)G[prop]=true;}
@@ -793,19 +2665,18 @@ function bindCtrl(id,prop){
   btn.addEventListener('mouseup',off);
   btn.addEventListener('mouseleave',off);
 }
-bindCtrl('cbtn-left','left');
-bindCtrl('cbtn-right','right');
-bindCtrl('cbtn-shoot','shoot');
-bindCtrl('cbtn-up','up');
-bindCtrl('cbtn-down','down');
+bindCtrl('cbtn-left','left');bindCtrl('cbtn-right','right');
+bindCtrl('cbtn-shoot','shoot');bindCtrl('cbtn-up','up');bindCtrl('cbtn-down','down');
 
-/* ═══════════════ TOAST ═══════════════ */
+/* ══════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════ */
 var tTmr=null;
 function toast(msg,type){
   var t=document.getElementById('toast');
   if(tTmr)clearTimeout(tTmr);
-  t.textContent=msg; t.className='show '+(type||'');
-  tTmr=setTimeout(function(){t.className='';},2000);
+  t.textContent=msg;t.className='show '+(type||'');
+  tTmr=setTimeout(function(){t.className='';},2600);
 }
 </script>
 </body>
