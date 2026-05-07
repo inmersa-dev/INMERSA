@@ -263,9 +263,7 @@ var W,H;
 function resize(){
   W=cv.width=wrap.offsetWidth; H=cv.height=wrap.offsetHeight;
   if(G) G.py=H-90;
-  /* reposicionar base del joystick según nuevo tamaño */
-  joystick.baseX=W-90; joystick.baseY=H-90;
-  if(!joystick.active){ joystick.knobX=joystick.baseX; joystick.knobY=joystick.baseY; }
+  /* nada extra que reposicionar en modo trackpad */
 }
 window.addEventListener('resize',resize);
 
@@ -282,13 +280,8 @@ if(IS_TOUCH){
   ctrlRight.style.display='none';
 }
 
-/* ── Estado del joystick virtual ── */
-var joystick={
-  active:false,
-  baseX:0, baseY:0,
-  knobX:0, knobY:0,
-  touchId:-1
-};
+/* ── Estado del trackpad táctil ── */
+var trackpad={ active:false, touchId:-1, lastX:0, lastY:0 };
 var SHOOT_TOUCH_ID=-1;
 
 resize();
@@ -832,24 +825,15 @@ function update(dt){
   if(G.phase!=='mini'&&G.phase!=='boss') return;
 
   /* ── player movement ── */
-  var ms=(IS_TOUCH?1.6:4.2)*G.moveMult;
-  if(G.joyX||G.joyY){
-    /* analógico con inercia: lerp suave hacia velocidad objetivo */
-    var tvx=G.joyX*ms, tvy=G.joyY*ms;
-    G.velX+=(tvx-G.velX)*0.14;
-    G.velY+=(tvy-G.velY)*0.14;
-    G.px+=G.velX; G.py+=G.velY;
-  } else {
-    /* cuando el stick está en reposo, frenar rápido para evitar sobrepasar */
-    G.velX*=IS_TOUCH?0.45:0.72; G.velY*=IS_TOUCH?0.45:0.72;
-    if(Math.abs(G.velX)>0.1) G.px+=G.velX;
-    if(Math.abs(G.velY)>0.1) G.py+=G.velY;
-    /* digital: teclado (siempre directo y responsivo) */
+  var ms=4.2*G.moveMult;
+  if(!IS_TOUCH){
+    /* teclado: movimiento digital directo */
     if(G.left)  G.px-=ms;
     if(G.right) G.px+=ms;
     if(G.up)    G.py-=ms;
     if(G.down)  G.py+=ms;
   }
+  /* touch: el trackpad mueve G.px/G.py directamente en el handler */
   G.px=Math.max(G.pr,Math.min(W-G.pr,G.px));
   G.py=Math.max(56,Math.min(H-78,G.py));
 
@@ -1777,27 +1761,12 @@ function draw(){
 
   drawHUD();
 
-  /* ── Joystick virtual (solo en touch, solo cuando está activo) ── */
-  if(IS_TOUCH&&joystick.active&&G&&(G.phase==='mini'||G.phase==='boss'||G.phase==='entering_valve'||G.phase==='exiting_level')){
-    var jbx=joystick.baseX, jby=joystick.baseY;
-    var jkx=joystick.knobX, jky=joystick.knobY;
-    /* base */
+  /* ── Indicador trackpad (punto tenue donde toca el dedo) ── */
+  if(IS_TOUCH&&trackpad.active&&G&&(G.phase==='mini'||G.phase==='boss'||G.phase==='entering_valve'||G.phase==='exiting_level')){
     ctx.save();
-    ctx.globalAlpha=0.55;
-    ctx.beginPath(); ctx.arc(jbx,jby,50,0,Math.PI*2);
-    ctx.fillStyle='rgba(20,3,8,0.7)'; ctx.fill();
-    ctx.strokeStyle='rgba(180,170,175,0.3)'; ctx.lineWidth=2; ctx.stroke();
-    /* zona muerta (círculo interior tenue) */
-    ctx.globalAlpha=0.18;
-    ctx.beginPath(); ctx.arc(jbx,jby,12,0,Math.PI*2);
-    ctx.strokeStyle='rgba(220,215,218,0.8)'; ctx.lineWidth=1; ctx.stroke();
-    /* knob — tamaño refleja cuánto está empujado */
-    var jDist=Math.sqrt((jkx-jbx)*(jkx-jbx)+(jky-jby)*(jky-jby));
-    var kR=16+Math.min(8, jDist/50*8);  // 16px en reposo → 24px a tope
-    ctx.globalAlpha=0.55;
-    ctx.beginPath(); ctx.arc(jkx,jky,kR,0,Math.PI*2);
-    ctx.fillStyle='rgba(180,170,175,0.5)'; ctx.fill();
-    ctx.strokeStyle='rgba(220,215,218,0.6)'; ctx.lineWidth=2; ctx.stroke();
+    ctx.globalAlpha=0.22;
+    ctx.beginPath(); ctx.arc(trackpad.lastX, trackpad.lastY, 22, 0, Math.PI*2);
+    ctx.strokeStyle='#e2f0ff'; ctx.lineWidth=1.5; ctx.stroke();
     ctx.restore();
   }
 }
@@ -2999,73 +2968,49 @@ if(!IS_TOUCH){
   bindCtrl('cbtn-up','up');bindCtrl('cbtn-down','down');
 }
 
-/* Joystick virtual (solo si IS_TOUCH) */
+/* ── Trackpad táctil (solo si IS_TOUCH) ── */
 if(IS_TOUCH){
-  function isJoystickZone(x,y){
-    /* mitad derecha + tercio inferior de la pantalla */
-    return x>W/2 && y>H*0.55;
-  }
-  function updateJoystickInput(){
-    if(!joystick.active||!G){ G.joyX=0; G.joyY=0; G.left=G.right=G.up=G.down=false; return; }
-    var dx=joystick.knobX-joystick.baseX;
-    var dy=joystick.knobY-joystick.baseY;
-    var dist=Math.sqrt(dx*dx+dy*dy);
-    var DEAD=14, MAX=50;
-    if(dist<DEAD){
-      G.joyX=0; G.joyY=0;
-    } else {
-      /* remapear [DEAD…MAX] → [0…1] */
-      var norm=Math.min(1,(dist-DEAD)/(MAX-DEAD));
-      /* curva cúbica: requiere empuje deliberado para alcanzar velocidad alta */
-      norm=norm*norm*norm;
-      G.joyX=dx/dist*norm;
-      G.joyY=dy/dist*norm;
-    }
-    G.left=G.joyX<-0.15; G.right=G.joyX>0.15;
-    G.up=G.joyY<-0.15;   G.down=G.joyY>0.15;
-  }
+  var TP_SENS=0.82; /* sensibilidad: px del dedo → px de la nave */
+
   cv.addEventListener('touchstart',function(e){
     e.preventDefault();
     for(var ti=0;ti<e.changedTouches.length;ti++){
       var t=e.changedTouches[ti];
-      if(isJoystickZone(t.clientX,t.clientY)&&!joystick.active){
-        joystick.active=true;
-        joystick.touchId=t.identifier;
-        joystick.baseX=t.clientX; joystick.baseY=t.clientY;
-        joystick.knobX=t.clientX; joystick.knobY=t.clientY;
-      } else if(t.clientX<W/2&&SHOOT_TOUCH_ID===-1){
-        /* toque en mitad izquierda = disparo adicional */
+      /* mitad derecha = trackpad de movimiento */
+      if(t.clientX>W/2&&!trackpad.active){
+        trackpad.active=true;
+        trackpad.touchId=t.identifier;
+        trackpad.lastX=t.clientX;
+        trackpad.lastY=t.clientY;
+      /* mitad izquierda = disparo */
+      } else if(t.clientX<=W/2&&SHOOT_TOUCH_ID===-1){
         SHOOT_TOUCH_ID=t.identifier;
         if(G) G.shoot=true;
       }
     }
-    updateJoystickInput();
   },{passive:false});
 
   cv.addEventListener('touchmove',function(e){
     e.preventDefault();
     for(var ti=0;ti<e.changedTouches.length;ti++){
       var t=e.changedTouches[ti];
-      if(t.identifier===joystick.touchId){
-        var dx=t.clientX-joystick.baseX;
-        var dy=t.clientY-joystick.baseY;
-        var dist=Math.sqrt(dx*dx+dy*dy);
-        if(dist>50){dx=dx/dist*50;dy=dy/dist*50;}
-        joystick.knobX=joystick.baseX+dx;
-        joystick.knobY=joystick.baseY+dy;
+      if(t.identifier===trackpad.touchId&&G&&!G.dying&&!G.over){
+        var dx=(t.clientX-trackpad.lastX)*TP_SENS;
+        var dy=(t.clientY-trackpad.lastY)*TP_SENS;
+        G.px=Math.max(G.pr, Math.min(W-G.pr, G.px+dx));
+        G.py=Math.max(G.pr, Math.min(H-G.pr, G.py+dy));
+        trackpad.lastX=t.clientX;
+        trackpad.lastY=t.clientY;
       }
     }
-    updateJoystickInput();
   },{passive:false});
 
   function touchEnd(e){
     e.preventDefault();
     for(var ti=0;ti<e.changedTouches.length;ti++){
       var t=e.changedTouches[ti];
-      if(t.identifier===joystick.touchId){
-        joystick.active=false; joystick.touchId=-1;
-        joystick.knobX=joystick.baseX; joystick.knobY=joystick.baseY;
-        if(G) G.left=G.right=G.up=G.down=false;
+      if(t.identifier===trackpad.touchId){
+        trackpad.active=false; trackpad.touchId=-1;
       }
       if(t.identifier===SHOOT_TOUCH_ID){
         SHOOT_TOUCH_ID=-1;
