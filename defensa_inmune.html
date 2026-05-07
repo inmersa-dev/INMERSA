@@ -832,7 +832,7 @@ function update(dt){
   if(G.phase!=='mini'&&G.phase!=='boss') return;
 
   /* ── player movement ── */
-  var ms=(IS_TOUCH?2.2:4.2)*G.moveMult;
+  var ms=(IS_TOUCH?1.6:4.2)*G.moveMult;
   if(G.joyX||G.joyY){
     /* analógico con inercia: lerp suave hacia velocidad objetivo */
     var tvx=G.joyX*ms, tvy=G.joyY*ms;
