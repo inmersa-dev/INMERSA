@@ -332,6 +332,7 @@ function newGame(){
     enemyKilled:0, allyCollected:0, allyHit:0, quizWrong:0,
     checkpoint:0, checkpointScore:0, quizCorrect:0, quizQuestions:[],
     dmg:0, shake:0, valveFlash:0, scd:0, spcd:0,
+    turretCd:0, bossBodyCd:0,   /* cooldowns anti-multihit por contacto */
     spawnT:Date.now(), puSpawnT:Date.now(),
     over:false, dying:false,
     shield:false, double:false, doubleTmr:0, fast:false, fastTmr:0,
@@ -691,8 +692,11 @@ function spawnItem(){
   var lv=LD[G.levelIdx], max=G.phase==='mini'?4:5;
   if(G.items.length>=max) return;
   var isE, word, abnormal=false;
+  /* Nivel 1 (Anemia): solo enemigos — el jugador aprende a disparar sin arriesgar aliados */
+  if(G.levelIdx===0 && G.phase==='mini'){
+    isE=true; word=lv.disease;
   /* Leucemia (L2): 30% de chance de leucocito anormal (trampa) */
-  if(G.levelIdx===1 && G.phase==='mini' && Math.random()<.30){
+  } else if(G.levelIdx===1 && G.phase==='mini' && Math.random()<.30){
     isE=true; word='Leucocito anormal'; abnormal=true;
   } else {
     isE=Math.random()<.5;
@@ -987,6 +991,7 @@ function update(dt){
     /* ── abscesos: scroll + disparo + spawn por distancia ── */
     var wallWt=W*0.14, st=G.scrollY*0.01;
     var scrollSpd2=1.8+G.levelIdx*.14;
+    if(G.turretCd>0) G.turretCd-=dt;
     var aLive=[];
     for(var ti=0;ti<G.turrets.length;ti++){
       var tu=G.turrets[ti];
@@ -994,16 +999,25 @@ function update(dt){
       if(tu.y>H+30) continue;       // salió de pantalla → descartado
       if(tu.flash>0) tu.flash-=dt;
       tu.timer-=dt;
+      /* calcular x actual de la torreta */
+      tu.x=tu.side==='l'
+        ? wallWt+Math.sin(tu.y/50+st)*12+10
+        : W-wallWt-Math.sin(tu.y/50+st+Math.PI)*12-10;
       if(tu.timer<=0){
         tu.timer=tu.interval;
         tu.flash=320;
-        var tX=tu.side==='l'
-          ? wallWt+Math.sin(tu.y/50+st)*12+10
-          : W-wallWt-Math.sin(tu.y/50+st+Math.PI)*12-10;
-        var ddx=G.px-tX, ddy=G.py-tu.y;
+        var ddx=G.px-tu.x, ddy=G.py-tu.y;
         var dist=Math.sqrt(ddx*ddx+ddy*ddy)||1;
         var spd=2.4+G.levelIdx*0.18;
-        G.pathogens.push({x:tX,y:tu.y,vx:ddx/dist*spd,vy:ddy/dist*spd,r:7,spin:0});
+        G.pathogens.push({x:tu.x,y:tu.y,vx:ddx/dist*spd,vy:ddy/dist*spd,r:7,spin:0});
+      }
+      /* colisión cuerpo torreta → nave */
+      if(G.turretCd<=0){
+        var tcx=G.px-tu.x, tcy=G.py-tu.y;
+        if(tcx*tcx+tcy*tcy<(22+G.pr)*(22+G.pr)){
+          G.turretCd=1400;
+          hitLife('🦠 ¡Absceso impactó la nave!');
+        }
       }
       aLive.push(tu);
     }
@@ -1033,6 +1047,22 @@ function update(dt){
       b2.phase+=dt*.001*b2.speed;
       b2.x=W/2+Math.cos(b2.phase)*b2.amplitude;
       if(b2.hit>0) b2.hit-=dt;
+      if(G.bossBodyCd>0) G.bossBodyCd-=dt;
+      /* colisión cuerpo del jefe → nave */
+      if(G.bossBodyCd<=0){
+        var bcdx=G.px-b2.x, bcdy=G.py-b2.y;
+        if(bcdx*bcdx+bcdy*bcdy<(b2.r+G.pr)*(b2.r+G.pr)){
+          G.bossBodyCd=1400; hitLife('💥 ¡Colisión con el jefe!');
+        }
+        /* clones de Leucemia */
+        for(var bci=0;bci<G.bossClones.length;bci++){
+          var bcl=G.bossClones[bci];
+          var cldx=G.px-bcl.x, cldy=G.py-bcl.y;
+          if(cldx*cldx+cldy*cldy<(bcl.r+G.pr)*(bcl.r+G.pr)){
+            G.bossBodyCd=1400; hitLife('💥 ¡Clon de Leucemia impactó!'); break;
+          }
+        }
+      }
 
       /* ── Anemia: nube de oscuridad cada 2 s + disparo apuntado lento ── */
       if(b2.bossType==='anemia'){
