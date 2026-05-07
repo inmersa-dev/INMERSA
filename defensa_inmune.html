@@ -110,6 +110,15 @@ canvas{display:block;width:100%;height:100%}
     <div id="qz-badge" style="font-size:.6rem;text-transform:uppercase;letter-spacing:2px;padding:4px 18px;border-radius:20px;font-weight:900;color:#fff"></div>
     <div style="font-size:.68rem;color:#cc4040;font-weight:800">VÁLVULA BLOQUEADA — VERIFICACIÓN REQUERIDA</div>
     <div id="qz-prog" style="font-size:.72rem;color:#9a7070"></div>
+    <div style="width:100%;max-width:310px;margin:2px 0 6px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+        <span style="font-size:.58rem;text-transform:uppercase;letter-spacing:2px;color:#7a9cc0">Tiempo</span>
+        <span id="qz-timer-num" style="font-size:.68rem;font-weight:900;color:#e2f0ff">15s</span>
+      </div>
+      <div style="height:5px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden">
+        <div id="qz-timer-bar" style="height:100%;width:100%;background:#22c55e;border-radius:3px;transition:background .4s"></div>
+      </div>
+    </div>
     <div id="qz-q"></div>
     <div id="qz-opts" style="display:flex;flex-direction:column;gap:7px;width:100%;max-width:310px"></div>
     <div id="qz-fb"></div>
@@ -166,7 +175,11 @@ var LD=[
    qs:[
      {q:'¿Qué tipo de célula se produce de forma anormal en la Leucemia?',opts:['Plaquetas','Leucocitos','Eritrocitos','Plasma'],a:1},
      {q:'¿En qué parte del cuerpo se origina la Leucemia?',opts:['El hígado','Los pulmones','La médula ósea','El corazón'],a:2},
-     {q:'Los leucocitos también se conocen como...',opts:['Glóbulos rojos','Plaquetas','Glóbulos blancos','Trombocitos'],a:2}
+     {q:'Los leucocitos también se conocen como...',opts:['Glóbulos rojos','Plaquetas','Glóbulos blancos','Trombocitos'],a:2},
+     {q:'¿Cuántos glóbulos blancos hay aproximadamente por microlitro de sangre sana?',opts:['500 – 1.000','4.000 – 11.000','20.000 – 50.000','100.000 – 200.000'],a:1},
+     {q:'¿Qué grupo de alimentos ayuda a aumentar la producción de glóbulos blancos?',opts:['Arroz blanco, pan, pasta, azúcar','Naranja, ajo, brócoli, pimientos','Frituras, embutidos, comida rápida','Café, alcohol, bebidas energéticas'],a:1},
+     {q:'¿Cuántos tipos principales de glóbulos blancos existen?',opts:['2','3','5','8'],a:2},
+     {q:'¿Cuál es la función principal de los glóbulos blancos?',opts:['Transportar oxígeno','Coagular la sangre','Defender el cuerpo contra infecciones','Producir hemoglobina'],a:2}
    ]},
   {disease:'Leucopenia',mechanic:'leucopenia',bossType:'leucopenia',col:'#f59e0b',affected:['Leucocito'],
    desc:'Cantidad anormalmente baja de glóbulos blancos. Las defensas se debilitan.',
@@ -324,7 +337,7 @@ function newGame(){
     lives:LIVES_START, score:0,
     combo:0, bestCombo:0,
     enemyKilled:0, allyCollected:0, allyHit:0, quizWrong:0,
-    checkpoint:0, checkpointScore:0, quizCorrect:0,
+    checkpoint:0, checkpointScore:0, quizCorrect:0, quizQuestions:[],
     dmg:0, shake:0, valveFlash:0, scd:0, spcd:0,
     spawnT:Date.now(), puSpawnT:Date.now(),
     over:false, dying:false,
@@ -446,10 +459,64 @@ function spawnAbscess(){
   G.turretNextAt=G.scrollY+550+Math.random()*250;
 }
 
+/* ── Quiz helpers ── */
+var QZ_IDX=0, QZ_TIMER_ID=null, QZ_CORRECT_A=0;
+var QZ_DURATION=15;
+
+function fisherYates(arr){
+  for(var i=arr.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var t=arr[i]; arr[i]=arr[j]; arr[j]=t;
+  }
+}
+
+/* Selecciona 3 preguntas: 2 del nivel actual + 1 de un nivel anterior aleatorio */
+function buildQuizPool(){
+  var current=LD[G.levelIdx].qs.slice();
+  fisherYates(current);
+  var pool=[current[0], current[1]||current[0]];
+  if(G.levelIdx>0){
+    var prevLv=LD[Math.floor(Math.random()*G.levelIdx)];
+    var prev=prevLv.qs.slice(); fisherYates(prev);
+    pool.push(prev[0]);
+  } else {
+    pool.push(current[2]||current[0]);
+  }
+  return pool;
+}
+
+/* Baraja opciones de una pregunta y devuelve {opts, a} con nuevo índice correcto */
+function shuffleOpts(q){
+  var idx=[0,1,2,3]; fisherYates(idx);
+  return { opts:idx.map(function(i){return q.opts[i];}), a:idx.indexOf(q.a) };
+}
+
+/* Temporizador visual */
+function startQzTimer(correctIdx){
+  clearQzTimer();
+  QZ_CORRECT_A=correctIdx;
+  var left=QZ_DURATION;
+  updateTimerUI(left);
+  QZ_TIMER_ID=setInterval(function(){
+    left=Math.max(0, left-0.1);
+    updateTimerUI(left);
+    if(left<=0){ clearQzTimer(); handleAnswer(-1, QZ_CORRECT_A); }
+  },100);
+}
+function clearQzTimer(){ if(QZ_TIMER_ID){clearInterval(QZ_TIMER_ID);QZ_TIMER_ID=null;} }
+function updateTimerUI(left){
+  var pct=left/QZ_DURATION*100;
+  var bar=document.getElementById('qz-timer-bar');
+  var num=document.getElementById('qz-timer-num');
+  if(bar){ bar.style.width=pct+'%';
+    bar.style.background=pct>55?'#22c55e':pct>28?'#f59e0b':'#ef4444'; }
+  if(num){ num.textContent=Math.ceil(left)+'s'; }
+}
+
 function startQuizPhase(){
   G.phase='idle';
   G.quizCorrect=0;
-  /* valve-arrival effect — destello dorado positivo */
+  G.quizQuestions=buildQuizPool();
   G.shake=320; G.valveFlash=680;
   var lv=LD[G.levelIdx];
   var badge=document.getElementById('qz-badge');
@@ -459,41 +526,45 @@ function startQuizPhase(){
   setTimeout(function(){ showOnlyOverlay('ov-quiz'); },600);
 }
 
-var QZ_IDX=0;
 function showQuizQuestion(idx){
   QZ_IDX=idx;
-  var lv=LD[G.levelIdx]; var q=lv.qs[idx];
+  var q=G.quizQuestions[idx];
+  var shuffled=shuffleOpts(q);
   document.getElementById('qz-prog').textContent='Pregunta '+(idx+1)+' de 3  ·  ✓ '+G.quizCorrect+' correctas';
   document.getElementById('qz-q').textContent=q.q;
   document.getElementById('qz-fb').textContent='';
   var opts=document.getElementById('qz-opts'); opts.innerHTML='';
   var lb=['A','B','C','D'];
-  q.opts.forEach(function(o,i){
+  shuffled.opts.forEach(function(o,i){
     var btn=document.createElement('button');
     btn.className='qz-btn'; btn.textContent=lb[i]+') '+o;
-    btn.addEventListener('click',function(){handleAnswer(i,q.a);});
+    btn.addEventListener('click',function(){handleAnswer(i,shuffled.a);});
     opts.appendChild(btn);
   });
+  startQzTimer(shuffled.a);
 }
 
 function handleAnswer(chosen,correct){
+  clearQzTimer();
   var btns=document.querySelectorAll('.qz-btn');
   btns.forEach(function(b){b.disabled=true;});
-  btns[correct].classList.add('ok');
+  if(correct>=0&&correct<btns.length) btns[correct].classList.add('ok');
   var fb=document.getElementById('qz-fb');
   if(chosen===correct){
     G.quizCorrect++;
     fb.style.color='#22c55e'; fb.textContent='✓ ¡Correcto!';
+  } else if(chosen===-1){
+    G.quizWrong++;
+    fb.style.color='#ef4444'; fb.textContent='⏱ ¡Tiempo agotado!';
   } else {
     btns[chosen].classList.add('bad'); G.quizWrong++;
     fb.style.color='#ef4444';
-    fb.textContent='✗ Incorrecto. Respuesta: '+document.querySelectorAll('.qz-btn')[correct].textContent.slice(3);
+    fb.textContent='✗ Incorrecto. Respuesta: '+btns[correct].textContent.slice(3);
   }
   setTimeout(function(){
     if(QZ_IDX+1<3){
       showQuizQuestion(QZ_IDX+1);
     } else {
-      /* Todas las preguntas respondidas — evaluar resultado */
       showOnlyOverlay(null);
       if(G.quizCorrect<=1){
         toast('📚 Necesitas repasar — vuelves al Pasillo','r');
@@ -502,7 +573,6 @@ function handleAnswer(chosen,correct){
         toast('⚔️ ¡Bien! Prepárate para el jefe','g');
         setTimeout(function(){ startBossPhase(); },1400);
       } else {
-        /* 3 de 3 — checkpoint guardado */
         G.checkpoint=G.levelIdx;
         G.checkpointScore=G.score;
         toast('🏁 ¡Perfecto! Checkpoint guardado — Nivel '+(G.levelIdx+1),'p');
@@ -571,12 +641,12 @@ function spawnBoss(){
   if(bt==='anemia'){
     cfg.r=45; cfg.hp=45; cfg.maxHp=45;
     cfg.speed=0.5; cfg.amplitude=W/2-84;
-    cfg.fireTimer=999999; cfg.fireInterval=999999;
+    cfg.fireTimer=3200; cfg.fireInterval=3200;   /* disparo lento cada 3.2 s */
     cfg.anemiaTimer=2000;
   }
   /* ── Jefe 2: Leucemia — leucocito deforme con clones ── */
   if(bt==='leucemia'){
-    cfg.r=38; cfg.hp=55; cfg.maxHp=55;
+    cfg.r=38; cfg.hp=32; cfg.maxHp=32;
     cfg.cloneTimer=5000; cfg.cloneInterval=5000;
   }
   /* ── Jefe 3: Leucopenia — bacteria con flagelos, ráfagas ── */
@@ -628,9 +698,9 @@ function spawnItem(){
   var lv=LD[G.levelIdx], max=G.phase==='mini'?4:5;
   if(G.items.length>=max) return;
   var isE, word, abnormal=false;
-  /* Leucemia (L2): 30% de chance de leucocito anormal (trampa) — solo forma diferente, mismo texto */
+  /* Leucemia (L2): 30% de chance de leucocito anormal (trampa) */
   if(G.levelIdx===1 && G.phase==='mini' && Math.random()<.30){
-    isE=true; word='Leucocito'; abnormal=true;
+    isE=true; word='Leucocito anormal'; abnormal=true;
   } else {
     isE=Math.random()<.5;
     var pool=isE?[lv.disease]:lv.affected;
@@ -762,7 +832,7 @@ function update(dt){
   if(G.phase!=='mini'&&G.phase!=='boss') return;
 
   /* ── player movement ── */
-  var ms=4.2*G.moveMult;
+  var ms=(IS_TOUCH?3.0:4.2)*G.moveMult;
   if(G.joyX||G.joyY){
     /* analógico con inercia: lerp suave hacia velocidad objetivo */
     var tvx=G.joyX*ms, tvy=G.joyY*ms;
@@ -980,13 +1050,26 @@ function update(dt){
       b2.x=W/2+Math.cos(b2.phase)*b2.amplitude;
       if(b2.hit>0) b2.hit-=dt;
 
-      /* ── Anemia: nube de oscuridad cada 2 s ── */
+      /* ── Anemia: nube de oscuridad cada 2 s + disparo apuntado lento ── */
       if(b2.bossType==='anemia'){
+        /* oscuridad */
         b2.anemiaTimer-=dt;
         if(b2.anemiaTimer<=0){
           b2.anemiaTimer=2000;
           G.visionLevel=Math.max(5, G.visionLevel-8);
           floatTxt(b2.x, b2.y+b2.r+14, '🌑 Oscuridad…', '#8a5050');
+        }
+        /* disparo: 3 gotas lentas en abanico apuntando al jugador */
+        b2.fireTimer-=dt;
+        if(b2.fireTimer<=0){
+          b2.fireTimer=b2.fireInterval;
+          var ang=Math.atan2(G.py-b2.y, G.px-b2.x);
+          for(var fa=-1;fa<=1;fa++){
+            var a=ang+fa*0.28;
+            G.pathogens.push({x:b2.x, y:b2.y+b2.r+6,
+              vx:Math.cos(a)*1.8, vy:Math.sin(a)*1.8,
+              r:9, spin:0, col:'#7f1d1d'});
+          }
         }
       }
 
@@ -1003,7 +1086,7 @@ function update(dt){
           b2.cloneTimer=b2.cloneInterval;
           G.bossClones.push({
             x:b2.x+(Math.random()-.5)*60, y:b2.y+40+Math.random()*30,
-            r:22, hp:4, maxHp:4,
+            r:22, hp:2, maxHp:2,
             phase:Math.random()*Math.PI*2,
             speed:b2.speed*1.3, amplitude:(W*.38),
             fireTimer:3000, fireInterval:3000, hit:0
@@ -1694,8 +1777,8 @@ function draw(){
 
   drawHUD();
 
-  /* ── Joystick virtual (solo en touch, solo durante gameplay) ── */
-  if(IS_TOUCH&&G&&(G.phase==='mini'||G.phase==='boss'||G.phase==='entering_valve'||G.phase==='exiting_level')){
+  /* ── Joystick virtual (solo en touch, solo cuando está activo) ── */
+  if(IS_TOUCH&&joystick.active&&G&&(G.phase==='mini'||G.phase==='boss'||G.phase==='entering_valve'||G.phase==='exiting_level')){
     var jbx=joystick.baseX, jby=joystick.baseY;
     var jkx=joystick.knobX, jky=joystick.knobY;
     /* base */
@@ -2368,7 +2451,8 @@ function drawPathogens(){
   for(var i=0;i<G.pathogens.length;i++){
     var p=G.pathogens[i];
     ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.spin);
-    ctx.shadowColor='#f97316';ctx.shadowBlur=12;ctx.fillStyle='#f97316';
+    var baseCol=p.col||'#f97316';
+    ctx.shadowColor=baseCol; ctx.shadowBlur=12; ctx.fillStyle=baseCol;
     for(var k=0;k<4;k++){
       var a=k/4*Math.PI*2;
       ctx.beginPath();ctx.moveTo(Math.cos(a-.3)*p.r,Math.sin(a-.3)*p.r);
@@ -2376,7 +2460,12 @@ function drawPathogens(){
       ctx.lineTo(Math.cos(a+.3)*p.r,Math.sin(a+.3)*p.r);ctx.closePath();ctx.fill();
     }
     var pg=ctx.createRadialGradient(-2,-2,1,0,0,p.r);
-    pg.addColorStop(0,'#fcd34d');pg.addColorStop(.6,'#ef4444');pg.addColorStop(1,'#7f1d1d');
+    if(p.col){
+      /* proyectil con color personalizado (ej. gotas de Anemia) */
+      pg.addColorStop(0,'#fca5a5'); pg.addColorStop(.5,p.col); pg.addColorStop(1,'#1c0606');
+    } else {
+      pg.addColorStop(0,'#fcd34d');pg.addColorStop(.6,'#ef4444');pg.addColorStop(1,'#7f1d1d');
+    }
     ctx.fillStyle=pg; ctx.beginPath();ctx.arc(0,0,p.r,0,Math.PI*2);ctx.fill();
     ctx.restore();
   }
@@ -2435,28 +2524,19 @@ function drawItems(){
     var pulse=Math.sin(now/280+i)*.5+.5;
     ctx.save();
 
-    if(it.abnormal){
-      /* Leucocito anormal (L2): caja octagonal, fondo con tinte violeta */
-      ctx.shadowColor='rgba(168,85,247,.40)'; ctx.shadowBlur=7+pulse*4;
-      ctx.fillStyle='rgba(22,10,32,.95)';
-      drawOctBox(x,y,it.w,IH,9); ctx.fill();
-      ctx.strokeStyle='rgba(168,85,247,'+(0.45+pulse*0.28)+')';
-      ctx.lineWidth=1.8; drawOctBox(x,y,it.w,IH,9); ctx.stroke();
+    ctx.shadowColor='rgba(180,175,178,.22)'; ctx.shadowBlur=6+pulse*3;
+    ctx.fillStyle='rgba(20,15,18,.94)';
+    rr(x,y,it.w,IH,9); ctx.fill();
+    if(it.defective){
+      /* borde irregular ámbar para hemoglobina defectuosa (L5) */
+      ctx.shadowColor='rgba(245,158,11,.55)'; ctx.shadowBlur=8+pulse*4;
+      ctx.strokeStyle='rgba(245,158,11,'+(0.55+pulse*0.25)+')';
+      ctx.lineWidth=2.2;
+      drawSketchyRect(x,y,it.w,IH,9,i*97+Math.floor(now/8000));
+      ctx.stroke();
     } else {
-      ctx.shadowColor='rgba(180,175,178,.22)'; ctx.shadowBlur=6+pulse*3;
-      ctx.fillStyle='rgba(20,15,18,.94)';
-      rr(x,y,it.w,IH,9); ctx.fill();
-      if(it.defective){
-        /* borde irregular ámbar para hemoglobina defectuosa (L5) */
-        ctx.shadowColor='rgba(245,158,11,.55)'; ctx.shadowBlur=8+pulse*4;
-        ctx.strokeStyle='rgba(245,158,11,'+(0.55+pulse*0.25)+')';
-        ctx.lineWidth=2.2;
-        drawSketchyRect(x,y,it.w,IH,9,i*97+Math.floor(now/8000));
-        ctx.stroke();
-      } else {
-        ctx.strokeStyle='rgba(180,170,175,'+(0.42+pulse*0.13)+')';
-        ctx.lineWidth=1.6; rr(x,y,it.w,IH,9); ctx.stroke();
-      }
+      ctx.strokeStyle='rgba(180,170,175,'+(0.42+pulse*0.13)+')';
+      ctx.lineWidth=1.6; rr(x,y,it.w,IH,9); ctx.stroke();
     }
 
     ctx.shadowBlur=0;
@@ -2930,18 +3010,20 @@ if(IS_TOUCH){
     var dx=joystick.knobX-joystick.baseX;
     var dy=joystick.knobY-joystick.baseY;
     var dist=Math.sqrt(dx*dx+dy*dy);
-    var DEAD=12, MAX=50;
+    var DEAD=14, MAX=50;
     if(dist<DEAD){
       G.joyX=0; G.joyY=0;
     } else {
-      /* remapear [DEAD…MAX] → [0…1] para movimiento proporcional */
+      /* remapear [DEAD…MAX] → [0…1] */
       var norm=Math.min(1,(dist-DEAD)/(MAX-DEAD));
+      /* curva cuadrática: pequeños desplazamientos = velocidad muy baja,
+         solo empujes grandes dan velocidad alta */
+      norm=norm*norm;
       G.joyX=dx/dist*norm;
       G.joyY=dy/dist*norm;
     }
-    /* mantener flags booleanos para compatibilidad con teclado */
-    G.left=G.joyX<-0.18; G.right=G.joyX>0.18;
-    G.up=G.joyY<-0.18;   G.down=G.joyY>0.18;
+    G.left=G.joyX<-0.15; G.right=G.joyX>0.15;
+    G.up=G.joyY<-0.15;   G.down=G.joyY>0.15;
   }
   cv.addEventListener('touchstart',function(e){
     e.preventDefault();
