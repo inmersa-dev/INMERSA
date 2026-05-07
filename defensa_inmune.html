@@ -832,7 +832,7 @@ function update(dt){
   if(G.phase!=='mini'&&G.phase!=='boss') return;
 
   /* ── player movement ── */
-  var ms=(IS_TOUCH?3.0:4.2)*G.moveMult;
+  var ms=(IS_TOUCH?2.2:4.2)*G.moveMult;
   if(G.joyX||G.joyY){
     /* analógico con inercia: lerp suave hacia velocidad objetivo */
     var tvx=G.joyX*ms, tvy=G.joyY*ms;
@@ -840,8 +840,8 @@ function update(dt){
     G.velY+=(tvy-G.velY)*0.14;
     G.px+=G.velX; G.py+=G.velY;
   } else {
-    /* cuando el stick está en reposo, frenar suavemente */
-    G.velX*=0.72; G.velY*=0.72;
+    /* cuando el stick está en reposo, frenar rápido para evitar sobrepasar */
+    G.velX*=IS_TOUCH?0.45:0.72; G.velY*=IS_TOUCH?0.45:0.72;
     if(Math.abs(G.velX)>0.1) G.px+=G.velX;
     if(Math.abs(G.velY)>0.1) G.py+=G.velY;
     /* digital: teclado (siempre directo y responsivo) */
@@ -3016,9 +3016,8 @@ if(IS_TOUCH){
     } else {
       /* remapear [DEAD…MAX] → [0…1] */
       var norm=Math.min(1,(dist-DEAD)/(MAX-DEAD));
-      /* curva cuadrática: pequeños desplazamientos = velocidad muy baja,
-         solo empujes grandes dan velocidad alta */
-      norm=norm*norm;
+      /* curva cúbica: requiere empuje deliberado para alcanzar velocidad alta */
+      norm=norm*norm*norm;
       G.joyX=dx/dist*norm;
       G.joyY=dy/dist*norm;
     }
