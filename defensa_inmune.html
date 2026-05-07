@@ -692,8 +692,8 @@ function spawnItem(){
   var lv=LD[G.levelIdx], max=G.phase==='mini'?4:5;
   if(G.items.length>=max) return;
   var isE, word, abnormal=false;
-  /* Nivel 1 (Anemia): solo enemigos — el jugador aprende a disparar sin arriesgar aliados */
-  if(G.levelIdx===0 && G.phase==='mini'){
+  /* Nivel 1 (Anemia): en la válvula solo enemigos — no hay aliados que proteger */
+  if(G.levelIdx===0 && G.phase==='boss'){
     isE=true; word=lv.disease;
   /* Leucemia (L2): 30% de chance de leucocito anormal (trampa) */
   } else if(G.levelIdx===1 && G.phase==='mini' && Math.random()<.30){
