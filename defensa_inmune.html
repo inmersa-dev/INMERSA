@@ -55,6 +55,7 @@ canvas{display:block;width:100%;height:100%}
 #gutter-l,#gutter-r{position:fixed;top:0;bottom:0;background:#0e0103;z-index:0}
 #gutter-l{left:0;right:calc(50% + 240px)}
 #gutter-r{left:calc(50% + 240px);right:0}
+
 </style>
 </head>
 <body>
@@ -711,7 +712,8 @@ function spawnBoss(){
 }
 
 function spawnItem(){
-  var lv=LD[G.levelIdx], max=G.phase==='mini'?4:5;
+  if(G.phase==='boss') return;   /* boss = pura acción, sin items */
+  var lv=LD[G.levelIdx], max=4;
   if(G.items.length>=max) return;
   var isE, word, abnormal=false;
   /* Nivel 1 (Anemia): en la válvula solo enemigos — no hay aliados que proteger */
@@ -819,6 +821,10 @@ function applyPowerup(pu){
   if(pu.id==='double'){G.double=true;toast('💛 ¡Disparo doble — dura hasta recibir un golpe!','p');}
   if(pu.id==='fast')  {G.fast=true;toast('⚡ ¡Disparo veloz — dura hasta recibir un golpe!','p');}
   if(pu.id==='shield'){G.shield=true;toast('🛡️ ¡Escudo activado!','g');}
+  if(pu.id==='life'){
+    if(G.lives<LIVES_MAX){G.lives++;toast('❤️ ¡+1 Vida!','g');}
+    else toast('❤️ Vida al máximo','y');
+  }
 }
 
 /* ══════════════════════════════════════════
@@ -1125,7 +1131,10 @@ function update(dt){
         burst(b2.x+(Math.random()-.5)*55,b2.y+(Math.random()-.5)*38,'#fbbf24',6);}
       if(b2.dyingTimer<=0){
         burst(b2.x,b2.y,'#fbbf24',35); burst(b2.x,b2.y,'#fff',20);
-        G.bossClones=[];  /* todos los clones mueren con el jefe */
+        G.bossClones=[];
+        /* soltar vida recogible */
+        G.powerups.push({x:b2.x, y:b2.y, id:'life', label:'❤️ +VIDA', col:'#ef4444', r:14, spd:1.4, pulse:0});
+        toast('❤️ ¡El jefe soltó una vida!','g');
         G.boss=null;
         G.phase='exiting_level';
         G.exitTimer=600;
@@ -2186,36 +2195,22 @@ function drawBossDying(b2,now){
 
 /* shared HP bar below boss */
 function drawBossHPBar(b2){
-  var bw=W*0.68, bh=16, bx=b2.x-bw/2, by=b2.y-b2.r-44;
-  /* etiqueta encima */
-  ctx.font='bold 12px Nunito,sans-serif'; ctx.textAlign='center';
-  ctx.fillStyle='rgba(0,0,0,0.7)';
-  ctx.fillText('⚔️ '+b2.name, b2.x+1, by-4);
-  ctx.fillStyle='#ffd0d0';
-  ctx.fillText('⚔️ '+b2.name, b2.x, by-5);
-  /* sombra exterior */
-  ctx.fillStyle='rgba(0,0,0,.8)'; rr(bx-2,by-2,bw+4,bh+4,7); ctx.fill();
-  /* fondo vacío */
-  ctx.fillStyle='#1a0005'; rr(bx,by,bw,bh,6); ctx.fill();
-  /* barra de vida */
+  var bw=b2.r*2.8, bh=8, bx=b2.x-bw/2, by=b2.y-b2.r-22;
+  /* sombra */
+  ctx.fillStyle='rgba(0,0,0,.7)'; rr(bx-1,by-1,bw+2,bh+2,5); ctx.fill();
+  /* fondo */
+  ctx.fillStyle='#1a0005'; rr(bx,by,bw,bh,4); ctx.fill();
+  /* barra */
   var hpPct=b2.hp/b2.maxHp;
   var hpCol=hpPct>.6?b2.col:hpPct>.3?'#f59e0b':'#ef4444';
-  if(b2.hp>0){
-    ctx.fillStyle=hpCol;
-    rr(bx,by,bw*hpPct,bh,6); ctx.fill();
-    /* brillo superior */
-    ctx.fillStyle='rgba(255,255,255,0.18)';
-    rr(bx+2,by+2,Math.max(0,bw*hpPct-4),5,3); ctx.fill();
-  }
+  if(b2.hp>0){ ctx.fillStyle=hpCol; rr(bx,by,bw*hpPct,bh,4); ctx.fill(); }
   /* borde */
-  ctx.strokeStyle='rgba(255,255,255,0.22)'; ctx.lineWidth=1.2;
-  rr(bx,by,bw,bh,6); ctx.stroke();
-  /* HP numérico dentro de la barra */
-  ctx.font='bold 10px Nunito,sans-serif'; ctx.textAlign='center';
-  ctx.fillStyle='rgba(0,0,0,0.55)';
-  ctx.fillText(b2.hp+' / '+b2.maxHp, b2.x+1, by+bh-4);
-  ctx.fillStyle='#ffffff';
-  ctx.fillText(b2.hp+' / '+b2.maxHp, b2.x, by+bh-5);
+  ctx.strokeStyle='rgba(255,255,255,0.18)'; ctx.lineWidth=1;
+  rr(bx,by,bw,bh,4); ctx.stroke();
+  /* nombre encima */
+  ctx.font='bold 9px Nunito,sans-serif'; ctx.textAlign='center';
+  ctx.fillStyle='rgba(0,0,0,.6)'; ctx.fillText('⚔️ '+b2.name, b2.x+1, by-3);
+  ctx.fillStyle='#ffd0d0';       ctx.fillText('⚔️ '+b2.name, b2.x,   by-4);
 }
 
 /* ── Jefe 1: Anemia — eritrocito gigante pálido ── */
@@ -3121,12 +3116,11 @@ function drawECG(x,y,w,h){
 
 /* ── HUD ── */
 function drawHUD(){
-  /* HUD bg con gradiente */
+  /* fondo */
   var hudGrd=ctx.createLinearGradient(0,0,0,56);
   hudGrd.addColorStop(0,'rgba(4,1,10,.99)');
   hudGrd.addColorStop(1,'rgba(14,2,8,.94)');
   ctx.fillStyle=hudGrd; ctx.fillRect(0,0,W,56);
-  /* línea inferior con brillo */
   ctx.strokeStyle='rgba(220,40,20,.35)';ctx.lineWidth=1.5;
   ctx.beginPath();ctx.moveTo(0,56);ctx.lineTo(W,56);ctx.stroke();
   ctx.strokeStyle='rgba(255,80,40,.10)';ctx.lineWidth=0.8;
@@ -3136,28 +3130,24 @@ function drawHUD(){
   var hw=19;
   for(var i=0;i<LIVES_MAX;i++){
     ctx.globalAlpha=i<G.lives?1:.10;
-    /* mini avión dibujado en canvas */
     var lx=12+i*hw, ly=30;
     ctx.save(); ctx.translate(lx,ly);
     ctx.fillStyle=i<G.lives?'#88ccff':'#446';
     ctx.shadowColor=i<G.lives?'#44aaff':'transparent';
     ctx.shadowBlur=i<G.lives?6:0;
-    /* fuselaje */
     ctx.beginPath(); ctx.ellipse(0,0,2.5,5.5,0,0,Math.PI*2); ctx.fill();
-    /* alas */
     ctx.beginPath();
     ctx.moveTo(-1,1); ctx.lineTo(-7,4); ctx.lineTo(-4,5); ctx.lineTo(0,3);
     ctx.lineTo(4,5);  ctx.lineTo(7,4);  ctx.lineTo(1,1);
     ctx.closePath(); ctx.fill();
-    ctx.shadowBlur=0;
-    ctx.restore();
+    ctx.shadowBlur=0; ctx.restore();
   }
   ctx.globalAlpha=1;
 
   /* ECG */
   drawECG(14+LIVES_MAX*hw,12,52,28);
 
-  /* score — estilo marcador arcade */
+  /* score */
   ctx.textAlign='center';
   ctx.font='bold 8px Nunito,sans-serif';
   ctx.fillStyle='rgba(255,180,0,0.55)'; ctx.shadowBlur=0;
@@ -3180,7 +3170,7 @@ function drawHUD(){
     ctx.fillText('🔥 x'+G.combo,W/2,50);ctx.shadowBlur=0;
   }
 
-  /* top-right: level name */
+  /* nivel */
   var lv=LD[G.levelIdx];
   ctx.font='bold 11px Nunito,sans-serif';ctx.textAlign='right';
   ctx.fillStyle=lv.col;ctx.shadowColor=lv.col;ctx.shadowBlur=5;
@@ -3189,6 +3179,13 @@ function drawHUD(){
   /* phase label */
   var phLbl=G.phase==='mini'?'Volando al vaso…':G.phase==='boss'?'⚔️ Jefe en válvula':'';
   if(phLbl){ctx.font='9px Nunito,sans-serif';ctx.fillStyle='#cc7070';ctx.fillText(phLbl,W-10,36);}
+
+  /* checkpoint */
+  if(G.checkpoint>0){
+    ctx.font='bold 9px Nunito,sans-serif'; ctx.textAlign='center';
+    ctx.fillStyle='#a78bfa'; ctx.shadowColor='#a78bfa'; ctx.shadowBlur=5;
+    ctx.fillText('🏁'+(G.checkpoint+1),W/2-46,22); ctx.shadowBlur=0;
+  }
 
   /* ── BARRA DE PROGRESO AL VUELO (derecha) ── */
   if(G.phase==='mini'){
