@@ -44,10 +44,7 @@ body{background:#0e0103;color:#e2f0ff;font-family:'Nunito',sans-serif;min-height
 #game-wrap{position:relative;border-radius:var(--radius);overflow:hidden;border:2px solid var(--border);background:#0e0103;line-height:0}
 #gc{display:block;cursor:none}
 
-#mob-ctrl{display:none;align-items:center;gap:20px;padding:8px}
-.dpad{display:grid;grid-template-columns:44px 44px 44px;grid-template-rows:44px 44px 44px;gap:4px}
-.dp{background:var(--card2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-tap-highlight-color:transparent}
-.dp:active{background:var(--card3)}.dp.mid{visibility:hidden}
+#mob-ctrl{display:none;align-items:center;justify-content:center;gap:20px;padding:8px}
 #shoot-btn{background:linear-gradient(135deg,#7c3aed,var(--accent));border:none;border-radius:50%;width:62px;height:62px;color:#fff;font-size:.75rem;font-weight:900;cursor:pointer;box-shadow:0 0 20px rgba(0,212,255,.4);letter-spacing:.5px;font-family:'Nunito',sans-serif;-webkit-tap-highlight-color:transparent}
 #shoot-btn:active{transform:scale(.92)}
 #shoot-btn:disabled{opacity:.35;box-shadow:none}
@@ -182,11 +179,6 @@ body{background:#0e0103;color:#e2f0ff;font-family:'Nunito',sans-serif;min-height
 <div id="center-col">
   <div id="game-wrap"><canvas id="gc"></canvas></div>
   <div id="mob-ctrl">
-    <div class="dpad">
-      <div></div><div class="dp" id="d-up">↑</div><div></div>
-      <div class="dp" id="d-left">←</div><div class="dp mid"></div><div class="dp" id="d-right">→</div>
-      <div></div><div class="dp" id="d-down">↓</div><div></div>
-    </div>
     <div id="immune-mob" style="background:linear-gradient(135deg,#8b5cf6,#00d4ff);border-radius:50%;width:62px;height:62px;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:900;color:#0e0103;opacity:.4">INMUNE<br>OFF</div>
   </div>
 </div>
@@ -1821,16 +1813,34 @@ document.addEventListener('keydown',e=>{
   // espacio sin función (disparo eliminado)
 });
 
-// D-pad
-[['d-up',0,-1],['d-down',0,1],['d-left',-1,0],['d-right',1,0]].forEach(([id,dx,dy])=>{
-  const el=document.getElementById(id);if(!el) return;
-  el.addEventListener('pointerdown',e=>{
-    e.preventDefault();if(phase!=='playing') return;
-    if(dx===0&&dir.dy===0) nextDir={dx,dy};
-    if(dy===0&&dir.dx===0) nextDir={dx,dy};
-  });
-});
-// shoot-btn eliminado
+// Swipe direccional sobre el canvas (reemplaza D-pad)
+(()=>{
+  const cv=document.getElementById('gc');
+  const MIN_SWIPE=28; // píxeles mínimos para registrar giro
+  let t0x=0,t0y=0;
+  cv.addEventListener('touchstart',e=>{
+    e.preventDefault();
+    const t=e.changedTouches[0];
+    t0x=t.clientX; t0y=t.clientY;
+  },{passive:false});
+  cv.addEventListener('touchend',e=>{
+    e.preventDefault();
+    if(phase!=='playing') return;
+    const t=e.changedTouches[0];
+    const dx=t.clientX-t0x, dy=t.clientY-t0y;
+    const ax=Math.abs(dx), ay=Math.abs(dy);
+    if(ax<MIN_SWIPE&&ay<MIN_SWIPE) return; // tap sin dirección suficiente
+    if(ax>=ay){
+      // giro horizontal
+      if(dx>0&&dir.dx===0) nextDir={dx:1,dy:0};
+      else if(dx<0&&dir.dx===0) nextDir={dx:-1,dy:0};
+    } else {
+      // giro vertical
+      if(dy>0&&dir.dy===0) nextDir={dx:0,dy:1};
+      else if(dy<0&&dir.dy===0) nextDir={dx:0,dy:-1};
+    }
+  },{passive:false});
+})();
 
 // ═══════════════════════════════════════════════════
 // SPRITE LOADING — eritrocito4.png
