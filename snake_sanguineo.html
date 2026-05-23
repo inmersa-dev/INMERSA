@@ -112,6 +112,15 @@ body{background:#0e0103;color:#e2f0ff;font-family:'Nunito',sans-serif;min-height
 #mute-btn svg{width:22px;height:22px;pointer-events:none}
 #mute-btn.muted{color:var(--muted)}
 @media(max-width:880px){#mute-btn{width:44px;height:44px}}
+@media(max-width:640px){
+  #topbar{padding:8px 12px}
+  .tb-title{font-size:.82rem}
+  .tb-level{display:none}
+  .tb-stats{gap:6px}
+  .tb-stat .lbl{display:none}
+  .tb-stat .val{font-size:.9rem}
+  #h-chances{display:none}
+}
 </style>
 </head>
 <body>
@@ -572,6 +581,28 @@ function playAudioPoly(key) {
     clone.addEventListener('error', () => activeSfxCount--, {once: true});
   } catch(e) {}
 }
+
+// ── Desbloqueo de audio en móvil (política de autoplay) ──
+let audioUnlocked = false;
+function unlockAudio() {
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+  // Cada elemento se activa con volumen 0 y se pausa de inmediato;
+  // esto "prima" el elemento para que futuras llamadas a play() funcionen
+  Object.values(AUDIO).forEach(el => {
+    const savedVol = el.volume;
+    el.muted = true;
+    const p = el.play();
+    if (p) p.then(() => {
+      el.pause();
+      el.currentTime = 0;
+      el.muted = false;
+      el.volume = savedVol;
+    }).catch(() => { el.muted = false; });
+  });
+}
+document.addEventListener('touchstart', unlockAudio, {once: true, passive: true});
+document.addEventListener('click',      unlockAudio, {once: true});
 
 function startMusic() {
   if (audioMuted) return;
