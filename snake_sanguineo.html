@@ -588,26 +588,35 @@ let audioUnlocked = false;
 function unlockAudio() {
   if (audioUnlocked) return;
   audioUnlocked = true;
-  // Cada elemento se activa con volumen 0 y se pausa de inmediato;
-  // esto "prima" el elemento para que futuras llamadas a play() funcionen
+  // Usamos volume=0 (no muted) — más fiable en iOS Safari y Chrome Android.
+  // Reproducimos brevemente para "primar" cada elemento dentro del gesto del usuario.
   Object.values(AUDIO).forEach(el => {
     const savedVol = el.volume;
-    el.muted = true;
+    el.volume = 0;
     const p = el.play();
     if (p) p.then(() => {
       el.pause();
       el.currentTime = 0;
-      el.muted = false;
       el.volume = savedVol;
-    }).catch(() => { el.muted = false; });
+    }).catch(() => { el.volume = savedVol; });
+    else {
+      el.volume = savedVol;
+    }
   });
 }
-document.addEventListener('touchstart', unlockAudio, {once: true, passive: true});
-document.addEventListener('click',      unlockAudio, {once: true});
+['touchstart','touchend','click','keydown'].forEach(evt =>
+  document.addEventListener(evt, unlockAudio, {once: true, passive: true})
+);
 
 function startMusic() {
   if (audioMuted) return;
-  try { AUDIO.ambiente.currentTime = 0; AUDIO.ambiente.play().catch(()=>{}); } catch(e) {}
+  try {
+    const amb = AUDIO.ambiente;
+    // Si ya está reproduciendo no reiniciar desde 0
+    if (!amb.paused) return;
+    amb.currentTime = 0;
+    amb.play().catch(()=>{});
+  } catch(e) {}
 }
 
 function stopMusic() {
@@ -1716,7 +1725,12 @@ function showBrief(){
   BRIEF.objs.forEach(o=>{ol.innerHTML+=`<div class="ov-obj"><span style="color:var(--accent)">▸</span><span>${o}</span></div>`;});
   const btn=document.getElementById('ov-go');
   btn.textContent='¡COMENZAR!';
-  btn.onclick=()=>{document.getElementById('ov-brief').classList.remove('show');setTimeout(()=>startGame(),300);};
+  btn.onclick=()=>{
+    unlockAudio();   // prima todos los elementos dentro del gesto
+    startMusic();    // arranca música directamente en el gesto (sin setTimeout)
+    document.getElementById('ov-brief').classList.remove('show');
+    setTimeout(()=>startGame(),300);
+  };
   document.getElementById('ov-brief').classList.add('show');
 }
 
