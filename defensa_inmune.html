@@ -81,13 +81,13 @@ canvas{display:block;width:100%;height:100%}
   <div class="ov" id="ov-start">
     <div style="font-size:2.8rem;animation:bob 2.5s ease-in-out infinite">🩸</div>
     <h1>Defensa Inmune</h1>
-    <div class="sub">8 niveles · Vaso Sanguíneo</div>
+    <div class="sub">5 niveles · Vaso Sanguíneo</div>
     <div class="rules" style="background:#1a0508;border:1px solid #3a1020;border-radius:10px;padding:12px 18px;line-height:2.1;font-size:1.05rem">
       💊 <b>DISPARA</b> enfermedades<br>
       🩸 <b>RECOGE</b> componentes<br>
       ⚠️ Todos se ven igual — <b>lee</b> antes de actuar
     </div>
-    <div class="sub" style="font-size:.92rem">❤️×5 al inicio · hasta 8 ❤️ · cada 6 rescates = +1 vida</div>
+    <div class="sub" style="font-size:.92rem">Barra de salud · cada 6 rescates = +20 HP</div>
     <button class="big-btn" id="btn-start">¡Entrar al vaso! 🩸</button>
   </div>
 
@@ -148,7 +148,7 @@ canvas{display:block;width:100%;height:100%}
   <div class="ov hidden" id="ov-win">
     <div style="font-size:3rem;animation:bob 2s ease-in-out infinite">🏆</div>
     <h1 style="color:#fbbf24">¡SISTEMA PROTEGIDO!</h1>
-    <div style="font-size:.78rem;color:#22c55e;font-weight:800">Las 8 enfermedades han sido eliminadas</div>
+    <div style="font-size:.78rem;color:#22c55e;font-weight:800">Las 5 enfermedades han sido eliminadas</div>
     <div id="win-sc" style="font-size:1.3rem;font-weight:900;color:#fbbf24"></div>
     <div class="stats-grid" id="win-stats"></div>
     <button class="big-btn" id="btn-win">Jugar de nuevo 🔄</button>
@@ -181,33 +181,6 @@ var LD=[
      {q:'¿Qué grupo de alimentos ayuda a aumentar la producción de glóbulos blancos?',opts:['Arroz blanco, pan, pasta, azúcar','Naranja, ajo, brócoli, pimientos','Frituras, embutidos, comida rápida','Café, alcohol, bebidas energéticas'],a:1},
      {q:'¿Cuántos tipos principales de glóbulos blancos existen?',opts:['2','3','5','8'],a:2},
      {q:'¿Cuál es la función principal de los glóbulos blancos?',opts:['Transportar oxígeno','Coagular la sangre','Defender el cuerpo contra infecciones','Producir hemoglobina'],a:2}
-   ]},
-  {disease:'Leucopenia',mechanic:'leucopenia',bossType:'leucopenia',col:'#f59e0b',affected:['Leucocito'],
-   desc:'Cantidad anormalmente baja de glóbulos blancos. Las defensas se debilitan.',
-   fact:'La Leucopenia aumenta gravemente el riesgo de infecciones oportunistas.',
-   intro:'Tus disparos son más lentos y los patógenos vienen más rápido. Recoge leucocitos para restaurar tu velocidad de disparo. Sin ellos te verás desbordado.',
-   qs:[
-     {q:'¿Qué significa tener Leucopenia?',opts:['Exceso de glóbulos rojos','Déficit de glóbulos blancos','Déficit de plaquetas','Exceso de plasma'],a:1},
-     {q:'¿Qué se debilita principalmente con la Leucopenia?',opts:['La coagulación','El transporte de oxígeno','Las defensas del cuerpo','La producción de plasma'],a:2},
-     {q:'¿Qué otro nombre reciben los glóbulos blancos?',opts:['Eritrocitos','Leucocitos','Trombocitos','Plaquetas'],a:1}
-   ]},
-  {disease:'Policitemia',mechanic:'policitemia',bossType:'policitemia',col:'#dc2626',affected:['Eritrocito'],
-   desc:'Exceso de glóbulos rojos. La sangre se vuelve más espesa y lenta.',
-   fact:'La Policitemia aumenta el riesgo de trombosis y accidentes cerebrovasculares.',
-   intro:'La sangre está espesa. Tu nave se mueve más lento y el vaso está congestionado de glóbulos rojos flotantes. Navega entre los obstáculos y sigue clasificando.',
-   qs:[
-     {q:'¿Qué ocurre en la sangre de una persona con Policitemia?',opts:['Tiene pocos glóbulos rojos','Tiene exceso de glóbulos rojos','Tiene pocos glóbulos blancos','Tiene pocas plaquetas'],a:1},
-     {q:'¿Por qué la Policitemia hace la sangre más espesa?',opts:['Por exceso de agua','Por falta de plasma','Por exceso de glóbulos rojos','Por exceso de plaquetas'],a:2},
-     {q:'Los glóbulos rojos también se llaman...',opts:['Leucocitos','Trombocitos','Linfocitos','Eritrocitos'],a:3}
-   ]},
-  {disease:'Talasemia',mechanic:'talasemia',bossType:'talasemia',col:'#ea580c',affected:['Hemoglobina'],
-   desc:'Hemoglobina defectuosa de origen genético. Los glóbulos rojos no funcionan bien.',
-   fact:'La Talasemia es hereditaria y más frecuente en países mediterráneos y asiáticos.',
-   intro:'Hemoglobinas funcionales y defectuosas caerán con la misma etiqueta. La diferencia es visual: las defectuosas tienen bordes irregulares y deformados. Solo recoge las de bordes limpios.',
-   qs:[
-     {q:'¿Qué proteína está defectuosa en la Talasemia?',opts:['Leucocito','Plaqueta','Hemoglobina','Plasma'],a:2},
-     {q:'La Talasemia es una enfermedad de origen...',opts:['Viral','Bacteriano','Genético','Ambiental'],a:2},
-     {q:'¿Qué función cumple la hemoglobina?',opts:['Defender contra infecciones','Coagular la sangre','Transportar oxígeno','Producir plasma'],a:2}
    ]},
   {disease:'Hemofilia',mechanic:'hemofilia',bossType:'hemofilia',col:'#0891b2',affected:['Plaqueta','Plasma'],
    desc:'Los factores de coagulación del plasma fallan. La sangre no coagula correctamente.',
@@ -245,24 +218,19 @@ var PU_TYPES=[
 ];
 /* escoltas del pasillo: dificultad creciente por nivel */
 var ESCORT_CFG=[
-  {max:0, spawnI:99999, spd:0,   fire:false, fireI:99999}, /* L1 Anemia      */
-  {max:1, spawnI:6000,  spd:1.7, fire:true,  fireI:4200},  /* L2 Leucemia     */
-  {max:1, spawnI:5500,  spd:1.9, fire:true,  fireI:3200},  /* L3 Leucopenia   */
-  {max:2, spawnI:5000,  spd:2.1, fire:true,  fireI:2800},  /* L4 Policitemia  */
-  {max:2, spawnI:4500,  spd:2.3, fire:true,  fireI:2500},  /* L5 Talasemia    */
-  {max:3, spawnI:4000,  spd:2.5, fire:true,  fireI:2200},  /* L6 Hemofilia    */
-  {max:3, spawnI:3500,  spd:2.7, fire:true,  fireI:1900},  /* L7 Trombocit.   */
-  {max:4, spawnI:3000,  spd:3.0, fire:true,  fireI:1600}   /* L8 Sepsis       */
+  {max:0, spawnI:99999, spd:0,   fire:false, fireI:99999}, /* L1 Anemia           */
+  {max:1, spawnI:6000,  spd:1.7, fire:true,  fireI:4200},  /* L2 Leucemia          */
+  {max:3, spawnI:4000,  spd:2.5, fire:true,  fireI:2200},  /* L3 Hemofilia         */
+  {max:3, spawnI:3500,  spd:2.7, fire:true,  fireI:1900},  /* L4 Trombocitopenia   */
+  {max:4, spawnI:3000,  spd:3.0, fire:true,  fireI:1600}   /* L5 Sepsis            */
 ];
-var LIVES_START=5, LIVES_MAX=8;
+/* HP system — reemplaza lives binarias */
 
 /* Descripción de mecánica especial por nivel (se muestra en el intro) */
 var MECHS=[
   '👁 Tu <b>visión se oscurecerá</b> progresivamente. Recoge <b>Eritrocitos</b> y <b>Hemoglobina</b> para recuperarla.',
   '⚠️ <b>Leucocitos anormales</b> caen mezclados con los sanos. Tienen el mismo aspecto — solo la etiqueta los delata. Recoger uno anormal → pierdes vida.',
-  '🐢 Tus defensas son escasas: <b>disparas más lento</b> y los patógenos vienen más rápido. Recoge <b>Leucocitos</b> para recuperar velocidad de disparo.',
-  '🩸 Exceso de células: la nave se mueve más <b>lenta</b> y el vaso está <b>congestionado</b>. Esquiva los eritrocitos flotantes mientras sigues clasificando.',
-  '','','',''
+  '','',''
 ];
 
 /* ══════════════════════════════════════════
@@ -339,12 +307,18 @@ initBg();
 ══════════════════════════════════════════ */
 var G=null;
 
+/* ══ Sprites ══ */
+var SPR_RBC=new Image(), SPR_RBC_OK=false, SPR_RBC_FAIL=false;
+SPR_RBC.onload =function(){ SPR_RBC_OK=true; };
+SPR_RBC.onerror=function(){ SPR_RBC_FAIL=true; console.warn('eritrocito4.png no cargó — usando fallback'); };
+SPR_RBC.src='./eritrocito4.png';
+
 function newGame(){
   G={
     phase:'idle', levelIdx:0,
     px:W/2, py:H-90, pr:20,
     bullets:[], items:[], powerups:[], pathogens:[], parts:[], floats:[],
-    lives:LIVES_START, score:0,
+    hp:50, hpMax:50, iframes:0, score:0,
     combo:0, bestCombo:0,
     enemyKilled:0, allyCollected:0, allyHit:0, quizWrong:0,
     checkpoint:0, checkpointScore:0, quizCorrect:0, quizQuestions:[],
@@ -362,11 +336,11 @@ function newGame(){
     shockwave:null,
     turrets:[], turretNextAt:380,
     /* mecánicas de nivel */
-    visionLevel:100,   // L1 Anemia / L5 Talasemia
-    shootCdMod:1,      // L3 Leucopenia: multiplicador de cooldown (1=normal, 2=doble lentitud)
-    leucoTimer:0,      // L3 tiempo sin recoger leucocitos
-    moveMult:1,        // L4 Policitemia: multiplicador de velocidad
-    obstacles:[],      // L4 eritrocitos flotantes
+    visionLevel:100,   // L1 Anemia (viñeta oscura)
+    shootCdMod:1,      // (reservado — mecánica de cooldown, sin uso en niveles activos)
+    leucoTimer:0,
+    moveMult:1,        // (reservado — multiplicador de velocidad, sin uso en niveles activos)
+    obstacles:[],      // (reservado — eritrocitos flotantes, sin uso en niveles activos)
     /* L6 Hemofilia */
     bleeding:false, bleedTimer:0, bleedInterval:4000, bleedHits:0, bleedDropT:0,
     /* L7 Trombocitopenia */
@@ -384,7 +358,14 @@ function newGame(){
     valveAnimating:false,
     /* transitions */
     transY:0, transVY:0, transShrink:1, transTimer:0,
-    exitTimer:0
+    exitTimer:0,
+    /* HORDA */
+    hordaStartTime:0,
+    campaignScore:0,
+    hordaRotQueue:[0,1,2,3,4],
+    hordaCompletedCycles:[0,0,0,0,0],
+    hordaActiveDisease:0,
+    hordaItemsSpawnedCount:0
   };
 }
 
@@ -614,15 +595,42 @@ function showLevelWin(){
   document.getElementById('lw-name').style.color=lv.col;
   document.getElementById('lw-fact').textContent=lv.fact;
   document.getElementById('lw-score').textContent='Puntuación total: '+G.score+' pts';
-  document.getElementById('btn-lwin').textContent=G.levelIdx>=7?'¡Ver resultados! 🏆':'Siguiente nivel →';
+  document.getElementById('btn-lwin').textContent=G.levelIdx>=4?'¡Activar MODO HORDA! 🔥':'Siguiente nivel →';
   showOnlyOverlay('ov-lwin');
 }
 
-function advanceLevel(){G.levelIdx>=7?showWinAll():startLevel(G.levelIdx+1);}
+function advanceLevel(){G.levelIdx>=4?activateHorda():startLevel(G.levelIdx+1);}
 function showWinAll(){G.over=true;document.getElementById('win-sc').textContent=G.score+' puntos';buildStats(document.getElementById('win-stats'));showOnlyOverlay('ov-win');}
+function activateHorda(){
+  G.campaignScore=G.score;
+  G.hordaStartTime=Date.now();
+  G.phase='horda';
+  G.items=[]; G.pathogens=[]; G.turrets=[]; G.escorts=[];
+  G.flightProg=0; G.flightTime=0; G.scrollY=0;
+  /* reset mechanic states */
+  G.bleeding=false; G.bleedTimer=0;
+  G.wounds=[]; G.carryingPlatelet=false;
+  G.sepsisProgress=0; G.bulletRange=1.0;
+  G.visionLevel=100;
+  /* pick first disease */
+  G.hordaActiveDisease=G.hordaRotQueue[0];
+  G.hordaItemsSpawnedCount=0;
+  toast('🔥 ¡MODO HORDA! Resistencia infinita…','y',4000);
+}
 function showOver(){
   G.over=true;
-  document.getElementById('go-sc').textContent=G.score+' puntos';
+  if(G.hordaStartTime>0){
+    var hordaSc=G.score-G.campaignScore;
+    var hordaSec=Math.floor((Date.now()-G.hordaStartTime)/1000);
+    var hm=Math.floor(hordaSec/60), hs=hordaSec%60;
+    var hTime=(hm>0?hm+'m ':'')+hs+'s';
+    document.getElementById('go-sc').innerHTML=
+      '<div>'+G.score+' puntos</div>'+
+      '<div style="font-size:.82rem;color:#f97316;margin-top:4px">🔥 Campaña: '+G.campaignScore+' · Horda: '+hordaSc+'</div>'+
+      '<div style="font-size:.72rem;color:#9a7070">Tiempo en HORDA: '+hTime+'</div>';
+  } else {
+    document.getElementById('go-sc').textContent=G.score+' puntos';
+  }
   buildStats(document.getElementById('go-stats'));
   var btn=document.getElementById('btn-retry');
   if(G.checkpoint>0){
@@ -762,6 +770,63 @@ function spawnPowerup(){
   G.powerups.push({id:t.id,label:t.label,col:t.col,dur:t.dur,x:Math.random()*(W-60)+30,y:-28,spd:1.2,r:18});
 }
 
+/* ── HORDA: rotación de enfermedad cuando se limpia la oleada ── */
+var HORDA_WAVE_SIZE=8; /* ítems por oleada antes de poder rotar */
+function checkHordaRotation(){
+  if(G.hordaItemsSpawnedCount<HORDA_WAVE_SIZE) return;
+  if(G.items.length>0) return;            /* esperar a pantalla vacía */
+  /* avanzar ciclo completado para la enfermedad actual */
+  G.hordaCompletedCycles[G.hordaActiveDisease]++;
+  /* siguiente enfermedad en la cola circular */
+  var qi=G.hordaRotQueue.indexOf(G.hordaActiveDisease);
+  var nextQi=(qi+1)%G.hordaRotQueue.length;
+  G.hordaActiveDisease=G.hordaRotQueue[nextQi];
+  G.hordaItemsSpawnedCount=0;
+  var lv=LD[G.hordaActiveDisease];
+  var cycle=G.hordaCompletedCycles[G.hordaActiveDisease];
+  var lvlLbl=cycle>0?' (×'+((cycle)+1)+')':'';
+  toast('🔄 Oleada: '+lv.disease+lvlLbl,'p',3000);
+}
+
+/* ── HORDA: spawn con dificultad evolutiva ── */
+function spawnItemHorda(){
+  if(G.items.length>=5) return;
+  var lv=LD[G.hordaActiveDisease];
+  var cycle=G.hordaCompletedCycles[G.hordaActiveDisease];
+  /* multiplicador de velocidad según ciclos completados */
+  var spdMults=[1.0,1.3,1.6,2.0];
+  var sm=spdMults[Math.min(cycle,3)];
+  /* elegir ítem: 50% enemigo / 50% aliado */
+  var isE=Math.random()<0.5;
+  var pool=isE?[lv.disease]:lv.affected;
+  var word=pool[Math.floor(Math.random()*pool.length)];
+  /* nombres alternativos (igual que campaña) */
+  var altNames={'Eritrocito':'Glóbulo rojo','Glóbulo rojo':'Eritrocito',
+    'Leucocito':'Glóbulo blanco','Glóbulo blanco':'Leucocito',
+    'Plaqueta':'Trombocito','Trombocito':'Plaqueta'};
+  if(!isE && altNames[word] && Math.random()<0.5) word=altNames[word];
+  ctx.font='bold 15px Nunito,sans-serif';
+  var tw=ctx.measureText(word).width, iw=tw+28;
+  var x=Math.random()*(W-iw-16)+iw/2+8;
+  G.items.push({
+    word:word, enemy:isE, defective:false, abnormal:false,
+    x:x, y:-30, w:iw,
+    spd:(1.5+Math.random()*0.7)*sm,
+    pulsing:cycle>=3   /* ciclo 3+: parpadeo rojo/amarillo de alerta */
+  });
+  G.hordaItemsSpawnedCount++;
+  /* patógenos acompañantes según ciclo */
+  var numPaths=cycle>=2?2:cycle>=1?1:0;
+  for(var p=0;p<numPaths;p++){
+    G.pathogens.push({
+      x:W*0.1+Math.random()*(W*0.8), y:-20-p*28,
+      vx:(Math.random()-.5)*1.5,
+      vy:(1.5+Math.random()*0.8)*sm,
+      r:7, spin:0
+    });
+  }
+}
+
 /* ══════════════════════════════════════════
    MECHANICS
 ══════════════════════════════════════════ */
@@ -774,23 +839,29 @@ function doShoot(){
   G.scd=cd; G.spcd=140;
 }
 
-function hitLife(msg){
+function hitLife(damage, msg){
+  /* escudo y powerups absorben el golpe antes de cualquier daño */
   if(G.shield){G.shield=false;G.dmg=250;G.shake=180;toast('🛡️ ¡Escudo absorbió el golpe!','g');return;}
   if(G.double){G.double=false;G.dmg=250;G.shake=180;toast('💛 ¡Disparo doble consumido por el golpe!','y');return;}
   if(G.fast)  {G.fast=false;  G.dmg=250;G.shake=180;toast('⚡ ¡Velocidad consumida por el golpe!','y');return;}
+  /* iframes: durante ~1 s post-impacto no se recibe más daño */
+  if(G.iframes>0) return;
   /* L6 Hemofilia: golpes activan sangrado en lugar de daño instantáneo */
   if(LD[G.levelIdx].mechanic==='hemofilia'){
     G.bleedHits++; G.bleedTimer=G.bleedInterval; G.bleeding=true;
     G.dmg=400; G.shake=240; G.combo=0;
     toast('🩸 ¡Sangrado activado! Recoge Plaqueta o Plasma','r'); return;
   }
-  G.lives--; G.dmg=720; G.shake=420; G.combo=0;
+  G.hp=Math.max(0, G.hp-damage);
+  G.iframes=1000;
+  G.dmg=720; G.shake=420; G.combo=0;
   toast(msg,'r');
-  if(G.lives<=0){G.lives=0; G.dying=true; setTimeout(showOver,700);}
+  if(G.hp<=0){ G.hp=0; G.dying=true; setTimeout(showOver,700); }
 }
 
 function updateECG(dt){
-  var f=1+(LIVES_MAX-G.lives)*.22;
+  var hpFrac=G.hp/G.hpMax;                       // 0–1
+  var f=1+(1-hpFrac)*1.5;                         // más rápido/errático con HP bajo
   G.ecgPhase+=dt*.0016*f; if(G.ecgPhase>=1) G.ecgPhase-=1;
   var t=G.ecgPhase,v=0;
   if(t>.08&&t<.22) v=Math.sin((t-.08)/.14*Math.PI)*.2;
@@ -798,7 +869,7 @@ function updateECG(dt){
   if(t>=.34&&t<.36) v=1;
   if(t>=.36&&t<.43) v=1-(t-.36)/.07*1.25;
   if(t>.50&&t<.66) v=Math.sin((t-.50)/.16*Math.PI)*.28;
-  if(G.lives<=2) v+=(Math.random()-.5)*.14;
+  if(hpFrac<=0.25) v+=(Math.random()-.5)*.14;    // temblor con HP crítico
   G.ecgBuf.push(v); if(G.ecgBuf.length>52) G.ecgBuf.shift();
 }
 
@@ -822,8 +893,8 @@ function applyPowerup(pu){
   if(pu.id==='fast')  {G.fast=true;toast('⚡ ¡Disparo veloz — dura hasta recibir un golpe!','p');}
   if(pu.id==='shield'){G.shield=true;toast('🛡️ ¡Escudo activado!','g');}
   if(pu.id==='life'){
-    if(G.lives<LIVES_MAX){G.lives++;toast('❤️ ¡+1 Vida!','g');}
-    else toast('❤️ Vida al máximo','y');
+    if(G.hp<G.hpMax){G.hp=Math.min(G.hpMax,G.hp+20);floatTxt(pu.x,pu.y-18,'❤️ +20 HP','#ef4444');toast('❤️ ¡+20 HP del jefe!','g');}
+    else toast('❤️ HP al máximo','y');
   }
 }
 
@@ -864,10 +935,10 @@ function update(dt){
     return;
   }
 
-  if(G.phase!=='mini'&&G.phase!=='boss') return;
+  if(G.phase!=='mini'&&G.phase!=='boss'&&G.phase!=='horda') return;
 
   /* ── player movement ── */
-  var ms=4.2*G.moveMult;
+  var ms=6.5*G.moveMult;
   if(!IS_TOUCH){
     /* teclado: movimiento digital directo */
     if(G.left)  G.px-=ms;
@@ -883,6 +954,7 @@ function update(dt){
   if(G.shoot) doShoot();
   if(G.dmg>0) G.dmg-=dt;
   if(G.valveFlash>0) G.valveFlash-=dt;
+  if(G.iframes>0) G.iframes-=dt;
   if(G.shake>0) G.shake-=dt;
   updateECG(dt);
 
@@ -943,10 +1015,10 @@ function update(dt){
       G.bleedDropT+=dt;
       if(G.bleedDropT>=1200){
         G.bleedDropT=0;
-        G.lives=Math.max(0,G.lives-1);
+        G.hp=Math.max(0,G.hp-10);   // sangrado: -10 HP/tick, bypasea iframes
         G.dmg=320; G.shake=160;
-        floatTxt(G.px,G.py-35,'🩸 -1 vida','#ef4444');
-        if(G.lives<=0){G.lives=0; G.dying=true; setTimeout(showOver,700);}
+        floatTxt(G.px,G.py-35,'🩸 −10 HP','#ef4444');
+        if(G.hp<=0){G.hp=0; G.dying=true; setTimeout(showOver,700);}
       }
       if(G.bleedTimer<=0){ G.bleeding=false; G.bleedDropT=0; toast('🩹 Sangrado detenido','g'); }
     }
@@ -968,10 +1040,10 @@ function update(dt){
         wo.bleedT+=dt;
         if(wo.bleedT>=2500){
           wo.bleedT=0;
-          G.lives=Math.max(0,G.lives-1);
+          G.hp=Math.max(0,G.hp-8);   // herida: -8 HP/tick, bypasea iframes
           G.dmg=280; G.shake=140;
-          floatTxt(wo.x,wo.y-15,'🩸 herida -1','#ef4444');
-          if(G.lives<=0){G.lives=0; G.dying=true; setTimeout(showOver,700);}
+          floatTxt(wo.x,wo.y-15,'🩸 herida −8 HP','#ef4444');
+          if(G.hp<=0){G.hp=0; G.dying=true; setTimeout(showOver,700);}
         }
         /* nave cerca con plaqueta → sellar */
         if(G.carryingPlatelet){
@@ -1052,9 +1124,7 @@ function update(dt){
         var tcx=G.px-tu.x, tcy=G.py-tu.y;
         if(tcx*tcx+tcy*tcy<(22+G.pr)*(22+G.pr)){
           G.turretCd=1400;
-          G.lives--; G.dmg=720; G.shake=420; G.combo=0;
-          toast('🩸 ¡Trombo impactó la nave!','r');
-          if(G.lives<=0){G.lives=0; G.dying=true; setTimeout(showOver,700);}
+          hitLife(15,'🩸 ¡Trombo impactó la nave!');
         }
       }
       aLive.push(tu);
@@ -1108,9 +1178,7 @@ function update(dt){
           var ecdx=G.px-ec.x, ecdy=G.py-ec.y;
           if(ecdx*ecdx+ecdy*ecdy<(ec.r+G.pr)*(ec.r+G.pr)){
             G.turretCd=1400;
-            G.lives--; G.dmg=720; G.shake=420; G.combo=0;
-            toast('🦠 ¡Escolta impactó la nave!','r');
-            if(G.lives<=0){G.lives=0; G.dying=true; setTimeout(showOver,700);}
+            hitLife(15,'🦠 ¡Escolta impactó la nave!');
             burst(ec.x,ec.y,'#ef4444',12);
             continue; /* destruir escolta */
           }
@@ -1132,12 +1200,17 @@ function update(dt){
       if(b2.dyingTimer<=0){
         burst(b2.x,b2.y,'#fbbf24',35); burst(b2.x,b2.y,'#fff',20);
         G.bossClones=[];
-        /* soltar vida recogible */
-        G.powerups.push({x:b2.x, y:b2.y, id:'life', label:'❤️ +VIDA', col:'#ef4444', r:14, spd:1.4, pulse:0});
-        toast('❤️ ¡El jefe soltó una vida!','g');
         G.boss=null;
-        G.phase='exiting_level';
-        G.exitTimer=600;
+        if(G.levelIdx===4){
+          /* último jefe → MODO HORDA directo */
+          activateHorda();
+        } else {
+          /* soltar vida recogible */
+          G.powerups.push({x:b2.x, y:b2.y, id:'life', label:'❤️ +VIDA', col:'#ef4444', r:14, spd:1.4, pulse:0});
+          toast('❤️ ¡El jefe soltó una vida!','g');
+          G.phase='exiting_level';
+          G.exitTimer=600;
+        }
         return;
       }
     } else if(!G.valveAnimating){
@@ -1150,14 +1223,14 @@ function update(dt){
       if(G.bossBodyCd<=0){
         var bcdx=G.px-b2.x, bcdy=G.py-b2.y;
         if(bcdx*bcdx+bcdy*bcdy<(b2.r+G.pr)*(b2.r+G.pr)){
-          G.bossBodyCd=1400; hitLife('💥 ¡Colisión con el jefe!');
+          G.bossBodyCd=1400; hitLife(35,'💥 ¡Colisión con el jefe!');
         }
         /* clones de Leucemia */
         for(var bci=0;bci<G.bossClones.length;bci++){
           var bcl=G.bossClones[bci];
           var cldx=G.px-bcl.x, cldy=G.py-bcl.y;
           if(cldx*cldx+cldy*cldy<(bcl.r+G.pr)*(bcl.r+G.pr)){
-            G.bossBodyCd=1400; hitLife('💥 ¡Clon de Leucemia impactó!'); break;
+            G.bossBodyCd=1400; hitLife(35,'💥 ¡Clon de Leucemia impactó!'); break;
           }
         }
       }
@@ -1215,9 +1288,7 @@ function update(dt){
             var scx=G.px-st2.x, scy=G.py-st2.y;
             if(scx*scx+scy*scy<(22+G.pr)*(22+G.pr)){
               G.turretCd=1400;
-              G.lives--; G.dmg=720; G.shake=420; G.combo=0;
-              toast('🩸 ¡Absceso impactó la nave!','r');
-              if(G.lives<=0){G.lives=0;G.dying=true;setTimeout(showOver,700);}
+              hitLife(20,'🩸 ¡Absceso impactó la nave!');
               continue;
             }
           }
@@ -1540,7 +1611,7 @@ function update(dt){
   var ni=[];
   for(var i=0;i<G.items.length;i++){
     var it=G.items[i];it.y+=it.spd;
-    if(it.y>H+40){if(it.enemy){G.combo=0;hitLife('🦠 ¡Enfermedad escapó!');}}
+    if(it.y>H+40){if(it.enemy){G.combo=0;hitLife(8,'🦠 ¡Enfermedad escapó!');}}
     else ni.push(it);
   }
   G.items=ni;
@@ -1565,7 +1636,7 @@ function update(dt){
           G.allyHit++;G.combo=0;burst(it.x,it.y,'#ef4444',8);
           floatTxt(it.x,it.y-14,'¡Aliado!','#f87171');
           toast('💔 ¡Disparaste a '+it.word+'!','r');
-          hitLife('💔 ¡Componente dañado!');
+          hitLife(5,'💔 ¡Componente dañado!');
         }
         break;
       }
@@ -1584,7 +1655,7 @@ function update(dt){
     var cy=Math.max(it.y-19,Math.min(G.py,it.y+19));
     var dx=G.px-cx,dy=G.py-cy;
     if(dx*dx+dy*dy<G.pr*G.pr){
-      if(it.enemy){G.combo=0;burst(it.x,it.y,'#ef4444',10);floatTxt(it.x,it.y-14,'💥','#f87171');hitLife('💥 ¡La nave fue golpeada!');}
+      if(it.enemy){G.combo=0;burst(it.x,it.y,'#ef4444',10);floatTxt(it.x,it.y-14,'💥','#f87171');hitLife(15,'💥 ¡La nave fue golpeada!'); /* TODO: verificar daño */}
       else {
         G.allyCollected++;G.score+=8;burst(it.x,it.y,'#22c55e',9);
         if(G.phase==='mini') G.flightProg=Math.min(100,G.flightProg+2);
@@ -1624,10 +1695,11 @@ function update(dt){
           G.sepsisProgress=Math.max(0,G.sepsisProgress-8);
           floatTxt(it.x,it.y-28,'⚡ alcance +','#22c55e');
         }
-        if(G.allyCollected%6===0&&G.lives<LIVES_MAX){
-          G.lives++;burst(it.x,it.y-22,'#ef4444',10);
-          floatTxt(it.x,it.y-38,'❤️ +VIDA','#ef4444');
-          toast('❤️ ¡Vida extra! ('+G.allyCollected+' rescates)','g');
+        if(G.allyCollected%6===0){
+          G.hp=Math.min(G.hpMax, G.hp+20);
+          burst(it.x,it.y-22,'#22c55e',10);
+          floatTxt(it.x,it.y-38,'❤️ +20 HP','#22c55e');
+          toast('❤️ ¡+20 HP! ('+G.allyCollected+' rescates)','g');
         } else {floatTxt(it.x,it.y-14,'🩸 +8','#22c55e');toast('🩸 '+it.word+' recolectado','g');}
       }
     } else ni2.push(it);
@@ -1640,7 +1712,7 @@ function update(dt){
     var p=G.pathogens[i];p.x+=p.vx;p.y+=p.vy;p.spin+=.08;
     if(p.y>H+20) continue;
     var dx=G.px-p.x,dy=G.py-p.y;
-    if(dx*dx+dy*dy<(G.pr+p.r)*(G.pr+p.r)){burst(p.x,p.y,'#f97316',8);hitLife('☣️ ¡Patógeno impactó!');}
+    if(dx*dx+dy*dy<(G.pr+p.r)*(G.pr+p.r)){burst(p.x,p.y,'#f97316',8);hitLife(15,'☣️ ¡Patógeno impactó!');}
     else np.push(p);
   }
   G.pathogens=np;
@@ -1653,7 +1725,7 @@ function update(dt){
     var sdist=Math.sqrt(sdx*sdx+sdy*sdy);
     if(sdist<sw.r&&sdist>sw.r-18){
       G.shockwave=null;
-      hitLife('☢️ ¡Onda expansiva de Sepsis!');
+      hitLife(20,'☢️ ¡Onda expansiva de Sepsis!');
     } else if(sw.r>=sw.maxR){
       G.shockwave=null;
     }
@@ -1672,8 +1744,16 @@ function update(dt){
 
   /* spawn timers */
   var now=Date.now(), spMs=Math.max(1400,2800-G.levelIdx*200);
-  if(now-G.spawnT>spMs){spawnItem();G.spawnT=now;}
-  if(now-G.puSpawnT>11000+Math.random()*4000){spawnPowerup();G.puSpawnT=now;}
+  if(G.phase==='horda'){
+    /* horda: cadencia más alta, usa spawnItemHorda */
+    checkHordaRotation();
+    var hMs=Math.max(900,2000-G.levelIdx*150);
+    if(now-G.spawnT>hMs){spawnItemHorda();G.spawnT=now;}
+    if(now-G.puSpawnT>11000+Math.random()*4000){spawnPowerup();G.puSpawnT=now;}
+  } else {
+    if(now-G.spawnT>spMs){spawnItem();G.spawnT=now;}
+    if(now-G.puSpawnT>11000+Math.random()*4000){spawnPowerup();G.puSpawnT=now;}
+  }
 
   /* particles */
   var npa=[]; for(var i=0;i<G.parts.length;i++){var p=G.parts[i];p.x+=p.vx;p.y+=p.vy;p.vy+=.12;p.life-=dt;if(p.life>0)npa.push(p);} G.parts=npa;
@@ -1983,7 +2063,7 @@ function draw(){
   drawHUD();
 
   /* ── Indicador trackpad (punto tenue donde toca el dedo) ── */
-  if(IS_TOUCH&&trackpad.active&&G&&(G.phase==='mini'||G.phase==='boss'||G.phase==='entering_valve'||G.phase==='exiting_level')){
+  if(IS_TOUCH&&trackpad.active&&G&&(G.phase==='mini'||G.phase==='boss'||G.phase==='entering_valve'||G.phase==='exiting_level'||G.phase==='horda')){
     ctx.save();
     ctx.globalAlpha=0.22;
     ctx.beginPath(); ctx.arc(trackpad.lastX, trackpad.lastY, 22, 0, Math.PI*2);
@@ -2856,7 +2936,14 @@ function drawItems(){
     ctx.fillStyle='rgba(18,13,16,.95)';
     rr(x,y,it.w,IH,9); ctx.fill();
 
-    if(it.defective){
+    if(it.pulsing){
+      /* HORDA ciclo 3+: borde alerta rojo/amarillo alternado */
+      var pColNow=Math.floor(now/200)%2===0?'#ef4444':'#fbbf24';
+      ctx.shadowColor=pColNow; ctx.shadowBlur=12+pulse*8;
+      ctx.strokeStyle=pColNow; ctx.lineWidth=2.5;
+      rr(x,y,it.w,IH,9); ctx.stroke();
+      ctx.shadowBlur=0;
+    } else if(it.defective){
       ctx.shadowColor='rgba(245,158,11,.55)'; ctx.shadowBlur=8+pulse*4;
       ctx.strokeStyle='rgba(245,158,11,'+(0.55+pulse*0.25)+')';
       ctx.lineWidth=2.2;
@@ -2878,9 +2965,20 @@ function drawItems(){
     ctx.lineTo(it.x,y+IH+ef+8); ctx.closePath(); ctx.fill();
 
     ctx.shadowBlur=0;
-    ctx.fillStyle=it.defective?'#f59e0b':'#e2e0e1';
-    ctx.font='bold 14px Nunito,sans-serif'; ctx.textAlign='center';
-    ctx.fillText(it.word, it.x, it.y+6);
+
+    /* ── Eritrocito: sprite PNG si está disponible ── */
+    if(it.word==='Eritrocito' && SPR_RBC_OK){
+      /* escala proporcional (512:354) al ancho de la cápsula */
+      var sprW=it.w+16, sprH=sprW*(354/512);
+      ctx.shadowColor='rgba(220,60,60,0.45)'; ctx.shadowBlur=12;
+      ctx.drawImage(SPR_RBC, it.x-sprW/2, it.y-sprH/2, sprW, sprH);
+      ctx.shadowBlur=0;
+    } else {
+      ctx.fillStyle=it.defective?'#f59e0b':'#e2e0e1';
+      ctx.font='bold 14px Nunito,sans-serif'; ctx.textAlign='center';
+      ctx.fillText(it.word, it.x, it.y+6);
+    }
+
     ctx.restore();
   }
 }
@@ -2889,7 +2987,10 @@ function drawItems(){
 function drawShip(){ drawShipAt(G.px,G.py); }
 function drawShipAt(x,y){
   var now=Date.now();
+  /* parpadeo durante iframes: alterna opacidad cada 100 ms */
+  var shipAlpha=(G.iframes>0&&Math.floor(G.iframes/100)%2===0)?0.3:1.0;
   ctx.save(); ctx.translate(x,y); ctx.scale(1.35,1.35);
+  ctx.globalAlpha=shipAlpha;
 
   /* ── Motor: llama propulsora ── */
   var fHz=now*0.025, fH=12+Math.sin(fHz)*5;
@@ -3104,7 +3205,8 @@ function drawFloats(){
 
 /* ── ECG ── */
 function drawECG(x,y,w,h){
-  var col=G.lives>=5?'#22c55e':G.lives>=3?'#f59e0b':'#ef4444';
+  var hf=G.hp/G.hpMax;
+  var col=hf>0.6?'#22c55e':hf>0.3?'#f59e0b':'#ef4444';
   ctx.save();ctx.fillStyle='rgba(0,0,0,.38)';rr(x,y,w,h,4);ctx.fill();
   ctx.beginPath();ctx.rect(x+1,y+1,w-2,h-2);ctx.clip();
   ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.shadowColor=col;ctx.shadowBlur=5;
@@ -3126,26 +3228,25 @@ function drawHUD(){
   ctx.strokeStyle='rgba(255,80,40,.10)';ctx.lineWidth=0.8;
   ctx.beginPath();ctx.moveTo(0,57);ctx.lineTo(W,57);ctx.stroke();
 
-  /* vidas como aviones */
-  var hw=19;
-  for(var i=0;i<LIVES_MAX;i++){
-    ctx.globalAlpha=i<G.lives?1:.10;
-    var lx=12+i*hw, ly=30;
-    ctx.save(); ctx.translate(lx,ly);
-    ctx.fillStyle=i<G.lives?'#88ccff':'#446';
-    ctx.shadowColor=i<G.lives?'#44aaff':'transparent';
-    ctx.shadowBlur=i<G.lives?6:0;
-    ctx.beginPath(); ctx.ellipse(0,0,2.5,5.5,0,0,Math.PI*2); ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(-1,1); ctx.lineTo(-7,4); ctx.lineTo(-4,5); ctx.lineTo(0,3);
-    ctx.lineTo(4,5);  ctx.lineTo(7,4);  ctx.lineTo(1,1);
-    ctx.closePath(); ctx.fill();
-    ctx.shadowBlur=0; ctx.restore();
+  /* ── barra de salud HP ── */
+  var bx=12, by=12, bw=120, bh=10;
+  var hpFrac=G.hp/G.hpMax;
+  var hpCol=hpFrac>0.6?'#22c55e':hpFrac>0.3?'#fbbf24':'#ef4444';
+  /* pista */
+  ctx.fillStyle='rgba(0,0,0,0.5)'; rr(bx,by,bw,bh,5); ctx.fill();
+  ctx.strokeStyle='#3a1020'; ctx.lineWidth=1; rr(bx,by,bw,bh,5); ctx.stroke();
+  /* relleno con gradiente */
+  if(hpFrac>0){
+    var hGrd=ctx.createLinearGradient(bx,0,bx+bw*hpFrac,0);
+    hGrd.addColorStop(0,hpCol); hGrd.addColorStop(1,'rgba(255,255,255,0.18)');
+    ctx.fillStyle=hGrd;
+    ctx.shadowColor=hpCol; ctx.shadowBlur=hpFrac<0.3?8:4;
+    rr(bx,by,bw*hpFrac,bh,5); ctx.fill();
+    ctx.shadowBlur=0;
   }
-  ctx.globalAlpha=1;
 
   /* ECG */
-  drawECG(14+LIVES_MAX*hw,12,52,28);
+  drawECG(bx+bw+8,by,52,28);
 
   /* score */
   ctx.textAlign='center';
@@ -3170,15 +3271,31 @@ function drawHUD(){
     ctx.fillText('🔥 x'+G.combo,W/2,50);ctx.shadowBlur=0;
   }
 
-  /* nivel */
+  /* nivel / horda */
   var lv=LD[G.levelIdx];
   ctx.font='bold 11px Nunito,sans-serif';ctx.textAlign='right';
-  ctx.fillStyle=lv.col;ctx.shadowColor=lv.col;ctx.shadowBlur=5;
-  ctx.fillText('LV '+(G.levelIdx+1)+' · '+lv.disease,W-10,22);ctx.shadowBlur=0;
-
-  /* phase label */
-  var phLbl=G.phase==='mini'?'Volando al vaso…':G.phase==='boss'?'⚔️ Jefe en válvula':'';
-  if(phLbl){ctx.font='9px Nunito,sans-serif';ctx.fillStyle='#cc7070';ctx.fillText(phLbl,W-10,36);}
+  if(G.phase==='horda'){
+    /* temporizador HORDA */
+    var hordaSec=Math.floor((Date.now()-G.hordaStartTime)/1000);
+    var hm=Math.floor(hordaSec/60), hs=hordaSec%60;
+    var hTime=(hm>0?hm+'m ':'')+hs+'s';
+    var hPulse=Math.floor(Date.now()/400)%2===0;
+    ctx.fillStyle=hPulse?'#f97316':'#fbbf24';
+    ctx.shadowColor='#f97316';ctx.shadowBlur=8;
+    ctx.fillText('🔥 HORDA · '+hTime,W-10,22);ctx.shadowBlur=0;
+    /* oleada actual */
+    var hLv=LD[G.hordaActiveDisease];
+    var hCycle=G.hordaCompletedCycles[G.hordaActiveDisease];
+    ctx.font='bold 9px Nunito,sans-serif';
+    ctx.fillStyle=hLv.col;ctx.shadowColor=hLv.col;ctx.shadowBlur=4;
+    ctx.fillText('Oleada: '+hLv.disease+(hCycle>0?' ×'+(hCycle+1):''),W-10,36);ctx.shadowBlur=0;
+  } else {
+    ctx.fillStyle=lv.col;ctx.shadowColor=lv.col;ctx.shadowBlur=5;
+    ctx.fillText('LV '+(G.levelIdx+1)+' · '+lv.disease,W-10,22);ctx.shadowBlur=0;
+    /* phase label */
+    var phLbl=G.phase==='mini'?'Volando al vaso…':G.phase==='boss'?'⚔️ Jefe en válvula':'';
+    if(phLbl){ctx.font='9px Nunito,sans-serif';ctx.fillStyle='#cc7070';ctx.fillText(phLbl,W-10,36);}
+  }
 
   /* checkpoint */
   if(G.checkpoint>0){
@@ -3320,7 +3437,7 @@ function buildStats(el){
     '<div class="stat-box good"><div class="stat-num">'+G.enemyKilled+'</div><div class="stat-lbl">Enfermedades ☠️</div></div>'+
     '<div class="stat-box good"><div class="stat-num">'+G.allyCollected+'</div><div class="stat-lbl">Componentes 🩸</div></div>'+
     '<div class="stat-box bad"><div class="stat-num">'+G.allyHit+'</div><div class="stat-lbl">Aliados dañados</div></div>'+
-    '<div class="stat-box"><div class="stat-num">'+(G.levelIdx+1)+'/8</div><div class="stat-lbl">Niveles superados</div></div>';
+    '<div class="stat-box"><div class="stat-num">'+G.hp+'/50</div><div class="stat-lbl">HP final</div></div>';
 }
 
 /* ══════════════════════════════════════════
@@ -3453,11 +3570,11 @@ if(IS_TOUCH){
    TOAST
 ══════════════════════════════════════════ */
 var tTmr=null;
-function toast(msg,type){
+function toast(msg,type,dur){
   var t=document.getElementById('toast');
   if(tTmr)clearTimeout(tTmr);
   t.textContent=msg;t.className='show '+(type||'');
-  tTmr=setTimeout(function(){t.className='';},2600);
+  tTmr=setTimeout(function(){t.className='';},dur||2600);
 }
 </script>
 </body>
