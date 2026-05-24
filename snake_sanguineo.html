@@ -734,18 +734,13 @@ function drawItem(it){
 
   if(dType==='eritrocito'){
     if(eritSpriteOk){
-      // ── SPRITE PNG ──────────────────────────────────
-      // Proporción original 512×410; escalar manteniendo aspect ratio
       const dw = CELL * 0.88;
       const dh = dw * (410 / 512);
-      // Pulso suave: escala oscila entre 0.96 y 1.04 con periodo ~2s
       const pulse = 1 + 0.04 * Math.sin(Date.now() / 320);
       const pw = dw * pulse, ph = dh * pulse;
       ctx.shadowColor = '#ef4444'; ctx.shadowBlur = 10;
-      // Dibuja centrado en (x, y)
       ctx.drawImage(eritSprite, x - pw/2, y - ph/2, pw, ph);
     }else{
-      // ── FALLBACK PROCEDURAL ──────────────────────────
       ctx.shadowColor='#ef4444';ctx.fillStyle='#ef4444';
       ctx.beginPath();ctx.ellipse(x,y,r,r*.75,0,0,Math.PI*2);ctx.fill();
       ctx.fillStyle='rgba(0,0,0,.38)';ctx.beginPath();ctx.ellipse(x,y,r*.44,r*.3,0,0,Math.PI*2);ctx.fill();
@@ -806,28 +801,23 @@ function drawItem(it){
     ctx.fillStyle='rgba(107,142,35,.65)';ctx.beginPath();ctx.arc(x-r*.32,y-r*.28,r*.38,0,Math.PI*2);ctx.fill();
   }
 
-  // ── PÍLDORA (cápsula bicolor flotante) ──────────────
+  // PÍLDORA (cápsula bicolor flotante)
   if(dType==='pildora'){
-    const bob=Math.sin(Date.now()/400)*2; // flotación vertical
+    const bob=Math.sin(Date.now()/400)*2;
     const cx=x, cy=y+bob;
     const pr=r*.78;
-    // Sombra/halo verde
     ctx.shadowColor='#4ade80';ctx.shadowBlur=14;
-    // Mitad izquierda (verde)
     ctx.save();
     ctx.beginPath();ctx.ellipse(cx,cy,pr,pr*.58,0,Math.PI/2,Math.PI*3/2);ctx.closePath();
     ctx.fillStyle='#4ade80';ctx.fill();
     ctx.restore();
-    // Mitad derecha (blanca)
     ctx.save();
     ctx.beginPath();ctx.ellipse(cx,cy,pr,pr*.58,0,-Math.PI/2,Math.PI/2);ctx.closePath();
     ctx.fillStyle='#f0f0f0';ctx.fill();
     ctx.restore();
-    // Línea divisoria
     ctx.save();ctx.strokeStyle='rgba(0,0,0,.35)';ctx.lineWidth=1.5;
     ctx.beginPath();ctx.moveTo(cx,cy-pr*.58);ctx.lineTo(cx,cy+pr*.58);ctx.stroke();
     ctx.restore();
-    // Brillo superior
     ctx.save();ctx.fillStyle='rgba(255,255,255,.45)';
     ctx.beginPath();ctx.ellipse(cx-pr*.22,cy-pr*.22,pr*.32,pr*.18,-0.5,0,Math.PI*2);ctx.fill();
     ctx.restore();
@@ -835,7 +825,7 @@ function drawItem(it){
 
   ctx.shadowBlur=0;ctx.restore();
 
-  // ── Halo de "enfermedad armada" (2ª aparición en adelante) ──
+  // Halo de "enfermedad armada"
   if(it.armed){
     const pulse=0.5+0.5*Math.sin(Date.now()/220);
     ctx.save();
@@ -846,7 +836,6 @@ function drawItem(it){
     ctx.setLineDash([4,3]);
     ctx.beginPath();ctx.arc(x,y,r+5,0,Math.PI*2);ctx.stroke();
     ctx.setLineDash([]);
-    // rayo icono encima
     ctx.font=`bold ${Math.round(CELL*.52)}px sans-serif`;
     ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillStyle=`rgba(255,220,30,${0.7+0.3*pulse})`;
@@ -855,7 +844,7 @@ function drawItem(it){
     ctx.restore();
   }
 
-  // label
+  // label inferior
   const info=INFO[dType]||INFO[it.type];
   const lbl=info.lbl;
   const textCol=it.dis?'#f59e0b':info.bad?'#ff7070':'#b0e2ff';
@@ -863,8 +852,10 @@ function drawItem(it){
   ctx.font='700 7px Nunito,sans-serif';ctx.textAlign='center';
   const ly=it.row*CELL+CELL-1;
   const tw=ctx.measureText(lbl).width+5;
-  ctx.fillStyle='rgba(14,1,3,.88)';ctx.fillRect(x-tw/2,ly-7,tw,8);
-  ctx.fillStyle=textCol;ctx.fillText(lbl,x,ly);
+  ctx.fillStyle='rgba(14,1,3,.7)';
+  ctx.fillRect(x-tw/2,ly-7,tw,8);
+  ctx.fillStyle=textCol;
+  ctx.fillText(lbl,x,ly);
   ctx.restore();
 }
 
@@ -887,11 +878,11 @@ function drawSnake(){
       ctx.shadowColor='#ffffff';ctx.shadowBlur=isHead?20:10;
       ctx.fillStyle=isHead?`#ffffff`:`#${alpha}${alpha}${alpha}`;
     }else if(isHead){
-      ctx.shadowColor='#ff5555';ctx.shadowBlur=14;ctx.fillStyle='#c0392b';
+      ctx.shadowColor='#7BB3E0';ctx.shadowBlur=14;ctx.fillStyle='#5B8DBF';
     }else{
       const t=i/snake.length;
-      ctx.shadowColor='#8b2020';ctx.shadowBlur=5;
-      ctx.fillStyle=`rgb(${Math.round(192-t*134)},${Math.round(57-t*43)},${Math.round(43-t*27)})`;
+      ctx.shadowColor='#2C4868';ctx.shadowBlur=5;
+      ctx.fillStyle=`rgb(${Math.round(91-t*51)},${Math.round(141-t*71)},${Math.round(191-t*81)})`;
     }
     const p=isHead?1:2;
     rrect(ctx,x+p,y+p,CELL-p*2,CELL-p*2,4);ctx.fill();
