@@ -59,6 +59,30 @@ canvas{display:block;width:100%;height:100%}
 </style>
 </head>
 <body>
+<!-- ═══ AUDIO ═══ -->
+<audio id="mus-pasillo" src="Audio/Musica/defensa_pasillo.mp3" loop preload="auto"></audio>
+<audio id="mus-quiz"    src="Audio/Musica/defensa_quiz.mp3"    loop preload="auto"></audio>
+<audio id="mus-boss"    src="Audio/Musica/defensa_boss.mp3"    loop preload="auto"></audio>
+
+<audio id="sfx-shoot"        src="Audio/SFX/snake_disparo_enfermedad.mp3"  preload="auto"></audio>
+<audio id="sfx-enemy-hit"    src="Audio/SFX/snake_corte_cuerpo.mp3"        preload="auto"></audio>
+<audio id="sfx-enemy-death"  src="Audio/SFX/enemy_death.mp3"               preload="auto"></audio>
+<audio id="sfx-player-hurt"  src="Audio/SFX/snake_game_over.mp3"           preload="auto"></audio>
+<audio id="sfx-pickup"       src="Audio/SFX/pickup_good.mp3"               preload="auto"></audio>
+<audio id="sfx-valve"        src="Audio/SFX/valve_open.mp3"                preload="auto"></audio>
+<audio id="sfx-quiz-ok"      src="Audio/SFX/quiz_correct.mp3"              preload="auto"></audio>
+<audio id="sfx-quiz-bad"     src="Audio/SFX/snake_rescate_incorrecto.mp3"  preload="auto"></audio>
+<audio id="sfx-boss-appear"  src="Audio/SFX/boss_appear.mp3"               preload="auto"></audio>
+<audio id="sfx-boss-death"   src="Audio/SFX/boss_death.mp3"                preload="auto"></audio>
+<audio id="sfx-checkpoint"   src="Audio/SFX/checkpoint.mp3"                preload="auto"></audio>
+<audio id="sfx-milestone"    src="Audio/SFX/milestone.mp3"                 preload="auto"></audio>
+
+<button id="btn-mute" style="position:fixed;top:12px;right:12px;z-index:9999;
+  width:42px;height:42px;border-radius:50%;border:2px solid #fbbf24;
+  background:rgba(20,10,5,.85);color:#fbbf24;font-size:1.1rem;
+  cursor:pointer;font-weight:900;box-shadow:0 2px 8px rgba(0,0,0,.6);
+  display:flex;align-items:center;justify-content:center;padding:0">🔊</button>
+
 <div id="gutter-l"></div><div id="gutter-r"></div>
 <div id="wrap">
   <canvas id="gc"></canvas>
@@ -81,13 +105,13 @@ canvas{display:block;width:100%;height:100%}
   <div class="ov" id="ov-start">
     <div style="font-size:2.8rem;animation:bob 2.5s ease-in-out infinite">🩸</div>
     <h1>Defensa Inmune</h1>
-    <div class="sub">5 niveles · Vaso Sanguíneo</div>
+    <div class="sub">5 oficiales + 3 clasificados · Vaso Sanguíneo</div>
     <div class="rules" style="background:#1a0508;border:1px solid #3a1020;border-radius:10px;padding:12px 18px;line-height:2.1;font-size:1.05rem">
       💊 <b>DISPARA</b> enfermedades<br>
       🩸 <b>RECOGE</b> componentes<br>
       ⚠️ Todos se ven igual — <b>lee</b> antes de actuar
     </div>
-    <div class="sub" style="font-size:.92rem">Barra de salud · cada 6 rescates = +20 HP</div>
+    <div class="sub" style="font-size:.92rem">❤️×5 al inicio · hasta 8 ❤️ · cada 6 rescates = +1 vida</div>
     <button class="big-btn" id="btn-start">¡Entrar al vaso! 🩸</button>
   </div>
 
@@ -135,6 +159,40 @@ canvas{display:block;width:100%;height:100%}
     <button class="big-btn" id="btn-lwin">Siguiente nivel →</button>
   </div>
 
+  <!-- TRANSICIÓN: oficial completado, entrada a archivos clasificados -->
+  <div class="ov hidden" id="ov-official">
+    <div style="font-size:3rem;animation:bob 2s ease-in-out infinite">🏅</div>
+    <h1 style="color:#fbbf24">Cuestionario oficial completado</h1>
+    <div class="sub">Has dominado las 5 enfermedades del programa MINERD</div>
+    <div style="background:rgba(40,30,5,.6);border:1px solid #fbbf24;border-radius:14px;padding:14px 18px;max-width:340px;line-height:1.55">
+      <div style="font-size:.62rem;text-transform:uppercase;letter-spacing:2px;color:#fbbf24;font-weight:900;margin-bottom:8px">⚠️ ARCHIVOS CLASIFICADOS DESBLOQUEADOS</div>
+      <div style="font-size:.88rem;color:#e2f0ff">
+        Existen <b>3 enfermedades adicionales</b> que el currículo no exige conocer, pero que forman parte del banco completo de patologías de la sangre.<br><br>
+        <b style="color:#f59e0b">Leucopenia</b> · <b style="color:#dc2626">Policitemia</b> · <b style="color:#ea580c">Talasemia</b>
+      </div>
+    </div>
+    <div class="sub" style="font-size:.82rem;color:#9a7070">Decide si continuar — tu progreso oficial ya quedó guardado.</div>
+    <button class="big-btn" id="btn-official-continue" style="background:linear-gradient(135deg,#a16207,#fbbf24);color:#1a0508">Acceder a archivos clasificados →</button>
+    <button class="big-btn" id="btn-official-finish" style="background:rgba(60,30,15,.6);border:1px solid #fbbf24;color:#fbbf24;box-shadow:none">Finalizar aquí 🏁</button>
+  </div>
+
+  <!-- ENDLESS PROMPT -->
+  <div class="ov hidden" id="ov-endless-prompt">
+    <div style="font-size:3rem;animation:bob 2s ease-in-out infinite">🌀</div>
+    <h1 style="color:#00d4ff">¡8 patógenos eliminados!</h1>
+    <div class="sub">Has completado todas las enfermedades del banco</div>
+    <div style="background:rgba(0,20,50,.7);border:1px solid #00d4ff;border-radius:14px;padding:14px 18px;max-width:340px;line-height:1.55">
+      <div style="font-size:.62rem;text-transform:uppercase;letter-spacing:2px;color:#00d4ff;font-weight:900;margin-bottom:8px">🌀 MODO HORDA — SIN LÍMITE</div>
+      <div style="font-size:.88rem;color:#e2f0ff">
+        Los patógenos se vuelven cada vez <b>más rápidos y resistentes</b>.<br><br>
+        Cada <b style="color:#fbbf24">oleada de 8</b> tipos distintos aumenta su HP y velocidad un <b style="color:#ef4444">+10% / +5%</b>.<br><br>
+        Alcanza los hitos: <b style="color:#22c55e">10 · 25 · 50 · 100 · 200 · 500 kills</b>
+      </div>
+    </div>
+    <button class="big-btn" id="btn-endless-start" style="background:linear-gradient(135deg,#00b4cc,#00d4ff);color:#050f1e">Entrar al modo Horda ∞</button>
+    <button class="big-btn" id="btn-endless-finish" style="background:rgba(5,20,45,.6);border:1px solid #00d4ff;color:#00d4ff;box-shadow:none">Ver mis resultados finales 🏆</button>
+  </div>
+
   <!-- GAME OVER -->
   <div class="ov hidden" id="ov-go">
     <div style="font-size:3rem">💔</div>
@@ -148,7 +206,7 @@ canvas{display:block;width:100%;height:100%}
   <div class="ov hidden" id="ov-win">
     <div style="font-size:3rem;animation:bob 2s ease-in-out infinite">🏆</div>
     <h1 style="color:#fbbf24">¡SISTEMA PROTEGIDO!</h1>
-    <div style="font-size:.78rem;color:#22c55e;font-weight:800">Las 5 enfermedades han sido eliminadas</div>
+    <div style="font-size:.78rem;color:#22c55e;font-weight:800">Las 8 enfermedades han sido eliminadas</div>
     <div id="win-sc" style="font-size:1.3rem;font-weight:900;color:#fbbf24"></div>
     <div class="stats-grid" id="win-stats"></div>
     <button class="big-btn" id="btn-win">Jugar de nuevo 🔄</button>
@@ -156,58 +214,200 @@ canvas{display:block;width:100%;height:100%}
 </div>
 
 <script>
+/* ═══════════════════════════════════════════
+   AUDIO SYSTEM
+═══════════════════════════════════════════ */
+var AUDIO={
+  unlocked:false,
+  muted:false,
+  currentMusic:null,
+  vol:{music:0.45, sfx:0.6}
+};
+
+function unlockAudio(){
+  if(AUDIO.unlocked) return;
+  AUDIO.unlocked=true;
+  var ids=['mus-pasillo','mus-quiz','mus-boss',
+    'sfx-shoot','sfx-enemy-hit','sfx-enemy-death','sfx-player-hurt',
+    'sfx-pickup','sfx-valve','sfx-quiz-ok','sfx-quiz-bad',
+    'sfx-boss-appear','sfx-boss-death','sfx-checkpoint','sfx-milestone'];
+  ids.forEach(function(id){
+    var a=document.getElementById(id);
+    if(!a) return;
+    var oldVol=a.volume;
+    a.volume=0;
+    var p=a.play();
+    if(p&&p.then) p.then(function(){a.pause();a.currentTime=0;a.volume=oldVol;}).catch(function(){});
+  });
+}
+
+function playSFX(id){
+  if(!AUDIO.unlocked||AUDIO.muted) return;
+  var a=document.getElementById(id);
+  if(!a) return;
+  try{
+    a.currentTime=0;
+    a.volume=AUDIO.vol.sfx;
+    var p=a.play();
+    if(p&&p.then) p.catch(function(){});
+  }catch(e){}
+}
+
+function playMusic(id){
+  if(!AUDIO.unlocked) return;
+  if(AUDIO.currentMusic===id) return;
+  var prev=AUDIO.currentMusic;
+  AUDIO.currentMusic=id;
+  if(prev){
+    var oldA=document.getElementById(prev);
+    if(oldA){
+      (function(el){
+        var fadeOut=setInterval(function(){
+          if(el.volume>0.05){ el.volume=Math.max(0,el.volume-0.05); }
+          else{ el.volume=0; el.pause(); el.currentTime=0; clearInterval(fadeOut); }
+        },40);
+      })(oldA);
+    }
+  }
+  var newA=document.getElementById(id);
+  if(!newA) return;
+  newA.volume=0;
+  try{
+    var p=newA.play();
+    if(p&&p.then) p.catch(function(){});
+  }catch(e){}
+  if(AUDIO.muted) return;
+  var target=AUDIO.vol.music;
+  (function(el){
+    var fadeIn=setInterval(function(){
+      if(el.volume<target-0.05){ el.volume=Math.min(target,el.volume+0.05); }
+      else{ el.volume=target; clearInterval(fadeIn); }
+    },40);
+  })(newA);
+}
+
+function stopAllMusic(){
+  ['mus-pasillo','mus-quiz','mus-boss'].forEach(function(id){
+    var a=document.getElementById(id);
+    if(a){ a.pause(); a.currentTime=0; }
+  });
+  AUDIO.currentMusic=null;
+}
+
+function toggleMute(){
+  AUDIO.muted=!AUDIO.muted;
+  var btn=document.getElementById('btn-mute');
+  if(btn) btn.textContent=AUDIO.muted?'🔇':'🔊';
+  if(AUDIO.currentMusic){
+    var a=document.getElementById(AUDIO.currentMusic);
+    if(a) a.volume=AUDIO.muted?0:AUDIO.vol.music;
+  }
+}
+
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
 var LD=[
-  {disease:'Anemia',mechanic:'anemia',bossType:'anemia',col:'#ef4444',affected:['Eritrocito','Hemoglobina'],
+  {disease:'Anemia',oficial:true,mechanic:'anemia',bossType:'anemia',col:'#ef4444',affected:['Eritrocito','Hemoglobina'],
    desc:'Déficit de glóbulos rojos o hemoglobina. Los tejidos reciben menos oxígeno.',
    fact:'La Anemia es la enfermedad sanguínea más común a nivel mundial.',
    intro:'Tu visión se oscurecerá progresivamente por los bordes. Recoge eritrocitos y hemoglobina para recuperarla. Si no recoges suficientes, terminas jugando casi a ciegas.',
    qs:[
-     {q:'¿Qué componente de la sangre se reduce en la Anemia?',opts:['Eritrocito','Leucocito','Plaqueta','Plasma'],a:0},
-     {q:'La Anemia causa que los tejidos reciban menos...',opts:['Calor','Oxígeno','Agua','Anticuerpos'],a:1},
-     {q:'¿Cuál es el otro nombre del eritrocito?',opts:['Glóbulo blanco','Trombocito','Glóbulo rojo','Linfocito'],a:2}
+     {q:'¿Cuál es un síntoma de la anemia?',
+      opts:['Manchas rojas en la piel','Cansancio, palidez y mareos','Fiebre alta y confusión','Sangrado prolongado'],a:1},
+     {q:'La anemia causa que los tejidos reciban menos...',
+      opts:['Calor','Oxígeno','Agua','Anticuerpos'],a:1},
+     {q:'¿Qué enfermedad sanguínea es la más común del mundo?',
+      opts:['Leucemia','Hemofilia','Anemia','Sepsis'],a:2},
+     {q:'¿Cuál es la vida media de un eritrocito?',
+      opts:['8–11 días','24 horas','120 días','30 días'],a:2},
+     {q:'¿Qué molécula permite que el eritrocito transporte oxígeno?',
+      opts:['Albúmina','Fibrinógeno','Hemoglobina','Globulina'],a:2}
    ]},
-  {disease:'Leucemia',mechanic:'leucemia',bossType:'leucemia',col:'#a855f7',affected:['Leucocito'],
+  {disease:'Leucemia',oficial:true,mechanic:'leucemia',bossType:'leucemia',col:'#a855f7',affected:['Leucocito'],
    desc:'Producción descontrolada de glóbulos blancos anormales en la médula ósea.',
    fact:'La Leucemia es un cáncer que altera la médula ósea y los glóbulos blancos.',
    intro:'Leucocitos anormales caerán mezclados con los sanos — se ven igual. Solo la etiqueta los delata. Si recoges uno anormal, pierdes vida. Lee con cuidado.',
    qs:[
-     {q:'¿Qué tipo de célula se produce de forma anormal en la Leucemia?',opts:['Plaquetas','Leucocitos','Eritrocitos','Plasma'],a:1},
-     {q:'¿En qué parte del cuerpo se origina la Leucemia?',opts:['El hígado','Los pulmones','La médula ósea','El corazón'],a:2},
-     {q:'Los leucocitos también se conocen como...',opts:['Glóbulos rojos','Plaquetas','Glóbulos blancos','Trombocitos'],a:2},
-     {q:'¿Cuántos glóbulos blancos hay aproximadamente por microlitro de sangre sana?',opts:['500 – 1.000','4.000 – 11.000','20.000 – 50.000','100.000 – 200.000'],a:1},
-     {q:'¿Qué grupo de alimentos ayuda a aumentar la producción de glóbulos blancos?',opts:['Arroz blanco, pan, pasta, azúcar','Naranja, ajo, brócoli, pimientos','Frituras, embutidos, comida rápida','Café, alcohol, bebidas energéticas'],a:1},
-     {q:'¿Cuántos tipos principales de glóbulos blancos existen?',opts:['2','3','5','8'],a:2},
-     {q:'¿Cuál es la función principal de los glóbulos blancos?',opts:['Transportar oxígeno','Coagular la sangre','Defender el cuerpo contra infecciones','Producir hemoglobina'],a:2}
+     {q:'¿Qué enfermedad se caracteriza por una producción descontrolada de leucocitos anormales?',
+      opts:['Anemia','Trombocitopenia','Hemofilia','Leucemia'],a:3},
+     {q:'¿Cuál es el nombre común de los leucocitos?',
+      opts:['Plaquetas','Glóbulos blancos','Glóbulos rojos','Trombocitos'],a:1},
+     {q:'¿Cuál es el nombre científico de los glóbulos rojos?',
+      opts:['Leucocitos','Trombocitos','Eritrocitos','Megacariocitos'],a:2},
+     {q:'¿Cuál es la función principal del eritrocito?',
+      opts:['Defender al cuerpo contra infecciones','Transportar oxígeno a los tejidos y recoger CO₂','Formar coágulos para detener hemorragias','Transportar nutrientes y hormonas'],a:1},
+     {q:'¿Qué componente de la sangre tiene forma de disco bicóncavo?',
+      opts:['Leucocito','Plaqueta','Plasma','Eritrocito'],a:3}
    ]},
-  {disease:'Hemofilia',mechanic:'hemofilia',bossType:'hemofilia',col:'#0891b2',affected:['Plaqueta','Plasma'],
-   desc:'Los factores de coagulación del plasma fallan. La sangre no coagula correctamente.',
-   fact:'La Hemofilia fue llamada "la enfermedad de los reyes" por afectar a familias reales europeas.',
-   intro:'Si te golpean, no pierdes vida de golpe — empiezas a sangrar. Un temporizador drena tu vida gradualmente. Recoge plaquetas o plasma para detener la hemorragia antes de que sea tarde.',
-   qs:[
-     {q:'¿Qué proceso falla en una persona con Hemofilia?',opts:['El transporte de oxígeno','La producción de glóbulos blancos','La coagulación de la sangre','La absorción de nutrientes'],a:2},
-     {q:'¿Qué componentes de la sangre están involucrados en la Hemofilia?',opts:['Eritrocitos y hemoglobina','Leucocitos y plasma','Plaquetas y factores del plasma','Solo los eritrocitos'],a:2},
-     {q:'Las plaquetas también se conocen como...',opts:['Eritrocitos','Leucocitos','Trombocitos','Linfocitos'],a:2}
-   ]},
-  {disease:'Trombocitopenia',mechanic:'trombocitopenia',bossType:'trombocitopenia',col:'#db2777',affected:['Plaqueta'],
+  {disease:'Trombocitopenia',oficial:true,mechanic:'trombocitopenia',bossType:'trombocitopenia',col:'#db2777',affected:['Plaqueta'],
    desc:'Cantidad baja de plaquetas. El cuerpo no puede detener las hemorragias.',
    fact:'La Trombocitopenia puede ser causada por medicamentos, infecciones o autoinmunidad.',
    intro:'Las paredes del vaso se agrietan. Recoge plaquetas y llévalas a las grietas para sellarlas. Si no las cierras a tiempo, el sangrado constante te matará.',
    qs:[
-     {q:'¿Qué componente de la sangre tiene niveles bajos en la Trombocitopenia?',opts:['Eritrocitos','Leucocitos','Plaquetas','Hemoglobina'],a:2},
-     {q:'¿Cuál es el principal riesgo de la Trombocitopenia?',opts:['Más infecciones','Menos oxígeno','Sangrado excesivo','Sangre espesa'],a:2},
-     {q:'¿Cuál es el nombre científico de las plaquetas?',opts:['Eritrocitos','Leucocitos','Trombocitos','Monocitos'],a:2}
+     {q:'¿Qué componente de la sangre está afectado en la trombocitopenia?',
+      opts:['Eritrocito','Leucocito','Plasma','Plaqueta'],a:3},
+     {q:'¿Qué otro nombre reciben las plaquetas?',
+      opts:['Eritrocitos','Leucocitos','Trombocitos','Linfocitos'],a:2},
+     {q:'¿Cuál es la vida media de las plaquetas?',
+      opts:['24 horas','8–11 días','30 días','120 días'],a:1},
+     {q:'¿Cuántas plaquetas por mm³ de sangre se consideran valores normales?',
+      opts:['4,000–11,000','4.5–5.4 millones','150,000–450,000','100–500'],a:2}
    ]},
-  {disease:'Sepsis',mechanic:'sepsis',bossType:'sepsis',col:'#16a34a',affected:['Leucocito','Plasma'],
+  {disease:'Hemofilia',oficial:true,mechanic:'hemofilia',bossType:'hemofilia',col:'#0891b2',affected:['Plaqueta','Plasma'],
+   desc:'Los factores de coagulación del plasma fallan. La sangre no coagula correctamente.',
+   fact:'La Hemofilia fue llamada "la enfermedad de los reyes" por afectar a familias reales europeas.',
+   intro:'Si te golpean, no pierdes vida de golpe — empiezas a sangrar. Un temporizador drena tu vida gradualmente. Recoge plaquetas o plasma para detener la hemorragia antes de que sea tarde.',
+   qs:[
+     {q:'La hemofilia es una enfermedad de origen...',
+      opts:['Viral','Bacteriano','Genético','Ambiental'],a:2},
+     {q:'¿Qué componente de la sangre representa el 55% de su volumen?',
+      opts:['Eritrocito','Leucocito','Plasma','Plaqueta'],a:2},
+     {q:'¿Qué componente de la sangre fue el último en ser descubierto (1842)?',
+      opts:['Eritrocito','Leucocito','Plasma','Plaqueta'],a:3},
+     {q:'¿De qué está compuesto principalmente el plasma?',
+      opts:['90% agua','55% agua','90% proteínas','50% glucosa'],a:0}
+   ]},
+  {disease:'Sepsis',oficial:true,mechanic:'sepsis',bossType:'sepsis',col:'#16a34a',affected:['Leucocito','Plasma'],
    desc:'Infección generalizada en la sangre que desborda el sistema inmune del organismo.',
    fact:'La Sepsis es una emergencia médica que puede provocar fallo multiorgánico.',
    intro:'Infección total. Patógenos desde todas direcciones. Tu disparo perderá alcance con el tiempo. Recoge leucocitos y plasma para mantener tus defensas. Esto es todo o nada.',
    qs:[
-     {q:'¿Qué causa la Sepsis?',opts:['Una mutación genética','Una infección generalizada en la sangre','Exceso de glóbulos rojos','Falta de hierro'],a:1},
-     {q:'La Sepsis puede provocar...',opts:['Solo fiebre leve','Fallo de múltiples órganos','Exceso de plaquetas','Sangre más espesa'],a:1},
-     {q:'¿Qué componente de la sangre defiende contra infecciones?',opts:['Eritrocitos (glóbulos rojos)','Leucocitos (glóbulos blancos)','Trombocitos (plaquetas)','Plasma'],a:1}
+     {q:'La sepsis es causada por...',
+      opts:['Una mutación genética','Falta de hierro','Una infección que se extiende por la sangre','Exceso de plaquetas'],a:2},
+     {q:'¿Cuáles son las células más numerosas de la sangre?',
+      opts:['Leucocitos','Plaquetas','Eritrocitos','Linfocitos'],a:2},
+     {q:'¿Por qué el eritrocito tiene color rojo?',
+      opts:['Por el plasma que lo rodea','Por el hierro contenido en la hemoglobina','Por los leucocitos cercanos','Por reacción con el oxígeno'],a:1},
+     {q:'¿Qué componente de la sangre defiende contra infecciones?',
+      opts:['Eritrocitos','Leucocitos','Plaquetas','Plasma'],a:1}
+   ]},
+  {disease:'Leucopenia',oficial:false,mechanic:'leucopenia',bossType:'leucopenia',col:'#f59e0b',affected:['Leucocito'],
+   desc:'Cantidad anormalmente baja de glóbulos blancos. Las defensas se debilitan.',
+   fact:'La Leucopenia aumenta gravemente el riesgo de infecciones oportunistas.',
+   intro:'Tus disparos son más lentos y los patógenos vienen más rápido. Recoge leucocitos para restaurar tu velocidad de disparo. Sin ellos te verás desbordado.',
+   qs:[
+     {q:'¿Qué significa tener Leucopenia?',opts:['Exceso de glóbulos rojos','Déficit de glóbulos blancos','Déficit de plaquetas','Exceso de plasma'],a:1},
+     {q:'¿Qué se debilita principalmente con la Leucopenia?',opts:['La coagulación','El transporte de oxígeno','Las defensas del cuerpo','La producción de plasma'],a:2},
+     {q:'¿Qué otro nombre reciben los glóbulos blancos?',opts:['Eritrocitos','Leucocitos','Trombocitos','Plaquetas'],a:1}
+   ]},
+  {disease:'Policitemia',oficial:false,mechanic:'policitemia',bossType:'policitemia',col:'#dc2626',affected:['Eritrocito'],
+   desc:'Exceso de glóbulos rojos. La sangre se vuelve más espesa y lenta.',
+   fact:'La Policitemia aumenta el riesgo de trombosis y accidentes cerebrovasculares.',
+   intro:'La sangre está espesa. Tu nave se mueve más lento y el vaso está congestionado de glóbulos rojos flotantes. Navega entre los obstáculos y sigue clasificando.',
+   qs:[
+     {q:'¿Qué ocurre en la sangre de una persona con Policitemia?',opts:['Tiene pocos glóbulos rojos','Tiene exceso de glóbulos rojos','Tiene pocos glóbulos blancos','Tiene pocas plaquetas'],a:1},
+     {q:'¿Por qué la Policitemia hace la sangre más espesa?',opts:['Por exceso de agua','Por falta de plasma','Por exceso de glóbulos rojos','Por exceso de plaquetas'],a:2},
+     {q:'Los glóbulos rojos también se llaman...',opts:['Leucocitos','Trombocitos','Linfocitos','Eritrocitos'],a:3}
+   ]},
+  {disease:'Talasemia',oficial:false,mechanic:'talasemia',bossType:'talasemia',col:'#ea580c',affected:['Hemoglobina'],
+   desc:'Hemoglobina defectuosa de origen genético. Los glóbulos rojos no funcionan bien.',
+   fact:'La Talasemia es hereditaria y más frecuente en países mediterráneos y asiáticos.',
+   intro:'Hemoglobinas funcionales y defectuosas caerán con la misma etiqueta. La diferencia es visual: las defectuosas tienen bordes irregulares y deformados. Solo recoge las de bordes limpios.',
+   qs:[
+     {q:'¿Qué proteína está defectuosa en la Talasemia?',opts:['Leucocito','Plaqueta','Hemoglobina','Plasma'],a:2},
+     {q:'La Talasemia es una enfermedad de origen...',opts:['Viral','Bacteriano','Genético','Ambiental'],a:2},
+     {q:'¿Qué función cumple la hemoglobina?',opts:['Defender contra infecciones','Coagular la sangre','Transportar oxígeno','Producir plasma'],a:2}
    ]}
 ];
 
@@ -218,19 +418,24 @@ var PU_TYPES=[
 ];
 /* escoltas del pasillo: dificultad creciente por nivel */
 var ESCORT_CFG=[
-  {max:0, spawnI:99999, spd:0,   fire:false, fireI:99999}, /* L1 Anemia           */
-  {max:1, spawnI:6000,  spd:1.7, fire:true,  fireI:4200},  /* L2 Leucemia          */
-  {max:3, spawnI:4000,  spd:2.5, fire:true,  fireI:2200},  /* L3 Hemofilia         */
-  {max:3, spawnI:3500,  spd:2.7, fire:true,  fireI:1900},  /* L4 Trombocitopenia   */
-  {max:4, spawnI:3000,  spd:3.0, fire:true,  fireI:1600}   /* L5 Sepsis            */
+  {max:0, spawnI:99999, spd:0,   fire:false, fireI:99999}, /* L1 Anemia      */
+  {max:1, spawnI:6000,  spd:1.7, fire:true,  fireI:4200},  /* L2 Leucemia     */
+  {max:1, spawnI:5500,  spd:1.9, fire:true,  fireI:3200},  /* L3 Leucopenia   */
+  {max:2, spawnI:5000,  spd:2.1, fire:true,  fireI:2800},  /* L4 Policitemia  */
+  {max:2, spawnI:4500,  spd:2.3, fire:true,  fireI:2500},  /* L5 Talasemia    */
+  {max:3, spawnI:4000,  spd:2.5, fire:true,  fireI:2200},  /* L6 Hemofilia    */
+  {max:3, spawnI:3500,  spd:2.7, fire:true,  fireI:1900},  /* L7 Trombocit.   */
+  {max:4, spawnI:3000,  spd:3.0, fire:true,  fireI:1600}   /* L8 Sepsis       */
 ];
-/* HP system — reemplaza lives binarias */
+var LIVES_START=5, LIVES_MAX=8;
 
 /* Descripción de mecánica especial por nivel (se muestra en el intro) */
 var MECHS=[
   '👁 Tu <b>visión se oscurecerá</b> progresivamente. Recoge <b>Eritrocitos</b> y <b>Hemoglobina</b> para recuperarla.',
   '⚠️ <b>Leucocitos anormales</b> caen mezclados con los sanos. Tienen el mismo aspecto — solo la etiqueta los delata. Recoger uno anormal → pierdes vida.',
-  '','',''
+  '🐢 Tus defensas son escasas: <b>disparas más lento</b> y los patógenos vienen más rápido. Recoge <b>Leucocitos</b> para recuperar velocidad de disparo.',
+  '🩸 Exceso de células: la nave se mueve más <b>lenta</b> y el vaso está <b>congestionado</b>. Esquiva los eritrocitos flotantes mientras sigues clasificando.',
+  '','','',''
 ];
 
 /* ══════════════════════════════════════════
@@ -318,7 +523,7 @@ function newGame(){
     phase:'idle', levelIdx:0,
     px:W/2, py:H-90, pr:20,
     bullets:[], items:[], powerups:[], pathogens:[], parts:[], floats:[],
-    hp:50, hpMax:50, iframes:0, score:0,
+    lives:LIVES_START, score:0,
     combo:0, bestCombo:0,
     enemyKilled:0, allyCollected:0, allyHit:0, quizWrong:0,
     checkpoint:0, checkpointScore:0, quizCorrect:0, quizQuestions:[],
@@ -336,11 +541,11 @@ function newGame(){
     shockwave:null,
     turrets:[], turretNextAt:380,
     /* mecánicas de nivel */
-    visionLevel:100,   // L1 Anemia (viñeta oscura)
-    shootCdMod:1,      // (reservado — mecánica de cooldown, sin uso en niveles activos)
-    leucoTimer:0,
-    moveMult:1,        // (reservado — multiplicador de velocidad, sin uso en niveles activos)
-    obstacles:[],      // (reservado — eritrocitos flotantes, sin uso en niveles activos)
+    visionLevel:100,   // L1 Anemia / L5 Talasemia
+    shootCdMod:1,      // L3 Leucopenia: multiplicador de cooldown (1=normal, 2=doble lentitud)
+    leucoTimer:0,      // L3 tiempo sin recoger leucocitos
+    moveMult:1,        // L4 Policitemia: multiplicador de velocidad
+    obstacles:[],      // L4 eritrocitos flotantes
     /* L6 Hemofilia */
     bleeding:false, bleedTimer:0, bleedInterval:4000, bleedHits:0, bleedDropT:0,
     /* L7 Trombocitopenia */
@@ -359,13 +564,13 @@ function newGame(){
     /* transitions */
     transY:0, transVY:0, transShrink:1, transTimer:0,
     exitTimer:0,
-    /* HORDA */
-    hordaStartTime:0,
-    campaignScore:0,
-    hordaRotQueue:[0,1,2,3,4],
-    hordaCompletedCycles:[0,0,0,0,0],
-    hordaActiveDisease:0,
-    hordaItemsSpawnedCount:0
+    /* Modo Endless */
+    hordeMode:false,
+    hordeKills:0,
+    hordePool:[], hordeRotation:0,
+    hordeSpawnT:0, hordeSpawnInterval:2400,
+    hordeMilestones:[10,25,50,100,200,500],
+    hordeMilestoneIdx:0
   };
 }
 
@@ -373,7 +578,7 @@ function newGame(){
    PHASE MANAGEMENT
 ══════════════════════════════════════════ */
 function showOnlyOverlay(id){
-  ['ov-start','ov-intro','ov-quiz','ov-lwin','ov-go','ov-win'].forEach(function(i){
+  ['ov-start','ov-intro','ov-quiz','ov-lwin','ov-official','ov-endless-prompt','ov-go','ov-win'].forEach(function(i){
     document.getElementById(i).classList.add('hidden');
   });
   if(id) document.getElementById(id).classList.remove('hidden');
@@ -383,7 +588,13 @@ function startLevel(idx){
   G.levelIdx=idx; G.phase='idle';
   G.flightProg=0; G.flightTime=0; G.valveOpen=0; G.valveAnimating=false;
   var lv=LD[idx];
-  document.getElementById('oi-num').textContent='NIVEL '+(idx+1)+' DE 8';
+  var lvData=LD[idx];
+  playMusic('mus-pasillo');
+  if(lvData.oficial){
+    document.getElementById('oi-num').textContent='NIVEL '+(idx+1)+' DE 5';
+  } else {
+    document.getElementById('oi-num').textContent='ARCHIVO '+(idx-4)+' DE 3';
+  }
   document.getElementById('oi-name').textContent=lv.disease;
   document.getElementById('oi-name').style.color=lv.col;
   document.getElementById('oi-desc').textContent=lv.desc;
@@ -519,7 +730,7 @@ function startQuizPhase(){
   badge.textContent='NIVEL '+(G.levelIdx+1)+' · '+lv.disease;
   badge.style.background=lv.col;
   showQuizQuestion(0);
-  setTimeout(function(){ showOnlyOverlay('ov-quiz'); },600);
+  setTimeout(function(){ playMusic('mus-quiz'); showOnlyOverlay('ov-quiz'); },600);
 }
 
 function showQuizQuestion(idx){
@@ -548,12 +759,15 @@ function handleAnswer(chosen,correct){
   var fb=document.getElementById('qz-fb');
   if(chosen===correct){
     G.quizCorrect++;
+    playSFX('sfx-quiz-ok');
     fb.style.color='#22c55e'; fb.textContent='✓ ¡Correcto!';
   } else if(chosen===-1){
     G.quizWrong++;
+    playSFX('sfx-quiz-bad');
     fb.style.color='#ef4444'; fb.textContent='⏱ ¡Tiempo agotado!';
   } else {
     btns[chosen].classList.add('bad'); G.quizWrong++;
+    playSFX('sfx-quiz-bad');
     fb.style.color='#ef4444';
     fb.textContent='✗ Incorrecto. Respuesta: '+btns[correct].textContent.slice(3);
   }
@@ -571,6 +785,7 @@ function handleAnswer(chosen,correct){
       } else {
         G.checkpoint=G.levelIdx;
         G.checkpointScore=G.score;
+        playSFX('sfx-checkpoint');
         toast('🏁 ¡Perfecto! Checkpoint guardado — Nivel '+(G.levelIdx+1),'p');
         setTimeout(function(){ startBossPhase(); },1600);
       }
@@ -595,45 +810,102 @@ function showLevelWin(){
   document.getElementById('lw-name').style.color=lv.col;
   document.getElementById('lw-fact').textContent=lv.fact;
   document.getElementById('lw-score').textContent='Puntuación total: '+G.score+' pts';
-  document.getElementById('btn-lwin').textContent=G.levelIdx>=4?'¡Activar MODO HORDA! 🔥':'Siguiente nivel →';
+  if(G.levelIdx>=7){
+    document.getElementById('btn-lwin').textContent='Continuar →';
+  } else if(G.levelIdx===4){
+    document.getElementById('btn-lwin').textContent='Continuar →';
+  } else {
+    document.getElementById('btn-lwin').textContent='Siguiente nivel →';
+  }
   showOnlyOverlay('ov-lwin');
 }
 
-function advanceLevel(){G.levelIdx>=4?activateHorda():startLevel(G.levelIdx+1);}
-function showWinAll(){G.over=true;document.getElementById('win-sc').textContent=G.score+' puntos';buildStats(document.getElementById('win-stats'));showOnlyOverlay('ov-win');}
-function activateHorda(){
-  G.campaignScore=G.score;
-  G.hordaStartTime=Date.now();
-  G.phase='horda';
-  G.items=[]; G.pathogens=[]; G.turrets=[]; G.escorts=[];
-  G.flightProg=0; G.flightTime=0; G.scrollY=0;
-  /* reset mechanic states */
-  G.bleeding=false; G.bleedTimer=0;
-  G.wounds=[]; G.carryingPlatelet=false;
-  G.sepsisProgress=0; G.bulletRange=1.0;
-  G.visionLevel=100;
-  /* pick first disease */
-  G.hordaActiveDisease=G.hordaRotQueue[0];
-  G.hordaItemsSpawnedCount=0;
-  toast('🔥 ¡MODO HORDA! Resistencia infinita…','y',4000);
+function advanceLevel(){
+  if(G.levelIdx>=7){ showEndlessPrompt(); return; }
+  if(G.levelIdx===4){ showOfficialComplete(); return; }
+  startLevel(G.levelIdx+1);
 }
+/* ─── Endless / Horde ─── */
+function showEndlessPrompt(){
+  G.phase='idle';
+  showOnlyOverlay('ov-endless-prompt');
+}
+function startEndlessMode(){
+  G.hordeMode=true;
+  G.phase='endless';
+  G.hordePool=buildHordePool();
+  G.hordeSpawnT=0;
+  G.pathogens=[];
+  G.items=[];
+  G.powerups=[];
+  G.px=W/2; G.py=H-90;
+  playMusic('mus-boss');
+}
+function buildHordePool(){
+  /* Fisher-Yates shuffle of LD indices */
+  var idx=[0,1,2,3,4,5,6,7];
+  for(var i=idx.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var tmp=idx[i];idx[i]=idx[j];idx[j]=tmp;
+  }
+  return idx;
+}
+function nextHordeType(){
+  if(G.hordePool.length===0){
+    G.hordePool=buildHordePool();
+    G.hordeRotation++;
+  }
+  return G.hordePool.shift();
+}
+function spawnHordeEnemy(){
+  var typeIdx=nextHordeType();
+  var lv=LD[typeIdx];
+  /* scale per rotation: +10% HP, +5% speed */
+  var hpMult=1+G.hordeRotation*0.10;
+  var spMult=1+G.hordeRotation*0.05;
+  var baseHp=3, baseSpd=1.2;
+  G.pathogens.push({
+    x:30+Math.random()*(W-60),
+    y:-30,
+    vx:(Math.random()-.5)*1.4*spMult,
+    vy:(0.7+Math.random()*0.6)*spMult,
+    r:14+Math.random()*6,
+    spin:0,
+    hp:Math.round(baseHp*hpMult),
+    maxHp:Math.round(baseHp*hpMult),
+    col:lv.col,
+    typeIdx:typeIdx,
+    horde:true
+  });
+}
+function checkHordeMilestone(){
+  var ms=G.hordeMilestones[G.hordeMilestoneIdx];
+  if(ms===undefined) return;
+  if(G.hordeKills>=ms){
+    G.hordeMilestoneIdx++;
+    var bonus=ms*10;
+    G.score+=bonus;
+    playSFX('sfx-milestone');
+    floatTxt(W/2,H/2,'🎯 HITO '+ms+' kills! +'+bonus,'#fbbf24');
+    toast('🎯 ¡Hito '+ms+' kills! +'+bonus+' pts','y');
+  }
+}
+function showOfficialComplete(){
+  G.phase='idle';
+  showOnlyOverlay('ov-official');
+}
+function showWinAll(){G.over=true;stopAllMusic();document.getElementById('win-sc').textContent=G.score+' puntos';buildStats(document.getElementById('win-stats'));showOnlyOverlay('ov-win');}
 function showOver(){
   G.over=true;
-  if(G.hordaStartTime>0){
-    var hordaSc=G.score-G.campaignScore;
-    var hordaSec=Math.floor((Date.now()-G.hordaStartTime)/1000);
-    var hm=Math.floor(hordaSec/60), hs=hordaSec%60;
-    var hTime=(hm>0?hm+'m ':'')+hs+'s';
-    document.getElementById('go-sc').innerHTML=
-      '<div>'+G.score+' puntos</div>'+
-      '<div style="font-size:.82rem;color:#f97316;margin-top:4px">🔥 Campaña: '+G.campaignScore+' · Horda: '+hordaSc+'</div>'+
-      '<div style="font-size:.72rem;color:#9a7070">Tiempo en HORDA: '+hTime+'</div>';
-  } else {
-    document.getElementById('go-sc').textContent=G.score+' puntos';
-  }
+  stopAllMusic();
+  var scTxt=G.score+' puntos';
+  if(G.hordeMode) scTxt+=' · '+G.hordeKills+' kills en Horda';
+  document.getElementById('go-sc').textContent=scTxt;
   buildStats(document.getElementById('go-stats'));
   var btn=document.getElementById('btn-retry');
-  if(G.checkpoint>0){
+  if(G.hordeMode){
+    btn.textContent='Reintentar Horda 🌀';
+  } else if(G.checkpoint>0){
     btn.textContent='Volver al Checkpoint (Nivel '+(G.checkpoint+1)+') 🏁';
   } else {
     btn.textContent='Intentar de nuevo ↺';
@@ -645,6 +917,8 @@ function showOver(){
    SPAWN
 ══════════════════════════════════════════ */
 function spawnBoss(){
+  playMusic('mus-boss');
+  playSFX('sfx-boss-appear');
   var lv=LD[G.levelIdx], d=G.levelIdx;
   var bt=lv.bossType||'generic';
   G.bossClones=[];
@@ -770,63 +1044,6 @@ function spawnPowerup(){
   G.powerups.push({id:t.id,label:t.label,col:t.col,dur:t.dur,x:Math.random()*(W-60)+30,y:-28,spd:1.2,r:18});
 }
 
-/* ── HORDA: rotación de enfermedad cuando se limpia la oleada ── */
-var HORDA_WAVE_SIZE=8; /* ítems por oleada antes de poder rotar */
-function checkHordaRotation(){
-  if(G.hordaItemsSpawnedCount<HORDA_WAVE_SIZE) return;
-  if(G.items.length>0) return;            /* esperar a pantalla vacía */
-  /* avanzar ciclo completado para la enfermedad actual */
-  G.hordaCompletedCycles[G.hordaActiveDisease]++;
-  /* siguiente enfermedad en la cola circular */
-  var qi=G.hordaRotQueue.indexOf(G.hordaActiveDisease);
-  var nextQi=(qi+1)%G.hordaRotQueue.length;
-  G.hordaActiveDisease=G.hordaRotQueue[nextQi];
-  G.hordaItemsSpawnedCount=0;
-  var lv=LD[G.hordaActiveDisease];
-  var cycle=G.hordaCompletedCycles[G.hordaActiveDisease];
-  var lvlLbl=cycle>0?' (×'+((cycle)+1)+')':'';
-  toast('🔄 Oleada: '+lv.disease+lvlLbl,'p',3000);
-}
-
-/* ── HORDA: spawn con dificultad evolutiva ── */
-function spawnItemHorda(){
-  if(G.items.length>=5) return;
-  var lv=LD[G.hordaActiveDisease];
-  var cycle=G.hordaCompletedCycles[G.hordaActiveDisease];
-  /* multiplicador de velocidad según ciclos completados */
-  var spdMults=[1.0,1.3,1.6,2.0];
-  var sm=spdMults[Math.min(cycle,3)];
-  /* elegir ítem: 50% enemigo / 50% aliado */
-  var isE=Math.random()<0.5;
-  var pool=isE?[lv.disease]:lv.affected;
-  var word=pool[Math.floor(Math.random()*pool.length)];
-  /* nombres alternativos (igual que campaña) */
-  var altNames={'Eritrocito':'Glóbulo rojo','Glóbulo rojo':'Eritrocito',
-    'Leucocito':'Glóbulo blanco','Glóbulo blanco':'Leucocito',
-    'Plaqueta':'Trombocito','Trombocito':'Plaqueta'};
-  if(!isE && altNames[word] && Math.random()<0.5) word=altNames[word];
-  ctx.font='bold 15px Nunito,sans-serif';
-  var tw=ctx.measureText(word).width, iw=tw+28;
-  var x=Math.random()*(W-iw-16)+iw/2+8;
-  G.items.push({
-    word:word, enemy:isE, defective:false, abnormal:false,
-    x:x, y:-30, w:iw,
-    spd:(1.5+Math.random()*0.7)*sm,
-    pulsing:cycle>=3   /* ciclo 3+: parpadeo rojo/amarillo de alerta */
-  });
-  G.hordaItemsSpawnedCount++;
-  /* patógenos acompañantes según ciclo */
-  var numPaths=cycle>=2?2:cycle>=1?1:0;
-  for(var p=0;p<numPaths;p++){
-    G.pathogens.push({
-      x:W*0.1+Math.random()*(W*0.8), y:-20-p*28,
-      vx:(Math.random()-.5)*1.5,
-      vy:(1.5+Math.random()*0.8)*sm,
-      r:7, spin:0
-    });
-  }
-}
-
 /* ══════════════════════════════════════════
    MECHANICS
 ══════════════════════════════════════════ */
@@ -837,31 +1054,27 @@ function doShoot(){
   if(G.double){G.bullets.push({x:G.px-10,y:sy,startY:sy});G.bullets.push({x:G.px+10,y:sy,startY:sy});}
   else G.bullets.push({x:G.px,y:sy,startY:sy});
   G.scd=cd; G.spcd=140;
+  playSFX('sfx-shoot');
 }
 
-function hitLife(damage, msg){
-  /* escudo y powerups absorben el golpe antes de cualquier daño */
+function hitLife(msg){
   if(G.shield){G.shield=false;G.dmg=250;G.shake=180;toast('🛡️ ¡Escudo absorbió el golpe!','g');return;}
   if(G.double){G.double=false;G.dmg=250;G.shake=180;toast('💛 ¡Disparo doble consumido por el golpe!','y');return;}
   if(G.fast)  {G.fast=false;  G.dmg=250;G.shake=180;toast('⚡ ¡Velocidad consumida por el golpe!','y');return;}
-  /* iframes: durante ~1 s post-impacto no se recibe más daño */
-  if(G.iframes>0) return;
   /* L6 Hemofilia: golpes activan sangrado en lugar de daño instantáneo */
   if(LD[G.levelIdx].mechanic==='hemofilia'){
     G.bleedHits++; G.bleedTimer=G.bleedInterval; G.bleeding=true;
     G.dmg=400; G.shake=240; G.combo=0;
     toast('🩸 ¡Sangrado activado! Recoge Plaqueta o Plasma','r'); return;
   }
-  G.hp=Math.max(0, G.hp-damage);
-  G.iframes=1000;
-  G.dmg=720; G.shake=420; G.combo=0;
+  G.lives--; G.dmg=720; G.shake=420; G.combo=0;
+  playSFX('sfx-player-hurt');
   toast(msg,'r');
-  if(G.hp<=0){ G.hp=0; G.dying=true; setTimeout(showOver,700); }
+  if(G.lives<=0){G.lives=0; G.dying=true; setTimeout(showOver,700);}
 }
 
 function updateECG(dt){
-  var hpFrac=G.hp/G.hpMax;                       // 0–1
-  var f=1+(1-hpFrac)*1.5;                         // más rápido/errático con HP bajo
+  var f=1+(LIVES_MAX-G.lives)*.22;
   G.ecgPhase+=dt*.0016*f; if(G.ecgPhase>=1) G.ecgPhase-=1;
   var t=G.ecgPhase,v=0;
   if(t>.08&&t<.22) v=Math.sin((t-.08)/.14*Math.PI)*.2;
@@ -869,7 +1082,7 @@ function updateECG(dt){
   if(t>=.34&&t<.36) v=1;
   if(t>=.36&&t<.43) v=1-(t-.36)/.07*1.25;
   if(t>.50&&t<.66) v=Math.sin((t-.50)/.16*Math.PI)*.28;
-  if(hpFrac<=0.25) v+=(Math.random()-.5)*.14;    // temblor con HP crítico
+  if(G.lives<=2) v+=(Math.random()-.5)*.14;
   G.ecgBuf.push(v); if(G.ecgBuf.length>52) G.ecgBuf.shift();
 }
 
@@ -893,8 +1106,8 @@ function applyPowerup(pu){
   if(pu.id==='fast')  {G.fast=true;toast('⚡ ¡Disparo veloz — dura hasta recibir un golpe!','p');}
   if(pu.id==='shield'){G.shield=true;toast('🛡️ ¡Escudo activado!','g');}
   if(pu.id==='life'){
-    if(G.hp<G.hpMax){G.hp=Math.min(G.hpMax,G.hp+20);floatTxt(pu.x,pu.y-18,'❤️ +20 HP','#ef4444');toast('❤️ ¡+20 HP del jefe!','g');}
-    else toast('❤️ HP al máximo','y');
+    if(G.lives<LIVES_MAX){G.lives++;toast('❤️ ¡+1 Vida!','g');}
+    else toast('❤️ Vida al máximo','y');
   }
 }
 
@@ -935,7 +1148,7 @@ function update(dt){
     return;
   }
 
-  if(G.phase!=='mini'&&G.phase!=='boss'&&G.phase!=='horda') return;
+  if(G.phase!=='mini'&&G.phase!=='boss'&&G.phase!=='endless') return;
 
   /* ── player movement ── */
   var ms=6.5*G.moveMult;
@@ -954,7 +1167,6 @@ function update(dt){
   if(G.shoot) doShoot();
   if(G.dmg>0) G.dmg-=dt;
   if(G.valveFlash>0) G.valveFlash-=dt;
-  if(G.iframes>0) G.iframes-=dt;
   if(G.shake>0) G.shake-=dt;
   updateECG(dt);
 
@@ -984,8 +1196,8 @@ function update(dt){
       }
     }
 
-    /* ── L4 Policitemia: actualizar obstáculos ── */
-    if(G.levelIdx===3){
+    /* ── Policitemia: actualizar obstáculos ── */
+    if(LD[G.levelIdx].mechanic==='policitemia'){
       for(var oi=0;oi<G.obstacles.length;oi++){
         var ob=G.obstacles[oi];
         ob.x+=ob.vx; ob.y+=ob.vy; ob.ang+=0.005;
@@ -1015,10 +1227,10 @@ function update(dt){
       G.bleedDropT+=dt;
       if(G.bleedDropT>=1200){
         G.bleedDropT=0;
-        G.hp=Math.max(0,G.hp-10);   // sangrado: -10 HP/tick, bypasea iframes
+        G.lives=Math.max(0,G.lives-1);
         G.dmg=320; G.shake=160;
-        floatTxt(G.px,G.py-35,'🩸 −10 HP','#ef4444');
-        if(G.hp<=0){G.hp=0; G.dying=true; setTimeout(showOver,700);}
+        floatTxt(G.px,G.py-35,'🩸 -1 vida','#ef4444');
+        if(G.lives<=0){G.lives=0; G.dying=true; setTimeout(showOver,700);}
       }
       if(G.bleedTimer<=0){ G.bleeding=false; G.bleedDropT=0; toast('🩹 Sangrado detenido','g'); }
     }
@@ -1040,10 +1252,10 @@ function update(dt){
         wo.bleedT+=dt;
         if(wo.bleedT>=2500){
           wo.bleedT=0;
-          G.hp=Math.max(0,G.hp-8);   // herida: -8 HP/tick, bypasea iframes
+          G.lives=Math.max(0,G.lives-1);
           G.dmg=280; G.shake=140;
-          floatTxt(wo.x,wo.y-15,'🩸 herida −8 HP','#ef4444');
-          if(G.hp<=0){G.hp=0; G.dying=true; setTimeout(showOver,700);}
+          floatTxt(wo.x,wo.y-15,'🩸 herida -1','#ef4444');
+          if(G.lives<=0){G.lives=0; G.dying=true; setTimeout(showOver,700);}
         }
         /* nave cerca con plaqueta → sellar */
         if(G.carryingPlatelet){
@@ -1087,6 +1299,7 @@ function update(dt){
   if(G.phase==='mini'){
     if(G.flightProg>=100){
       /* llegamos a la válvula — iniciar animación de entrada */
+      playSFX('sfx-valve');
       G.phase='entering_valve';
       G.transY=G.py;
       G.transVY=-3;
@@ -1124,7 +1337,10 @@ function update(dt){
         var tcx=G.px-tu.x, tcy=G.py-tu.y;
         if(tcx*tcx+tcy*tcy<(22+G.pr)*(22+G.pr)){
           G.turretCd=1400;
-          hitLife(15,'🩸 ¡Trombo impactó la nave!');
+          G.lives--; G.dmg=720; G.shake=420; G.combo=0;
+          playSFX('sfx-player-hurt');
+          toast('🩸 ¡Trombo impactó la nave!','r');
+          if(G.lives<=0){G.lives=0; G.dying=true; setTimeout(showOver,700);}
         }
       }
       aLive.push(tu);
@@ -1178,7 +1394,10 @@ function update(dt){
           var ecdx=G.px-ec.x, ecdy=G.py-ec.y;
           if(ecdx*ecdx+ecdy*ecdy<(ec.r+G.pr)*(ec.r+G.pr)){
             G.turretCd=1400;
-            hitLife(15,'🦠 ¡Escolta impactó la nave!');
+            G.lives--; G.dmg=720; G.shake=420; G.combo=0;
+            playSFX('sfx-player-hurt');
+            toast('🦠 ¡Escolta impactó la nave!','r');
+            if(G.lives<=0){G.lives=0; G.dying=true; setTimeout(showOver,700);}
             burst(ec.x,ec.y,'#ef4444',12);
             continue; /* destruir escolta */
           }
@@ -1200,17 +1419,12 @@ function update(dt){
       if(b2.dyingTimer<=0){
         burst(b2.x,b2.y,'#fbbf24',35); burst(b2.x,b2.y,'#fff',20);
         G.bossClones=[];
+        /* soltar vida recogible */
+        G.powerups.push({x:b2.x, y:b2.y, id:'life', label:'❤️ +VIDA', col:'#ef4444', r:14, spd:1.4, pulse:0});
+        toast('❤️ ¡El jefe soltó una vida!','g');
         G.boss=null;
-        if(G.levelIdx===4){
-          /* último jefe → MODO HORDA directo */
-          activateHorda();
-        } else {
-          /* soltar vida recogible */
-          G.powerups.push({x:b2.x, y:b2.y, id:'life', label:'❤️ +VIDA', col:'#ef4444', r:14, spd:1.4, pulse:0});
-          toast('❤️ ¡El jefe soltó una vida!','g');
-          G.phase='exiting_level';
-          G.exitTimer=600;
-        }
+        G.phase='exiting_level';
+        G.exitTimer=600;
         return;
       }
     } else if(!G.valveAnimating){
@@ -1223,14 +1437,14 @@ function update(dt){
       if(G.bossBodyCd<=0){
         var bcdx=G.px-b2.x, bcdy=G.py-b2.y;
         if(bcdx*bcdx+bcdy*bcdy<(b2.r+G.pr)*(b2.r+G.pr)){
-          G.bossBodyCd=1400; hitLife(35,'💥 ¡Colisión con el jefe!');
+          G.bossBodyCd=1400; hitLife('💥 ¡Colisión con el jefe!');
         }
         /* clones de Leucemia */
         for(var bci=0;bci<G.bossClones.length;bci++){
           var bcl=G.bossClones[bci];
           var cldx=G.px-bcl.x, cldy=G.py-bcl.y;
           if(cldx*cldx+cldy*cldy<(bcl.r+G.pr)*(bcl.r+G.pr)){
-            G.bossBodyCd=1400; hitLife(35,'💥 ¡Clon de Leucemia impactó!'); break;
+            G.bossBodyCd=1400; hitLife('💥 ¡Clon de Leucemia impactó!'); break;
           }
         }
       }
@@ -1288,7 +1502,10 @@ function update(dt){
             var scx=G.px-st2.x, scy=G.py-st2.y;
             if(scx*scx+scy*scy<(22+G.pr)*(22+G.pr)){
               G.turretCd=1400;
-              hitLife(20,'🩸 ¡Absceso impactó la nave!');
+              G.lives--; G.dmg=720; G.shake=420; G.combo=0;
+              playSFX('sfx-player-hurt');
+              toast('🩸 ¡Absceso impactó la nave!','r');
+              if(G.lives<=0){G.lives=0;G.dying=true;setTimeout(showOver,700);}
               continue;
             }
           }
@@ -1538,6 +1755,7 @@ function update(dt){
               for(var k=0;k<5;k++) burst(b2.x+(Math.random()-.5)*70,b2.y+(Math.random()-.5)*45,b2.col,14);
               burst(b2.x,b2.y,'#fbbf24',25);
               G.score+=60; floatTxt(b2.x,b2.y-38,'💀 JEFE CAÍDO +60','#fbbf24');
+              playSFX('sfx-boss-death');
               toast('🏆 ¡'+b2.name+' derrotado! +60','p');
               b2.dying=true; b2.dyingTimer=1500; b2.burstCd=0;
             }
@@ -1607,11 +1825,50 @@ function update(dt){
     G.escorts=survE;
   }
 
+  /* bullet → horde pathogens */
+  if(G.phase==='endless'&&G.pathogens.length){
+    var nhp=[];
+    var bUsed={};
+    for(var pi=0;pi<G.pathogens.length;pi++){
+      var p=G.pathogens[pi];
+      var pHit=false;
+      for(var bi=0;bi<G.bullets.length;bi++){
+        if(bUsed[bi]) continue;
+        var b=G.bullets[bi];
+        var dx=b.x-p.x, dy=b.y-p.y;
+        if(dx*dx+dy*dy<p.r*p.r){
+          bUsed[bi]=true;
+          var dmg=G.double?2:1;
+          p.hp-=dmg; p.hit=200;
+          burst(b.x,b.y,p.col,4);
+          playSFX('sfx-enemy-hit');
+          if(p.hp<=0){
+            burst(p.x,p.y,p.col,12); burst(p.x,p.y,'#fbbf24',8);
+            playSFX('sfx-enemy-death');
+            G.hordeKills++; G.enemyKilled++; G.combo++;
+            if(G.combo>G.bestCombo) G.bestCombo=G.combo;
+            var bon=G.combo>=5?5:G.combo>=3?2:0;
+            G.score+=50+bon;
+            floatTxt(p.x,p.y-18,'💀 +'+(50+bon),'#fbbf24');
+            checkHordeMilestone();
+            pHit=true;
+          }
+          break;
+        }
+      }
+      if(!pHit) nhp.push(p);
+    }
+    G.pathogens=nhp;
+    var cleanB=[];
+    for(var bi=0;bi<G.bullets.length;bi++) if(!bUsed[bi]) cleanB.push(G.bullets[bi]);
+    G.bullets=cleanB;
+  }
+
   /* items fall */
   var ni=[];
   for(var i=0;i<G.items.length;i++){
     var it=G.items[i];it.y+=it.spd;
-    if(it.y>H+40){if(it.enemy){G.combo=0;hitLife(8,'🦠 ¡Enfermedad escapó!');}}
+    if(it.y>H+40){if(it.enemy){G.combo=0;hitLife('🦠 ¡Enfermedad escapó!');}}
     else ni.push(it);
   }
   G.items=ni;
@@ -1636,7 +1893,7 @@ function update(dt){
           G.allyHit++;G.combo=0;burst(it.x,it.y,'#ef4444',8);
           floatTxt(it.x,it.y-14,'¡Aliado!','#f87171');
           toast('💔 ¡Disparaste a '+it.word+'!','r');
-          hitLife(5,'💔 ¡Componente dañado!');
+          hitLife('💔 ¡Componente dañado!');
         }
         break;
       }
@@ -1655,9 +1912,10 @@ function update(dt){
     var cy=Math.max(it.y-19,Math.min(G.py,it.y+19));
     var dx=G.px-cx,dy=G.py-cy;
     if(dx*dx+dy*dy<G.pr*G.pr){
-      if(it.enemy){G.combo=0;burst(it.x,it.y,'#ef4444',10);floatTxt(it.x,it.y-14,'💥','#f87171');hitLife(15,'💥 ¡La nave fue golpeada!'); /* TODO: verificar daño */}
+      if(it.enemy){G.combo=0;burst(it.x,it.y,'#ef4444',10);floatTxt(it.x,it.y-14,'💥','#f87171');hitLife('💥 ¡La nave fue golpeada!');}
       else {
         G.allyCollected++;G.score+=8;burst(it.x,it.y,'#22c55e',9);
+        playSFX('sfx-pickup');
         if(G.phase==='mini') G.flightProg=Math.min(100,G.flightProg+2);
         /* L1 Anemia: restaurar visión */
         if(G.levelIdx===0&&(it.word==='Eritrocito'||it.word==='Glóbulo rojo'||it.word==='Hemoglobina')){
@@ -1695,27 +1953,45 @@ function update(dt){
           G.sepsisProgress=Math.max(0,G.sepsisProgress-8);
           floatTxt(it.x,it.y-28,'⚡ alcance +','#22c55e');
         }
-        if(G.allyCollected%6===0){
-          G.hp=Math.min(G.hpMax, G.hp+20);
-          burst(it.x,it.y-22,'#22c55e',10);
-          floatTxt(it.x,it.y-38,'❤️ +20 HP','#22c55e');
-          toast('❤️ ¡+20 HP! ('+G.allyCollected+' rescates)','g');
+        if(G.allyCollected%6===0&&G.lives<LIVES_MAX){
+          G.lives++;burst(it.x,it.y-22,'#ef4444',10);
+          floatTxt(it.x,it.y-38,'❤️ +VIDA','#ef4444');
+          toast('❤️ ¡Vida extra! ('+G.allyCollected+' rescates)','g');
         } else {floatTxt(it.x,it.y-14,'🩸 +8','#22c55e');toast('🩸 '+it.word+' recolectado','g');}
       }
     } else ni2.push(it);
   }
   G.items=ni2;
 
-  /* pathogens */
-  var np=[];
-  for(var i=0;i<G.pathogens.length;i++){
-    var p=G.pathogens[i];p.x+=p.vx;p.y+=p.vy;p.spin+=.08;
-    if(p.y>H+20) continue;
-    var dx=G.px-p.x,dy=G.py-p.y;
-    if(dx*dx+dy*dy<(G.pr+p.r)*(G.pr+p.r)){burst(p.x,p.y,'#f97316',8);hitLife(15,'☣️ ¡Patógeno impactó!');}
-    else np.push(p);
+  /* pathogens (niveles normales) */
+  if(G.phase!=='endless'){
+    var np=[];
+    for(var i=0;i<G.pathogens.length;i++){
+      var p=G.pathogens[i];p.x+=p.vx;p.y+=p.vy;p.spin+=.08;
+      if(p.y>H+20) continue;
+      var dx=G.px-p.x,dy=G.py-p.y;
+      if(dx*dx+dy*dy<(G.pr+p.r)*(G.pr+p.r)){burst(p.x,p.y,'#f97316',8);hitLife('☣️ ¡Patógeno impactó!');}
+      else np.push(p);
+    }
+    G.pathogens=np;
   }
-  G.pathogens=np;
+
+  /* pathogens horda (modo Endless) */
+  if(G.phase==='endless'){
+    var nph=[];
+    for(var i=0;i<G.pathogens.length;i++){
+      var p=G.pathogens[i];p.x+=p.vx;p.y+=p.vy;p.spin+=.08;
+      if(p.y>H+20) continue;
+      var dx=G.px-p.x,dy=G.py-p.y;
+      if(dx*dx+dy*dy<(G.pr+p.r)*(G.pr+p.r)){
+        burst(p.x,p.y,'#f97316',8);hitLife('☣️ ¡Patógeno Horda impactó!');
+        /* no seguir empujando este patógeno */
+      } else {
+        nph.push(p);
+      }
+    }
+    G.pathogens=nph;
+  }
 
   /* ── onda expansiva de Sepsis ── */
   if(G.shockwave){
@@ -1725,7 +2001,7 @@ function update(dt){
     var sdist=Math.sqrt(sdx*sdx+sdy*sdy);
     if(sdist<sw.r&&sdist>sw.r-18){
       G.shockwave=null;
-      hitLife(20,'☢️ ¡Onda expansiva de Sepsis!');
+      hitLife('☢️ ¡Onda expansiva de Sepsis!');
     } else if(sw.r>=sw.maxR){
       G.shockwave=null;
     }
@@ -1742,17 +2018,23 @@ function update(dt){
   }
   G.powerups=npu;
 
-  /* spawn timers */
-  var now=Date.now(), spMs=Math.max(1400,2800-G.levelIdx*200);
-  if(G.phase==='horda'){
-    /* horda: cadencia más alta, usa spawnItemHorda */
-    checkHordaRotation();
-    var hMs=Math.max(900,2000-G.levelIdx*150);
-    if(now-G.spawnT>hMs){spawnItemHorda();G.spawnT=now;}
-    if(now-G.puSpawnT>11000+Math.random()*4000){spawnPowerup();G.puSpawnT=now;}
-  } else {
+  /* spawn timers (solo en niveles normales) */
+  if(G.phase!=='endless'){
+    var now=Date.now(), spMs=Math.max(1400,2800-G.levelIdx*200);
     if(now-G.spawnT>spMs){spawnItem();G.spawnT=now;}
     if(now-G.puSpawnT>11000+Math.random()*4000){spawnPowerup();G.puSpawnT=now;}
+  }
+
+  /* spawn horda */
+  if(G.phase==='endless'){
+    var now=Date.now();
+    if(G.hordeSpawnT===0) G.hordeSpawnT=now;
+    if(now-G.hordeSpawnT>G.hordeSpawnInterval){
+      spawnHordeEnemy();
+      G.hordeSpawnT=now;
+      /* acelerar spawn gradualmente (mínimo 800ms) */
+      G.hordeSpawnInterval=Math.max(800,G.hordeSpawnInterval-15);
+    }
   }
 
   /* particles */
@@ -2063,7 +2345,7 @@ function draw(){
   drawHUD();
 
   /* ── Indicador trackpad (punto tenue donde toca el dedo) ── */
-  if(IS_TOUCH&&trackpad.active&&G&&(G.phase==='mini'||G.phase==='boss'||G.phase==='entering_valve'||G.phase==='exiting_level'||G.phase==='horda')){
+  if(IS_TOUCH&&trackpad.active&&G&&(G.phase==='mini'||G.phase==='boss'||G.phase==='entering_valve'||G.phase==='exiting_level')){
     ctx.save();
     ctx.globalAlpha=0.22;
     ctx.beginPath(); ctx.arc(trackpad.lastX, trackpad.lastY, 22, 0, Math.PI*2);
@@ -2936,14 +3218,7 @@ function drawItems(){
     ctx.fillStyle='rgba(18,13,16,.95)';
     rr(x,y,it.w,IH,9); ctx.fill();
 
-    if(it.pulsing){
-      /* HORDA ciclo 3+: borde alerta rojo/amarillo alternado */
-      var pColNow=Math.floor(now/200)%2===0?'#ef4444':'#fbbf24';
-      ctx.shadowColor=pColNow; ctx.shadowBlur=12+pulse*8;
-      ctx.strokeStyle=pColNow; ctx.lineWidth=2.5;
-      rr(x,y,it.w,IH,9); ctx.stroke();
-      ctx.shadowBlur=0;
-    } else if(it.defective){
+    if(it.defective){
       ctx.shadowColor='rgba(245,158,11,.55)'; ctx.shadowBlur=8+pulse*4;
       ctx.strokeStyle='rgba(245,158,11,'+(0.55+pulse*0.25)+')';
       ctx.lineWidth=2.2;
@@ -2987,10 +3262,7 @@ function drawItems(){
 function drawShip(){ drawShipAt(G.px,G.py); }
 function drawShipAt(x,y){
   var now=Date.now();
-  /* parpadeo durante iframes: alterna opacidad cada 100 ms */
-  var shipAlpha=(G.iframes>0&&Math.floor(G.iframes/100)%2===0)?0.3:1.0;
   ctx.save(); ctx.translate(x,y); ctx.scale(1.35,1.35);
-  ctx.globalAlpha=shipAlpha;
 
   /* ── Motor: llama propulsora ── */
   var fHz=now*0.025, fH=12+Math.sin(fHz)*5;
@@ -3205,8 +3477,7 @@ function drawFloats(){
 
 /* ── ECG ── */
 function drawECG(x,y,w,h){
-  var hf=G.hp/G.hpMax;
-  var col=hf>0.6?'#22c55e':hf>0.3?'#f59e0b':'#ef4444';
+  var col=G.lives>=5?'#22c55e':G.lives>=3?'#f59e0b':'#ef4444';
   ctx.save();ctx.fillStyle='rgba(0,0,0,.38)';rr(x,y,w,h,4);ctx.fill();
   ctx.beginPath();ctx.rect(x+1,y+1,w-2,h-2);ctx.clip();
   ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.shadowColor=col;ctx.shadowBlur=5;
@@ -3228,25 +3499,26 @@ function drawHUD(){
   ctx.strokeStyle='rgba(255,80,40,.10)';ctx.lineWidth=0.8;
   ctx.beginPath();ctx.moveTo(0,57);ctx.lineTo(W,57);ctx.stroke();
 
-  /* ── barra de salud HP ── */
-  var bx=12, by=12, bw=120, bh=10;
-  var hpFrac=G.hp/G.hpMax;
-  var hpCol=hpFrac>0.6?'#22c55e':hpFrac>0.3?'#fbbf24':'#ef4444';
-  /* pista */
-  ctx.fillStyle='rgba(0,0,0,0.5)'; rr(bx,by,bw,bh,5); ctx.fill();
-  ctx.strokeStyle='#3a1020'; ctx.lineWidth=1; rr(bx,by,bw,bh,5); ctx.stroke();
-  /* relleno con gradiente */
-  if(hpFrac>0){
-    var hGrd=ctx.createLinearGradient(bx,0,bx+bw*hpFrac,0);
-    hGrd.addColorStop(0,hpCol); hGrd.addColorStop(1,'rgba(255,255,255,0.18)');
-    ctx.fillStyle=hGrd;
-    ctx.shadowColor=hpCol; ctx.shadowBlur=hpFrac<0.3?8:4;
-    rr(bx,by,bw*hpFrac,bh,5); ctx.fill();
-    ctx.shadowBlur=0;
+  /* vidas como aviones */
+  var hw=19;
+  for(var i=0;i<LIVES_MAX;i++){
+    ctx.globalAlpha=i<G.lives?1:.10;
+    var lx=12+i*hw, ly=30;
+    ctx.save(); ctx.translate(lx,ly);
+    ctx.fillStyle=i<G.lives?'#88ccff':'#446';
+    ctx.shadowColor=i<G.lives?'#44aaff':'transparent';
+    ctx.shadowBlur=i<G.lives?6:0;
+    ctx.beginPath(); ctx.ellipse(0,0,2.5,5.5,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-1,1); ctx.lineTo(-7,4); ctx.lineTo(-4,5); ctx.lineTo(0,3);
+    ctx.lineTo(4,5);  ctx.lineTo(7,4);  ctx.lineTo(1,1);
+    ctx.closePath(); ctx.fill();
+    ctx.shadowBlur=0; ctx.restore();
   }
+  ctx.globalAlpha=1;
 
   /* ECG */
-  drawECG(bx+bw+8,by,52,28);
+  drawECG(14+LIVES_MAX*hw,12,52,28);
 
   /* score */
   ctx.textAlign='center';
@@ -3271,31 +3543,26 @@ function drawHUD(){
     ctx.fillText('🔥 x'+G.combo,W/2,50);ctx.shadowBlur=0;
   }
 
-  /* nivel / horda */
+  /* nivel */
   var lv=LD[G.levelIdx];
   ctx.font='bold 11px Nunito,sans-serif';ctx.textAlign='right';
-  if(G.phase==='horda'){
-    /* temporizador HORDA */
-    var hordaSec=Math.floor((Date.now()-G.hordaStartTime)/1000);
-    var hm=Math.floor(hordaSec/60), hs=hordaSec%60;
-    var hTime=(hm>0?hm+'m ':'')+hs+'s';
-    var hPulse=Math.floor(Date.now()/400)%2===0;
-    ctx.fillStyle=hPulse?'#f97316':'#fbbf24';
-    ctx.shadowColor='#f97316';ctx.shadowBlur=8;
-    ctx.fillText('🔥 HORDA · '+hTime,W-10,22);ctx.shadowBlur=0;
-    /* oleada actual */
-    var hLv=LD[G.hordaActiveDisease];
-    var hCycle=G.hordaCompletedCycles[G.hordaActiveDisease];
-    ctx.font='bold 9px Nunito,sans-serif';
-    ctx.fillStyle=hLv.col;ctx.shadowColor=hLv.col;ctx.shadowBlur=4;
-    ctx.fillText('Oleada: '+hLv.disease+(hCycle>0?' ×'+(hCycle+1):''),W-10,36);ctx.shadowBlur=0;
+  var hudText, hudCol;
+  if(G.hordeMode){
+    hudText='∞ HORDA · '+G.hordeKills+' kills';
+    hudCol='#00d4ff';
+  } else if(lv.oficial){
+    hudText='LV '+(G.levelIdx+1)+'/5 · '+lv.disease;
+    hudCol=lv.col;
   } else {
-    ctx.fillStyle=lv.col;ctx.shadowColor=lv.col;ctx.shadowBlur=5;
-    ctx.fillText('LV '+(G.levelIdx+1)+' · '+lv.disease,W-10,22);ctx.shadowBlur=0;
-    /* phase label */
-    var phLbl=G.phase==='mini'?'Volando al vaso…':G.phase==='boss'?'⚔️ Jefe en válvula':'';
-    if(phLbl){ctx.font='9px Nunito,sans-serif';ctx.fillStyle='#cc7070';ctx.fillText(phLbl,W-10,36);}
+    hudText='ARCH '+(G.levelIdx-4)+'/3 · '+lv.disease;
+    hudCol='#fbbf24';
   }
+  ctx.fillStyle=hudCol;ctx.shadowColor=hudCol;ctx.shadowBlur=5;
+  ctx.fillText(hudText,W-10,22);ctx.shadowBlur=0;
+
+  /* phase label */
+  var phLbl=G.phase==='mini'?'Volando al vaso…':G.phase==='boss'?'⚔️ Jefe en válvula':'';
+  if(phLbl){ctx.font='9px Nunito,sans-serif';ctx.fillStyle='#cc7070';ctx.fillText(phLbl,W-10,36);}
 
   /* checkpoint */
   if(G.checkpoint>0){
@@ -3437,7 +3704,7 @@ function buildStats(el){
     '<div class="stat-box good"><div class="stat-num">'+G.enemyKilled+'</div><div class="stat-lbl">Enfermedades ☠️</div></div>'+
     '<div class="stat-box good"><div class="stat-num">'+G.allyCollected+'</div><div class="stat-lbl">Componentes 🩸</div></div>'+
     '<div class="stat-box bad"><div class="stat-num">'+G.allyHit+'</div><div class="stat-lbl">Aliados dañados</div></div>'+
-    '<div class="stat-box"><div class="stat-num">'+G.hp+'/50</div><div class="stat-lbl">HP final</div></div>';
+    '<div class="stat-box"><div class="stat-num">'+(G.levelIdx+1)+'/8</div><div class="stat-lbl">Niveles superados</div></div>';
 }
 
 /* ══════════════════════════════════════════
@@ -3447,9 +3714,12 @@ document.getElementById('btn-start').addEventListener('click',function(){newGame
 document.getElementById('btn-intro').addEventListener('click',function(){showOnlyOverlay(null);startMiniPhase();});
 document.getElementById('btn-lwin').addEventListener('click',function(){showOnlyOverlay(null);advanceLevel();});
 document.getElementById('btn-retry').addEventListener('click',function(){
+  var wasHorde=G&&G.hordeMode;
   var ck=G?G.checkpoint:0, cks=G?G.checkpointScore:0;
   newGame();
-  if(ck>0){
+  if(wasHorde){
+    startEndlessMode();
+  } else if(ck>0){
     G.checkpoint=ck; G.checkpointScore=cks;
     G.score=cks;
     startLevel(ck);
@@ -3458,6 +3728,36 @@ document.getElementById('btn-retry').addEventListener('click',function(){
   }
 });
 document.getElementById('btn-win').addEventListener('click',function(){newGame();startLevel(0);});
+document.getElementById('btn-official-continue').addEventListener('click',function(){
+  startLevel(5);
+});
+document.getElementById('btn-official-finish').addEventListener('click',function(){
+  showWinAll();
+});
+document.getElementById('btn-endless-start').addEventListener('click',function(){
+  showOnlyOverlay(null);
+  startEndlessMode();
+});
+document.getElementById('btn-endless-finish').addEventListener('click',function(){
+  showWinAll();
+});
+
+/* Desbloquear audio al primer gesto */
+function _unlockOnce(){
+  unlockAudio();
+  document.removeEventListener('touchstart',_unlockOnce);
+  document.removeEventListener('click',_unlockOnce);
+  document.removeEventListener('keydown',_unlockOnce);
+}
+document.addEventListener('touchstart',_unlockOnce,{once:false,passive:true});
+document.addEventListener('click',_unlockOnce,{once:false});
+document.addEventListener('keydown',_unlockOnce,{once:false});
+
+/* Botón mute */
+document.getElementById('btn-mute').addEventListener('click',function(e){
+  e.stopPropagation();
+  toggleMute();
+});
 
 /* ══════════════════════════════════════════
    KEYBOARD
@@ -3570,11 +3870,11 @@ if(IS_TOUCH){
    TOAST
 ══════════════════════════════════════════ */
 var tTmr=null;
-function toast(msg,type,dur){
+function toast(msg,type){
   var t=document.getElementById('toast');
   if(tTmr)clearTimeout(tTmr);
   t.textContent=msg;t.className='show '+(type||'');
-  tTmr=setTimeout(function(){t.className='';},dur||2600);
+  tTmr=setTimeout(function(){t.className='';},2600);
 }
 </script>
 </body>
