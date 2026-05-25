@@ -1171,12 +1171,18 @@ function update(dt){
   updateECG(dt);
 
   /* ── scroll / flight progress ── */
-  var scrollSpd=1.8+G.levelIdx*.14;
+  var scrollSpd;
+  if(G.levelIdx<=2){
+    scrollSpd=1.3+G.levelIdx*.10;
+  } else {
+    scrollSpd=1.8+G.levelIdx*.14;
+  }
   G.scrollY+=scrollSpd;
 
   if(G.phase==='mini'){
     G.flightTime+=dt;
-    var timeProg=G.flightTime*0.0028;
+    var progFactor=(G.levelIdx<=2)?0.0018:0.0028;
+    var timeProg=G.flightTime*progFactor;
     G.flightProg=Math.min(100, Math.max(G.flightProg, timeProg));
 
     /* ── L1 Anemia: oscurecer visión (3 pts/seg → mínimo en ~22s) ── */
