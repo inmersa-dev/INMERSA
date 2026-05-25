@@ -69,7 +69,7 @@ canvas{display:block;width:100%;height:100%}
 <audio id="sfx-enemy-death"  src="Audio/SFX/enemy_death.mp3"               preload="auto"></audio>
 <audio id="sfx-player-hurt"  src="Audio/SFX/snake_game_over.mp3"           preload="auto"></audio>
 <audio id="sfx-pickup"       src="Audio/SFX/pickup_good.mp3"               preload="auto"></audio>
-<audio id="sfx-valve"        src="Audio/SFX/valve_open.mp3"                preload="auto"></audio>
+<audio id="sfx-mission"      src="Audio/SFX/mission_complete.mp3"          preload="auto"></audio>
 <audio id="sfx-quiz-ok"      src="Audio/SFX/quiz_correct.mp3"              preload="auto"></audio>
 <audio id="sfx-quiz-bad"     src="Audio/SFX/snake_rescate_incorrecto.mp3"  preload="auto"></audio>
 <audio id="sfx-boss-appear"  src="Audio/SFX/boss_appear.mp3"               preload="auto"></audio>
@@ -229,7 +229,7 @@ function unlockAudio(){
   AUDIO.unlocked=true;
   var ids=['mus-pasillo','mus-quiz','mus-boss',
     'sfx-shoot','sfx-enemy-hit','sfx-enemy-death','sfx-player-hurt',
-    'sfx-pickup','sfx-valve','sfx-quiz-ok','sfx-quiz-bad',
+    'sfx-pickup','sfx-mission','sfx-quiz-ok','sfx-quiz-bad',
     'sfx-boss-appear','sfx-boss-death','sfx-checkpoint','sfx-milestone'];
   ids.forEach(function(id){
     var a=document.getElementById(id);
@@ -513,10 +513,10 @@ initBg();
 var G=null;
 
 /* ══ Sprites ══ */
-var SPR_RBC=new Image(), SPR_RBC_OK=false, SPR_RBC_FAIL=false;
-SPR_RBC.onload =function(){ SPR_RBC_OK=true; };
-SPR_RBC.onerror=function(){ SPR_RBC_FAIL=true; console.warn('eritrocito4.png no cargó — usando fallback'); };
-SPR_RBC.src='./eritrocito4.png';
+// var SPR_RBC=new Image(), SPR_RBC_OK=false, SPR_RBC_FAIL=false;
+// SPR_RBC.onload =function(){ SPR_RBC_OK=true; };
+// SPR_RBC.onerror=function(){ SPR_RBC_FAIL=true; console.warn('eritrocito4.png no cargó — usando fallback'); };
+// SPR_RBC.src='./eritrocito4.png';
 
 function newGame(){
   G={
@@ -1299,7 +1299,7 @@ function update(dt){
   if(G.phase==='mini'){
     if(G.flightProg>=100){
       /* llegamos a la válvula — iniciar animación de entrada */
-      playSFX('sfx-valve');
+      playSFX('sfx-mission');
       G.phase='entering_valve';
       G.transY=G.py;
       G.transVY=-3;
@@ -3241,18 +3241,10 @@ function drawItems(){
 
     ctx.shadowBlur=0;
 
-    /* ── Eritrocito: sprite PNG si está disponible ── */
-    if(it.word==='Eritrocito' && SPR_RBC_OK){
-      /* escala proporcional (512:354) al ancho de la cápsula */
-      var sprW=it.w+16, sprH=sprW*(354/512);
-      ctx.shadowColor='rgba(220,60,60,0.45)'; ctx.shadowBlur=12;
-      ctx.drawImage(SPR_RBC, it.x-sprW/2, it.y-sprH/2, sprW, sprH);
-      ctx.shadowBlur=0;
-    } else {
-      ctx.fillStyle=it.defective?'#f59e0b':'#e2e0e1';
-      ctx.font='bold 14px Nunito,sans-serif'; ctx.textAlign='center';
-      ctx.fillText(it.word, it.x, it.y+6);
-    }
+    /* ── Eritrocito: solo texto en cápsula (sprite PNG eliminado por confusión visual) ── */
+    ctx.fillStyle=it.defective?'#f59e0b':'#e2e0e1';
+    ctx.font='bold 14px Nunito,sans-serif'; ctx.textAlign='center';
+    ctx.fillText(it.word, it.x, it.y+6);
 
     ctx.restore();
   }
