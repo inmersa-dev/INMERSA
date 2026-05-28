@@ -2428,52 +2428,75 @@ function drawTurrets(){
     var wallX=tu.side==='l'
       ? wallW+Math.sin(tY/50+t)*12
       : W-wallW-Math.sin(tY/50+t+Math.PI)*12;
-    /* la boca del cañón sobresale ligeramente hacia el interior */
-    var dir=tu.side==='l'?1:-1;
+    var dir=tu.side==='l'?1:-1;  /* dirección hacia el interior */
     var cx=wallX+dir*4;
     var firing=tu.flash>0;
     var fAlp=firing?(tu.flash/320):0;
 
     ctx.save(); ctx.translate(cx,tY);
 
-    /* base — protuberancia orgánica de la pared */
-    ctx.shadowColor='rgba(180,10,10,'+(0.5+fAlp*0.5)+')';
-    ctx.shadowBlur=firing?24+fAlp*18:12;
-    var bg=ctx.createRadialGradient(0,0,3,0,0,22);
-    bg.addColorStop(0, firing?'rgba(255,90,60,.9)':'rgba(140,10,10,.9)');
-    bg.addColorStop(0.55,'rgba(90,5,5,.85)');
-    bg.addColorStop(1,'rgba(40,2,2,.6)');
+    /* ── Cuerpo del bacilo: cápsula horizontal apuntando al interior ── */
+    /* El bastón se extiende desde la pared (dir negativo) hacia el centro (dir positivo) */
+    var bacLen=26, bacR=7;  /* largo y radio del bacilo */
+
+    ctx.shadowColor=firing?'rgba(120,255,90,'+(0.6+fAlp*0.4)+')':'rgba(40,180,60,.5)';
+    ctx.shadowBlur=firing?22+fAlp*16:11;
+
+    /* gradiente verde a lo largo del bacilo */
+    var bg=ctx.createLinearGradient(0,-bacR,0,bacR);
+    bg.addColorStop(0, firing?'#a0ff70':'#5fd040');
+    bg.addColorStop(0.5, firing?'#50d030':'#2a9020');
+    bg.addColorStop(1,'#0d5010');
     ctx.fillStyle=bg;
+
+    /* cápsula horizontal: dos semicírculos + rectángulo, orientada según dir */
+    var x0=-dir*8;          /* extremo pegado a la pared */
+    var x1=dir*(bacLen-8);  /* extremo hacia el interior */
     ctx.beginPath();
-    /* forma irregular tipo verruga biológica — más grande */
-    ctx.ellipse(0,0, 18,14, 0,0,Math.PI*2); ctx.fill();
+    if(ctx.roundRect){
+      var rx=Math.min(x0,x1), rw=Math.abs(x1-x0);
+      ctx.roundRect(rx, -bacR, rw, bacR*2, bacR);
+    } else {
+      /* fallback sin roundRect */
+      ctx.moveTo(x0,-bacR); ctx.lineTo(x1,-bacR);
+      ctx.arc(x1,0,bacR,-Math.PI/2,Math.PI/2,false);
+      ctx.lineTo(x0,bacR);
+      ctx.arc(x0,0,bacR,Math.PI/2,-Math.PI/2,false);
+    }
+    ctx.closePath(); ctx.fill();
     ctx.shadowBlur=0;
 
-    /* detalles — segmentos del cañón */
-    ctx.strokeStyle=firing?'rgba(255,120,80,.85)':'rgba(160,20,20,.7)';
-    ctx.lineWidth=2;
-    ctx.beginPath(); ctx.ellipse(0,0,18,14,0,0,Math.PI*2); ctx.stroke();
+    /* membrana / borde */
+    ctx.strokeStyle=firing?'rgba(160,255,120,.85)':'rgba(20,110,30,.8)';
+    ctx.lineWidth=1.6;
+    ctx.stroke();
 
-    /* boca del cañón (tubo que apunta al interior) — más largo */
-    ctx.fillStyle=firing?'rgba(255,140,90,.95)':'rgba(110,8,8,.9)';
-    ctx.beginPath();
-    ctx.roundRect
-      ? ctx.roundRect(dir*3,-4,dir*14,8,4)
-      : (function(){ctx.rect(dir*3,-4,dir*14,8);})();
-    ctx.fill();
+    /* ── Granulaciones internas (puntos oscuros, lectura de bacteria) ── */
+    ctx.fillStyle='rgba(10,60,15,.7)';
+    var spots=[
+      {x:dir*2,   y:-2,  r:1.6},
+      {x:dir*9,   y:2,   r:1.3},
+      {x:-dir*2,  y:1.5, r:1.4},
+      {x:dir*14,  y:-1.5,r:1.2}
+    ];
+    for(var sp=0;sp<spots.length;sp++){
+      var dot=spots[sp];
+      ctx.beginPath(); ctx.arc(dot.x, dot.y, dot.r, 0, Math.PI*2); ctx.fill();
+    }
 
-    /* orificio interior oscuro */
-    ctx.fillStyle='rgba(10,0,0,.92)';
-    ctx.beginPath(); ctx.ellipse(dir*17,0,5,4,0,0,Math.PI*2); ctx.fill();
+    /* brillo de superficie sutil */
+    ctx.fillStyle='rgba(220,255,200,.3)';
+    ctx.beginPath(); ctx.ellipse(dir*2,-3, 6, 2, 0, 0, Math.PI*2); ctx.fill();
 
-    /* destellos de disparo */
+    /* ── Destello de disparo (en la punta que apunta al interior) ── */
     if(firing){
+      var tipX=x1;
       ctx.globalAlpha=fAlp*0.85;
-      ctx.fillStyle='rgba(255,200,100,1)';
-      ctx.beginPath(); ctx.arc(dir*20,0,8+fAlp*6,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='rgba(180,255,120,1)';
+      ctx.beginPath(); ctx.arc(tipX+dir*6,0,8+fAlp*6,0,Math.PI*2); ctx.fill();
       ctx.globalAlpha=fAlp*0.4;
-      ctx.fillStyle='rgba(255,255,200,1)';
-      ctx.beginPath(); ctx.arc(dir*20,0,14+fAlp*8,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='rgba(230,255,200,1)';
+      ctx.beginPath(); ctx.arc(tipX+dir*6,0,14+fAlp*8,0,Math.PI*2); ctx.fill();
       ctx.globalAlpha=1;
     }
 
