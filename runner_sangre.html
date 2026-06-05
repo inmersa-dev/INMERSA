@@ -544,6 +544,23 @@ function triggerBossHit(dmg,cx,cy,color,isWeaponShot){
   }
 }
 
+/* ── FÁBRICA DE OBSTÁCULOS con comportamiento de velocidad ── */
+function _makeObs(x, lane, types){
+  var type=types[Math.floor(Math.random()*types.length)];
+  var roll=Math.random();
+  var spd, behavior;
+  if(roll<0.05){
+    spd=0.78; behavior='lunge';   /* empieza lento, se lanza a mitad */
+  }else if(roll<0.17){
+    spd=1.52; behavior='fast';    /* siempre rápido */
+  }else if(roll<0.29){
+    spd=0.68; behavior='slow';    /* siempre lento */
+  }else{
+    spd=1.0;  behavior='normal';
+  }
+  return {x:x, lane:lane, type:type, spd:spd, behavior:behavior};
+}
+
 /* ── INIT GAME ── */
 function initGame(){
   state='running';
@@ -626,20 +643,25 @@ function update(dt){
       if(sameLaneStreak>=2){newLane=1-lastSpawnLane;sameLaneStreak=1;}
       else{newLane=Math.random()<0.5?0:1;sameLaneStreak=(newLane===lastSpawnLane)?sameLaneStreak+1:1;}
       lastSpawnLane=newLane;
-      obstacles.push({x:W+60, lane:newLane, type:types[Math.floor(Math.random()*4)]});
-      /* doble obstáculo: 25% prob después de 30s, nunca durante jefe */
+      obstacles.push(_makeObs(W+60, newLane, types));
+      /* doble obstáculo: 25% prob después de 30s */
       if(gameElapsed>30&&Math.random()<0.25){
-        var gapPx=gameSpeed*0.30; /* ~0.3s de separación a velocidad actual */
-        obstacles.push({x:W+60+gapPx, lane:1-newLane, type:types[Math.floor(Math.random()*4)]});
-        sameLaneStreak=1; /* reset streak ya que el segundo va al otro carril */
+        var gapPx=gameSpeed*0.30;
+        obstacles.push(_makeObs(W+60+gapPx, 1-newLane, types));
+        sameLaneStreak=1;
       }
       spawnInterval=Math.max(0.8,2.3-ramp*1.5);
       spawnTimer=spawnInterval+(Math.random()*0.35-0.175);
     }
 
-    /* move obstacles (mundo lento) */
+    /* move obstacles */
     for(var i=obstacles.length-1;i>=0;i--){
-      obstacles[i].x-=gameSpeed*sdt*(obstacles[i].spd||1);
+      var _ob=obstacles[i];
+      /* lunge: acelera cuando pasa el centro de pantalla */
+      if(_ob.behavior==='lunge'&&_ob.x<W*0.62){
+        _ob.spd=Math.min(1.88,_ob.spd+dt*3.2);
+      }
+      _ob.x-=gameSpeed*sdt*(_ob.spd||1);
       if(obstacles[i].x<-80)obstacles.splice(i,1);
     }
 
@@ -1532,10 +1554,49 @@ function drawAstronaut(){
 function drawObstacles(){
   obstacles.forEach(function(o){
     ctx.save();ctx.translate(o.x,LANE[o.lane]);
+
+    /* ── cue visual de velocidad ── */
+    if(o.behavior==='fast'){
+      /* estela naranja hacia atrás */
+      var tg=ctx.createLinearGradient(48,0,0,0);
+      tg.addColorStop(0,'rgba(255,120,0,0)');
+      tg.addColorStop(1,'rgba(255,80,0,0.45)');
+      ctx.fillStyle=tg;
+      ctx.beginPath();ctx.ellipse(24,0,24,11,0,0,Math.PI*2);ctx.fill();
+      /* halo rojo */
+      ctx.shadowColor='rgba(255,60,0,0.7)';ctx.shadowBlur=14;
+    }else if(o.behavior==='slow'){
+      /* aura púrpura pulsante */
+      var pulse=0.5+0.5*Math.abs(Math.sin(elapsed*4));
+      ctx.globalAlpha=0.35+0.2*pulse;
+      var sg=ctx.createRadialGradient(0,0,10,0,0,32);
+      sg.addColorStop(0,'rgba(160,60,220,0.9)');
+      sg.addColorStop(1,'rgba(80,0,140,0)');
+      ctx.fillStyle=sg;
+      ctx.beginPath();ctx.arc(0,0,32,0,Math.PI*2);ctx.fill();
+      ctx.globalAlpha=1;
+      ctx.shadowColor='rgba(160,60,220,0.6)';ctx.shadowBlur=12;
+    }else if(o.behavior==='lunge'){
+      /* azul oscuro → rojo al acelerar */
+      var lungeT=Math.max(0,(o.spd-0.78)/(1.88-0.78)); /* 0=lento, 1=full speed */
+      var lr=Math.floor(20+lungeT*235), lg=Math.floor(30*(1-lungeT)), lb=Math.floor(180*(1-lungeT));
+      var pulse2=0.4+0.4*Math.abs(Math.sin(elapsed*6));
+      ctx.shadowColor='rgba('+lr+','+lg+','+lb+',0.8)';ctx.shadowBlur=16+8*pulse2;
+      /* partícula de "carga" cuando está a punto de lanzarse */
+      if(o.spd<1.0){
+        ctx.globalAlpha=0.5*(1-lungeT);
+        ctx.fillStyle='rgba(60,120,255,0.6)';
+        ctx.beginPath();ctx.arc(0,0,24*(1-lungeT*0.5),0,Math.PI*2);ctx.fill();
+        ctx.globalAlpha=1;
+      }
+    }
+
     if(o.type==='virus')dVirus();
     else if(o.type==='bacteria')dBacteria();
     else if(o.type==='fungus')dFungus();
     else dParasite(o.x);
+
+    ctx.shadowBlur=0;
     ctx.restore();
   });
 }
