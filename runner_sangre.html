@@ -61,26 +61,28 @@ function rr(x,y,w,h,r){
 
 /* ── PREGUNTAS ── */
 var QS=[
-  {q:'¿Qué componente sanguíneo transporta oxígeno?',      a:'Glóbulo Rojo',          b:'Plaqueta'},
-  {q:'¿Cuánto tiempo vive un glóbulo rojo?',                a:'120 días',               b:'7 días'},
-  {q:'¿Qué proteína carga el O₂ dentro del eritrocito?',   a:'Hemoglobina',            b:'Fibrina'},
-  {q:'¿Qué componente activa la coagulación?',              a:'Plaqueta',               b:'Plasma'},
-  {q:'¿Qué porcentaje de la sangre es plasma?',             a:'55%',                    b:'35%'},
-  {q:'¿Cuántos tipos de leucocitos existen?',               a:'5 tipos',                b:'3 tipos'},
-  {q:'¿Qué glóbulos defienden contra infecciones?',        a:'Glóbulos Blancos',       b:'Glóbulos Rojos'},
-  {q:'¿Qué enfermedad reduce los glóbulos rojos?',          a:'Anemia',                 b:'Leucemia'},
-  {q:'¿Síntoma principal de la Anemia?',                    a:'Fatiga y palidez',       b:'Fiebre y moretones'},
-  {q:'¿Qué enfermedad impide la coagulación?',              a:'Hemofilia',              b:'Talasemia'},
-  {q:'La Leucemia afecta principalmente:',                  a:'Glóbulos Blancos',       b:'Plaquetas'},
-  {q:'¿Exceso de glóbulos rojos se llama?',                 a:'Policitemia',            b:'Leucopenia'},
-  {q:'¿Síntoma de Trombocitopenia?',                        a:'Moretones espontáneos',  b:'Fiebre alta'},
-  {q:'¿Enfermedad genética de la hemoglobina?',             a:'Talasemia',              b:'Sepsis'},
-  {q:'¿Leucopenia reduce qué componente?',                  a:'Glóbulos Blancos',       b:'Glóbulos Rojos'},
-  {q:'¿Síntoma característico de Sepsis?',                  a:'Fiebre y confusión',     b:'Palidez crónica'},
-  {q:'¿Qué componente es el 90% agua?',                     a:'Plasma',                 b:'Hemoglobina'},
-  {q:'¿Cuánto viven las plaquetas?',                        a:'7–10 días',              b:'120 días'},
-  {q:'¿Qué enfermedad reduce plaquetas?',                   a:'Trombocitopenia',        b:'Policitemia'},
-  {q:'¿Cuántos glóbulos rojos hay por mm³?',               a:'5 millones',             b:'150,000'},
+  {q:'¿Cuál es un síntoma de la anemia?',                      a:'Cansancio, palidez y mareos',          b:'Sangrado prolongado'},
+  {q:'¿La anemia causa que los tejidos reciban menos qué?',    a:'Oxígeno',                              b:'Anticuerpos'},
+  {q:'¿Cuál es la enfermedad sanguínea más común del mundo?',  a:'Anemia',                               b:'Leucemia'},
+  {q:'¿Cuál es la vida media de un eritrocito?',               a:'120 días',                             b:'8–11 días'},
+  {q:'¿Qué molécula permite que el eritrocito transporte O₂?', a:'Hemoglobina',                          b:'Fibrinógeno'},
+  {q:'¿Qué enfermedad produce leucocitos descontrolados?',     a:'Leucemia',                             b:'Hemofilia'},
+  {q:'¿Cuál es el nombre común de los leucocitos?',            a:'Glóbulos blancos',                     b:'Glóbulos rojos'},
+  {q:'¿Cuál es el nombre científico de los glóbulos rojos?',   a:'Eritrocitos',                          b:'Leucocitos'},
+  {q:'¿Cuál es la función principal del eritrocito?',          a:'Transportar oxígeno',                  b:'Defender contra infecciones'},
+  {q:'¿Qué componente tiene forma de disco bicóncavo?',        a:'Eritrocito',                           b:'Plaqueta'},
+  {q:'¿Qué componente afecta la trombocitopenia?',             a:'Plaqueta',                             b:'Eritrocito'},
+  {q:'¿Qué otro nombre reciben las plaquetas?',                a:'Trombocitos',                          b:'Linfocitos'},
+  {q:'¿Cuál es la vida media de las plaquetas?',               a:'8–11 días',                            b:'120 días'},
+  {q:'¿Cuántas plaquetas por mm³ son normales?',               a:'150,000 a 450,000',                    b:'4 a 11 mil'},
+  {q:'¿La hemofilia es de qué origen?',                        a:'Genético',                             b:'Viral'},
+  {q:'¿Qué componente es el 55% del volumen sanguíneo?',       a:'Plasma',                               b:'Eritrocito'},
+  {q:'¿Qué componente fue descubierto en 1842?',               a:'Plaqueta',                             b:'Plasma'},
+  {q:'¿De qué está compuesto principalmente el plasma?',       a:'90% agua',                             b:'90% proteínas'},
+  {q:'¿La sepsis es causada por qué?',                         a:'Una infección',                        b:'Falta de hierro'},
+  {q:'¿Cuáles son las células más numerosas de la sangre?',    a:'Eritrocitos',                          b:'Leucocitos'},
+  {q:'¿Por qué el eritrocito tiene color rojo?',               a:'Por el hierro de la hemoglobina',      b:'Por reacción con oxígeno'},
+  {q:'¿Qué componente defiende contra infecciones?',           a:'Leucocitos',                           b:'Plaquetas'},
 ];
 
 /* ── ESTADO ── */
@@ -91,8 +93,8 @@ var obstacles=[],spawnTimer=2.3,spawnInterval=2.3;
 var sameLaneStreak=0,lastSpawnLane=-1;
 var usedQIdx=[],qCurrent=null,gates=null,plat=null;
 var qPhase='',qReadTimer=0;
-var pendingQuestion=false,qSeq=0,gateFlash=null;
-var qMarks=[],qMarkTimer=12;
+var pendingQuestion=false,gateFlash=null;
+var qMarks=[],qMarkTimer=30;
 var shield=false,shieldTimer=0;
 var SHIELD_DURATION=8;
 var pillCount=0,pills=[],pillFX=[];
@@ -201,16 +203,15 @@ var _ALL_AUDIO_IDS=[
 function unlockAudio(){
   if(AUDIO.unlocked)return;
   AUDIO.unlocked=true;
+  /* Solo calentar SFX — las pistas mus-* las maneja playMusic()
+     directamente y no necesitan warm-up (evita race condition). */
   _ALL_AUDIO_IDS.forEach(function(id){
+    if(id.indexOf('mus-')===0)return;   /* saltar música */
     var a=document.getElementById(id);
     if(!a)return;
     var ov=a.volume; a.volume=0;
     var p=a.play();
-    if(p&&p.then)p.then(function(){
-      a.volume=ov;
-      /* NO pausar si ya es la pista activa — evita race con playMusic() */
-      if(AUDIO.currentMusic!==id){a.pause();a.currentTime=0;}
-    }).catch(function(){});
+    if(p&&p.then)p.then(function(){a.pause();a.currentTime=0;a.volume=ov;}).catch(function(){});
   });
 }
 
@@ -551,8 +552,8 @@ function initGame(){
   obstacles=[];spawnTimer=2.3;spawnInterval=2.3;
   sameLaneStreak=0;lastSpawnLane=-1;
   usedQIdx=[];qCurrent=null;gates=null;
-  qPhase='';qReadTimer=0;pendingQuestion=false;qSeq=0;bgScroll=0;
-  qMarks=[];qMarkTimer=8;
+  qPhase='';qReadTimer=0;pendingQuestion=false;bgScroll=0;
+  qMarks=[];qMarkTimer=30+Math.random()*10;
   shield=false;shieldTimer=0;
   pillCount=0;pills=[];pillFX=[];lifeUpFX=null;
   virusBoss=null;parasiteBoss=null;parasiteProjs=[];
@@ -668,7 +669,7 @@ function update(dt){
       qMarkTimer-=sdt;
       if(qMarkTimer<=0&&qMarks.length===0){
         qMarks.push({x:W+60, lane:Math.random()<0.5?0:1});
-        qMarkTimer=18+Math.random()*4;
+        qMarkTimer=30+Math.random()*10;
       }
     }
 
@@ -682,7 +683,7 @@ function update(dt){
         qMarks=[];obstacles=[];spawnTimer=99;
         if(!virusBoss)pills.push({x:W+90, lane:1});
         playSFX('sfx-question');  /* activación pregunta */
-        qSeq=0;state='question';qPhase='reading';qReadTimer=2.8;
+        state='question';qPhase='reading';qReadTimer=2.8;
         pickQuestion();sndQ();
         duckMusicForQuiz();  /* baja volumen al 35%, no cambia pista */
         break;
@@ -691,7 +692,7 @@ function update(dt){
 
     /* ── SPAWN DE JEFE — estructura escalonada 6/12/18 respuestas correctas ── */
     if(!virusBoss&&!parasiteBoss&&!tumorBoss){
-      if(!bossVirusDefeated&&correctAns>=6){
+      if(!bossVirusDefeated&&correctAns>=3){
         pills=[];qMarks=[];treatPickups=[];treatPickupTimer=2.5;
         var br=Math.min(88,H*0.15);
         virusBoss={r:br,hp:8,maxHp:8,t:0,
@@ -699,14 +700,14 @@ function update(dt){
           pendingLane:Math.random()<0.5?0:1,
           isDying:false,dyingTimer:0};
         playSFX('sfx-boss-appear');playMusic('mus-jefe');
-      }else if(bossVirusDefeated&&!bossParasiteDefeated&&correctAns>=12){
+      }else if(bossVirusDefeated&&!bossParasiteDefeated&&correctAns>=6){
         pills=[];qMarks=[];treatPickups=[];treatPickupTimer=2.5;
         parasiteBoss={hp:12,maxHp:12,t:0,
           shootTimer:3.5+Math.random()*0.8,
           headGlow:0,isDying:false,dyingTimer:0};
         parasiteProjs=[];
         playSFX('sfx-boss-appear');playMusic('mus-jefe');
-      }else if(bossParasiteDefeated&&!bossTumorDefeated&&correctAns>=18){
+      }else if(bossParasiteDefeated&&!bossTumorDefeated&&correctAns>=9){
         pills=[];qMarks=[];treatPickups=[];treatPickupTimer=2.5;
         var tbH=H*0.46;
         tumorBoss={hp:20,maxHp:20,t:0,
@@ -1187,21 +1188,9 @@ function update(dt){
     if(gateFlash&&gateFlash.timer>0) gateFlash.timer-=dt;
     resultTimer-=dt;
     if(resultTimer<=0){
-      qSeq++;
-      if(qSeq<2){
-        state='question';
-        qPhase='reading';
-        qReadTimer=2.8;
-        pickQuestion();
-        sndQ();
-        duckMusicForQuiz();  /* mantiene volumen al 35% entre preguntas del par */
-      }else{
-        qSeq=0;
-        state='running';
-        spawnTimer=2.0;
-        /* volver a música correcta al salir del quiz */
-        unduckMusicForQuiz();  /* sube volumen al 100%, misma pista */
-      }
+      state='running';
+      spawnTimer=2.0;
+      unduckMusicForQuiz();  /* sube volumen al 100%, misma pista */
     }
   }
 
@@ -2895,29 +2884,29 @@ function drawQMarks(){
     ctx.save();
     ctx.translate(x,y);
 
-    /* outer glow halo */
+    /* outer glow halo — verde */
     ctx.globalAlpha=0.22*pulse;
     var halo=ctx.createRadialGradient(0,0,6,0,0,38);
-    halo.addColorStop(0,'rgba(80,200,255,0.95)');
-    halo.addColorStop(1,'rgba(80,200,255,0)');
+    halo.addColorStop(0,'rgba(34,197,94,0.95)');
+    halo.addColorStop(1,'rgba(34,197,94,0)');
     ctx.fillStyle=halo;
     ctx.beginPath();ctx.arc(0,0,38,0,Math.PI*2);ctx.fill();
 
-    /* pulsing ring */
+    /* pulsing ring — verde acento */
     ctx.globalAlpha=0.75*pulse;
-    ctx.strokeStyle='rgba(100,220,255,0.95)';ctx.lineWidth=2.5;
+    ctx.strokeStyle='rgba(34,197,94,0.95)';ctx.lineWidth=2.5;
     ctx.beginPath();ctx.arc(0,0,23,0,Math.PI*2);ctx.stroke();
 
-    /* orb fill */
+    /* orb fill — fondo oscuro verde */
     ctx.globalAlpha=0.95;
     var bg=ctx.createRadialGradient(-4,-5,2,0,0,20);
-    bg.addColorStop(0,'#0d2a42');bg.addColorStop(1,'#071525');
+    bg.addColorStop(0,'rgba(20,80,40,0.95)');bg.addColorStop(1,'#061a0d');
     ctx.fillStyle=bg;
     ctx.beginPath();ctx.arc(0,0,20,0,Math.PI*2);ctx.fill();
 
-    /* "?" glyph */
-    ctx.shadowColor='rgba(100,220,255,0.9)';ctx.shadowBlur=14;
-    ctx.fillStyle='#64dcff';
+    /* "?" glyph — verde vibrante con glow verde */
+    ctx.shadowColor='rgba(34,197,94,0.9)';ctx.shadowBlur=14;
+    ctx.fillStyle='#22c55e';
     ctx.font='bold 22px Nunito,sans-serif';
     ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillText('?',0,1);
@@ -2925,7 +2914,7 @@ function drawQMarks(){
 
     /* inner shine */
     ctx.globalAlpha=0.35;
-    ctx.fillStyle='rgba(200,240,255,0.7)';
+    ctx.fillStyle='rgba(174,240,200,0.7)';
     ctx.beginPath();ctx.ellipse(-5,-6,5,3,-0.5,0,Math.PI*2);ctx.fill();
 
     ctx.globalAlpha=1;
@@ -3001,11 +2990,11 @@ function drawGates(){
   var gx=gates.x;
   var gw=Math.min(260,W*0.28),gh=88;
 
-  /* progress bar showing how close gates are */
+  /* barra de progreso — verde */
   var prog=Math.max(0,Math.min(1,1-(gx-player.x)/(W-player.x)));
-  ctx.fillStyle='rgba(120,60,0,0.25)';
+  ctx.fillStyle='rgba(21,128,61,0.25)';
   rr(0,H-6,W,6,0);ctx.fill();
-  ctx.fillStyle='rgba(220,140,40,0.7)';
+  ctx.fillStyle='rgba(34,197,94,0.7)';
   rr(0,H-6,W*prog,6,0);ctx.fill();
 
   [0,1].forEach(function(lane){
@@ -3013,27 +3002,29 @@ function drawGates(){
     var text=lane===0?qCurrent.top:qCurrent.bot;
 
     ctx.save();ctx.translate(gx,gy);
-    ctx.shadowColor='rgba(220,140,40,0.5)';ctx.shadowBlur=18;
-    ctx.fillStyle='#1a0e00';
-    ctx.strokeStyle='#c87820';ctx.lineWidth=2.5;
+    /* caja verde */
+    ctx.shadowColor='rgba(34,197,94,0.45)';ctx.shadowBlur=18;
+    ctx.fillStyle='rgba(20,80,40,0.55)';
+    ctx.strokeStyle='#22c55e';ctx.lineWidth=2.5;
     rr(-gw/2,-gh/2,gw,gh,10);ctx.fill();ctx.stroke();
     ctx.shadowBlur=0;
 
-    /* lane arrow indicator */
-    ctx.fillStyle='rgba(220,160,60,0.6)';
+    /* flecha de carril — verde claro */
+    ctx.fillStyle='rgba(174,240,200,0.75)';
     ctx.font='14px sans-serif';
     ctx.textAlign='left';ctx.textBaseline='middle';
     ctx.fillText(lane===0?'▲':'▼',-gw/2+8,0);
 
-    ctx.fillStyle='#ffe8b0';
+    /* texto de respuesta — blanco para máxima legibilidad */
+    ctx.fillStyle='#ffffff';
     ctx.font='bold 30px Nunito,sans-serif';
     ctx.textAlign='center';ctx.textBaseline='middle';
     wrapTextC(text,6,0,gw-30,34);
     ctx.restore();
   });
 
-  /* vertical connector */
-  ctx.strokeStyle='rgba(100,180,255,0.1)';ctx.lineWidth=1.5;ctx.setLineDash([4,8]);
+  /* conector vertical — verde tenue */
+  ctx.strokeStyle='rgba(34,197,94,0.12)';ctx.lineWidth=1.5;ctx.setLineDash([4,8]);
   ctx.beginPath();ctx.moveTo(gx,LANE[0]+31);ctx.lineTo(gx,LANE[1]-31);ctx.stroke();
   ctx.setLineDash([]);
 }
@@ -3043,43 +3034,42 @@ function drawPlat(){
   if(!plat||!qCurrent)return;
   var ansEdge=plat.x+plat.platW;
   var bw=Math.min(200,plat.platW*0.65), bh=76;
-  var col='#c87820', fill='#1a0e00';
 
-  /* progress bar */
+  /* barra de progreso — verde */
   var prog=Math.max(0,Math.min(1,1-(ansEdge-player.x)/(W-player.x)));
-  ctx.fillStyle='rgba(120,60,0,0.25)';rr(0,H-6,W,6,0);ctx.fill();
-  ctx.fillStyle='rgba(220,140,40,0.7)';rr(0,H-6,W*prog,6,0);ctx.fill();
+  ctx.fillStyle='rgba(21,128,61,0.25)';rr(0,H-6,W,6,0);ctx.fill();
+  ctx.fillStyle='rgba(34,197,94,0.7)';rr(0,H-6,W*prog,6,0);ctx.fill();
 
   ctx.save();
 
-  /* ── CAJA SUPERIOR — centrada en carril 0 ── */
+  /* ── CAJA SUPERIOR — carril 0 ── */
   var tbx=ansEdge-bw, tby=LANE[0]-bh/2;
-  ctx.shadowColor='rgba(220,140,40,0.55)';ctx.shadowBlur=18;
-  ctx.fillStyle=fill;ctx.strokeStyle=col;ctx.lineWidth=2.5;
+  ctx.shadowColor='rgba(34,197,94,0.5)';ctx.shadowBlur=18;
+  ctx.fillStyle='rgba(20,80,40,0.55)';ctx.strokeStyle='#22c55e';ctx.lineWidth=2.5;
   rr(tbx,tby,bw,bh,10);ctx.fill();ctx.stroke();
   ctx.shadowBlur=0;
-  ctx.fillStyle='rgba(220,160,60,0.75)';ctx.font='14px sans-serif';
+  ctx.fillStyle='rgba(174,240,200,0.75)';ctx.font='14px sans-serif';
   ctx.textAlign='left';ctx.textBaseline='middle';
   ctx.fillText('▲',tbx+8,tby+bh/2);
-  ctx.fillStyle='#ffe8b0';ctx.font='bold 27px Nunito,sans-serif';
+  ctx.fillStyle='#ffffff';ctx.font='bold 27px Nunito,sans-serif';
   ctx.textAlign='center';ctx.textBaseline='middle';
   wrapTextC(qCurrent.top,tbx+bw/2+8,tby+bh/2,bw-32,29);
 
-  /* ── CAJA INFERIOR — centrada en carril 1 ── */
+  /* ── CAJA INFERIOR — carril 1 ── */
   var bbx=ansEdge-bw, bby=LANE[1]-bh/2;
-  ctx.shadowColor='rgba(220,140,40,0.4)';ctx.shadowBlur=12;
-  ctx.fillStyle=fill;ctx.strokeStyle=col;ctx.lineWidth=2;
+  ctx.shadowColor='rgba(34,197,94,0.4)';ctx.shadowBlur=12;
+  ctx.fillStyle='rgba(20,80,40,0.55)';ctx.strokeStyle='#22c55e';ctx.lineWidth=2;
   rr(bbx,bby,bw,bh,10);ctx.fill();ctx.stroke();
   ctx.shadowBlur=0;
-  ctx.fillStyle='rgba(220,160,60,0.75)';ctx.font='14px sans-serif';
+  ctx.fillStyle='rgba(174,240,200,0.75)';ctx.font='14px sans-serif';
   ctx.textAlign='left';ctx.textBaseline='middle';
   ctx.fillText('▼',bbx+8,bby+bh/2);
-  ctx.fillStyle='#ffe8b0';ctx.font='bold 27px Nunito,sans-serif';
+  ctx.fillStyle='#ffffff';ctx.font='bold 27px Nunito,sans-serif';
   ctx.textAlign='center';ctx.textBaseline='middle';
   wrapTextC(qCurrent.bot,bbx+bw/2+8,bby+bh/2,bw-32,29);
 
-  /* conector vertical punteado */
-  ctx.strokeStyle='rgba(100,180,255,0.12)';ctx.lineWidth=1;ctx.setLineDash([3,6]);
+  /* conector vertical — verde tenue */
+  ctx.strokeStyle='rgba(34,197,94,0.12)';ctx.lineWidth=1;ctx.setLineDash([3,6]);
   ctx.beginPath();ctx.moveTo(ansEdge-bw/2,tby+bh);ctx.lineTo(ansEdge-bw/2,bby);ctx.stroke();
   ctx.setLineDash([]);
 
@@ -3109,9 +3099,9 @@ function drawQuestionBox(){
     var qw=Math.min(560,W*0.78),qh=110;
     var qx=W/2-qw/2,qy=H/2-qh/2;
 
-    /* box */
-    ctx.fillStyle='#000810';
-    ctx.strokeStyle='#5588dd';ctx.lineWidth=2.5;
+    /* box — borde verde acento */
+    ctx.fillStyle='rgba(20,80,40,0.55)';
+    ctx.strokeStyle='rgba(34,197,94,0.7)';ctx.lineWidth=2.5;
     rr(qx,qy,qw,qh,16);ctx.fill();ctx.stroke();
 
     /* question text */
@@ -3121,23 +3111,23 @@ function drawQuestionBox(){
     wrapTextC(qCurrent.q,W/2,H/2-8,qw-36,26);
 
     /* hint */
-    ctx.fillStyle='rgba(160,200,255,0.55)';
+    ctx.fillStyle='rgba(174,240,200,0.55)';
     ctx.font='13px Nunito,sans-serif';
     ctx.fillText('Las respuestas llegan enseguida — elige tu carril  ↑  ↓',W/2,qy+qh-16);
 
-    /* countdown bar */
+    /* countdown bar — verde */
     var frac=qReadTimer/2.8;
-    ctx.fillStyle='rgba(60,100,200,0.25)';
+    ctx.fillStyle='rgba(21,128,61,0.25)';
     rr(qx+8,qy+qh-8,(qw-16),4,2);ctx.fill();
-    ctx.fillStyle='rgba(100,160,255,0.7)';
+    ctx.fillStyle='rgba(34,197,94,0.7)';
     rr(qx+8,qy+qh-8,Math.max(0,(qw-16)*frac),4,2);ctx.fill();
 
   }else if(qPhase==='approaching'){
-    /* compact top bar — high contrast */
+    /* compact top bar — borde verde */
     var bw=Math.min(500,W*0.65),bh=50;
     var bx=W/2-bw/2,by=10;
-    ctx.fillStyle='#000810';
-    ctx.strokeStyle='#4477cc';ctx.lineWidth=2;
+    ctx.fillStyle='rgba(20,80,40,0.55)';
+    ctx.strokeStyle='rgba(34,197,94,0.7)';ctx.lineWidth=2;
     rr(bx,by,bw,bh,10);ctx.fill();ctx.stroke();
 
     ctx.fillStyle='#ffffff';
