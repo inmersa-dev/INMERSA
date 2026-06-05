@@ -94,7 +94,7 @@ var sameLaneStreak=0,lastSpawnLane=-1;
 var usedQIdx=[],qCurrent=null,gates=null,plat=null;
 var qPhase='',qReadTimer=0;
 var pendingQuestion=false,gateFlash=null;
-var qMarks=[],qMarkTimer=30;
+var qMarks=[],qMarkTimer=20;
 var shield=false,shieldTimer=0;
 var SHIELD_DURATION=8;
 var pillCount=0,pills=[],pillFX=[];
@@ -570,7 +570,7 @@ function initGame(){
   sameLaneStreak=0;lastSpawnLane=-1;
   usedQIdx=[];qCurrent=null;gates=null;
   qPhase='';qReadTimer=0;pendingQuestion=false;bgScroll=0;
-  qMarks=[];qMarkTimer=30+Math.random()*10;
+  qMarks=[];qMarkTimer=20+Math.random()*5;
   shield=false;shieldTimer=0;
   pillCount=0;pills=[];pillFX=[];lifeUpFX=null;
   virusBoss=null;parasiteBoss=null;parasiteProjs=[];
@@ -691,7 +691,7 @@ function update(dt){
       qMarkTimer-=sdt;
       if(qMarkTimer<=0&&qMarks.length===0){
         qMarks.push({x:W+60, lane:Math.random()<0.5?0:1});
-        qMarkTimer=30+Math.random()*10;
+        qMarkTimer=20+Math.random()*5;
       }
     }
 
@@ -1076,23 +1076,30 @@ function update(dt){
       var pp=playerProjs[ppI];
       pp.x+=1500*sdt;
       if(pp.x>W+20){playerProjs.splice(ppI,1);continue;}
-      /* impacto: cuando el proyectil alcanza la zona del jefe (x > W*0.68) */
-      if(pp.x>W*0.68){
-        var _hitBoss=null,_hitCol='#88aaff',_hitCX=W-60,_hitCY=(LANE[0]+LANE[1])/2;
-        if(virusBoss&&!virusBoss.isDying){
-          _hitBoss=virusBoss;_hitCol='#aaddff';
-          _hitCX=W-virusBoss.r*0.55;_hitCY=(LANE[0]+LANE[1])/2+Math.sin(virusBoss.t*1.2)*12;
-        }else if(parasiteBoss&&!parasiteBoss.isDying){
-          _hitBoss=parasiteBoss;_hitCol='#ddaaff';_hitCX=W-38;
-        }else if(tumorBoss&&!tumorBoss.isDying){
-          _hitBoss=tumorBoss;_hitCol='#ffaaaa';
-        }
-        if(_hitBoss){
-          _hitBoss.hp=Math.max(0,_hitBoss.hp-1);
-          /* usar coordenadas del proyectil como punto de impacto exacto */
-          triggerBossHit(1,pp.x,_hitCY,_hitCol,true);
-          playerProjs.splice(ppI,1);
-        }
+      /* impacto: threshold dinámico por jefe para coincidir con el borde visual del cuerpo */
+      var _hitBoss=null,_hitCol='#88aaff',_hitCY=(LANE[0]+LANE[1])/2,_hitThresh=W+999;
+      if(virusBoss&&!virusBoss.isDying){
+        /* borde izquierdo del círculo del virus */
+        _hitThresh=W-virusBoss.r*1.55;
+        _hitCol='#aaddff';
+        _hitCY=(LANE[0]+LANE[1])/2+Math.sin(virusBoss.t*1.2)*12;
+        if(pp.x>=_hitThresh)_hitBoss=virusBoss;
+      }else if(parasiteBoss&&!parasiteBoss.isDying){
+        /* borde izquierdo del cuerpo del parásito */
+        _hitThresh=W-72;
+        _hitCol='#ddaaff';
+        if(pp.x>=_hitThresh)_hitBoss=parasiteBoss;
+      }else if(tumorBoss&&!tumorBoss.isDying){
+        /* borde izquierdo del blob del tumor */
+        var _tRX=(tumorBoss.bodyH||H*0.46)*0.27;
+        _hitThresh=W-_tRX*1.55;
+        _hitCol='#ffaaaa';
+        if(pp.x>=_hitThresh)_hitBoss=tumorBoss;
+      }
+      if(_hitBoss){
+        _hitBoss.hp=Math.max(0,_hitBoss.hp-1);
+        triggerBossHit(1,pp.x,_hitCY,_hitCol,true);
+        playerProjs.splice(ppI,1);
       }
     }
 
@@ -1103,7 +1110,12 @@ function update(dt){
         ms.x+=640*sdt;
         /* guiar el misil suavemente hacia targetY */
         ms.y+=(ms.targetY-ms.y)*Math.min(1,3.5*sdt);
-        if(ms.x>W*0.72){
+        /* threshold dinámico igual que los proyectiles normales */
+        var _msThresh=W+999;
+        if(virusBoss&&!virusBoss.isDying) _msThresh=W-virusBoss.r*1.55;
+        else if(parasiteBoss&&!parasiteBoss.isDying) _msThresh=W-72;
+        else if(tumorBoss&&!tumorBoss.isDying){var _mtRX=(tumorBoss.bodyH||H*0.46)*0.27;_msThresh=W-_mtRX*1.55;}
+        if(ms.x>=_msThresh){
           /* impacto */
           ms.phase='exploding';ms.explTimer=0.55;
           var _mHitBoss=null,_mHitCol='#ff8833',_mHitCX=ms.x,_mHitCY=ms.y;
@@ -1216,10 +1228,11 @@ function update(dt){
     }
   }
 
-  /* ── Sirena loop: activa con 1 vida, desactiva si se recupera ── */
+  /* ── Sirena loop: activa con 1 vida O frente a cualquier jefe ── */
   if(state==='running'||state==='question'||state==='result'){
-    if(lives===1&&!AUDIO.sirenLoopPlaying){playSiren('loop');}
-    else if(lives>1&&AUDIO.sirenLoopPlaying){stopSirenLoop();}
+    var _bossNow=(virusBoss&&!virusBoss.isDying)||(parasiteBoss&&!parasiteBoss.isDying)||(tumorBoss&&!tumorBoss.isDying);
+    if((lives===1||_bossNow)&&!AUDIO.sirenLoopPlaying){playSiren('loop');}
+    else if(lives>1&&!_bossNow&&AUDIO.sirenLoopPlaying){stopSirenLoop();}
   }
 }
 
