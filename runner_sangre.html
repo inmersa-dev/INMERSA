@@ -422,7 +422,7 @@ function onKey(k){
       if(!virusBoss&&!parasiteBoss&&!tumorBoss){
         pills=[];qMarks=[];treatPickups=[];treatPickupTimer=2.5;
         var br=Math.min(88,H*0.15);
-        virusBoss={r:br,hp:8,maxHp:8,t:0,
+        virusBoss={r:br,hp:16,maxHp:16,t:0,
           vomitTimer:1.0+Math.random()*0.4,
           pendingLane:Math.random()<0.5?0:1,
           isDying:false,dyingTimer:0};
@@ -433,7 +433,7 @@ function onKey(k){
       /* Invocar Parásito Lanzador */
       if(!virusBoss&&!parasiteBoss&&!tumorBoss){
         pills=[];qMarks=[];treatPickups=[];treatPickupTimer=2.5;
-        parasiteBoss={hp:12,maxHp:12,t:0,
+        parasiteBoss={hp:24,maxHp:24,t:0,
           shootTimer:3.5+Math.random()*0.8,
           headGlow:0,isDying:false,dyingTimer:0};
         parasiteProjs=[];
@@ -445,7 +445,7 @@ function onKey(k){
       if(!virusBoss&&!parasiteBoss&&!tumorBoss){
         pills=[];qMarks=[];treatPickups=[];treatPickupTimer=2.5;
         var tbH3=H*0.46;
-        tumorBoss={hp:20,maxHp:20,t:0,
+        tumorBoss={hp:40,maxHp:40,t:0,
           fragTimer:0.8+Math.random()*0.4,
           nucleusGlow:0,isDying:false,dyingTimer:0,
           deathPhase:0,deathTimer:0,bodyH:tbH3,absorbGlow:0};
@@ -477,18 +477,9 @@ function _updateBotiquinAndPickups(dt,sdt){
   treatPickupTimer-=sdt;
   if(treatPickupTimer<=0){
     var tr=Math.random(),ttype,tdmg;
-    var _isTumorFight=!!(tumorBoss&&!tumorBoss.isDying);
-    if(_isTumorFight){
-      /* contra el Tumor: solo armas */
-      if(tr<0.50){ttype='weapon';tdmg=0;}      /* 50%: ráfaga 3s */
-      else{ttype='missile';tdmg=5;}            /* 50%: misil x5 daño */
-    }else{
-      /* contra Virus/Parásito: tabla normal */
-      if(tr<0.20){ttype='weapon';tdmg=0;}      /* 20%: arma 3s */
-      else if(tr<0.68){ttype='pill';tdmg=1;}
-      else if(tr<0.92){ttype='flask';tdmg=2;}
-      else{ttype='vaccine';tdmg=3;}
-    }
+    /* contra cualquier jefe: solo armas */
+    if(tr<0.50){ttype='weapon';tdmg=0;}        /* 50%: ráfaga 3s */
+    else{ttype='missile';tdmg=5;}              /* 50%: misil x5 daño */
     var destLane=Math.random()<0.5?0:1;
     var bqX=70,bqY=LANE[0]-80;
     /* state: 'arc' → 'active' → ('absorbing') → gone */
@@ -581,7 +572,8 @@ function initGame(){
   correctForBoss=0;bossParticles=[];impactRings=[];timeScale=1;
   botiquin={t:0,animTimer:0,animScale:1};
   /* flags de jefes vencidos se leen de localStorage al inicio de cada run */
-  _loadProgress();
+  /* resetear flags de jefes en cada partida nueva — persisten solo las preguntas dominadas */
+  bossVirusDefeated=false;bossParasiteDefeated=false;bossTumorDefeated=false;
   plat=null;
   player.lane=1;player.y=LANE[1];player.fromY=LANE[1];player.toY=LANE[1];player.transitionTimer=0;player.hitTimer=0;
   initParticles();
@@ -717,14 +709,14 @@ function update(dt){
       if(!bossVirusDefeated&&correctAns>=3){
         pills=[];qMarks=[];treatPickups=[];treatPickupTimer=2.5;
         var br=Math.min(88,H*0.15);
-        virusBoss={r:br,hp:8,maxHp:8,t:0,
+        virusBoss={r:br,hp:16,maxHp:16,t:0,
           vomitTimer:1.0+Math.random()*0.4,
           pendingLane:Math.random()<0.5?0:1,
           isDying:false,dyingTimer:0};
         playSFX('sfx-boss-appear');playMusic('mus-jefe');
       }else if(bossVirusDefeated&&!bossParasiteDefeated&&correctAns>=6){
         pills=[];qMarks=[];treatPickups=[];treatPickupTimer=2.5;
-        parasiteBoss={hp:12,maxHp:12,t:0,
+        parasiteBoss={hp:24,maxHp:24,t:0,
           shootTimer:3.5+Math.random()*0.8,
           headGlow:0,isDying:false,dyingTimer:0};
         parasiteProjs=[];
@@ -732,7 +724,7 @@ function update(dt){
       }else if(bossParasiteDefeated&&!bossTumorDefeated&&correctAns>=9){
         pills=[];qMarks=[];treatPickups=[];treatPickupTimer=2.5;
         var tbH=H*0.46;
-        tumorBoss={hp:20,maxHp:20,t:0,
+        tumorBoss={hp:40,maxHp:40,t:0,
           fragTimer:0.8+Math.random()*0.4, /* primer fragmento pronto */
           nucleusGlow:0, /* telegraph */
           isDying:false,dyingTimer:0,
