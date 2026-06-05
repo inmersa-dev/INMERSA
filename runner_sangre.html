@@ -206,7 +206,11 @@ function unlockAudio(){
     if(!a)return;
     var ov=a.volume; a.volume=0;
     var p=a.play();
-    if(p&&p.then)p.then(function(){a.pause();a.currentTime=0;a.volume=ov;}).catch(function(){});
+    if(p&&p.then)p.then(function(){
+      a.volume=ov;
+      /* NO pausar si ya es la pista activa — evita race con playMusic() */
+      if(AUDIO.currentMusic!==id){a.pause();a.currentTime=0;}
+    }).catch(function(){});
   });
 }
 
@@ -254,14 +258,45 @@ function stopAllMusic(){
   AUDIO.currentMusic=null;
 }
 
+/* ── Duck / unduck: baja o sube el volumen de la pista actual sin cambiarla ── */
+var _duckInterval=null;
+function duckMusicForQuiz(){
+  if(!AUDIO.unlocked||!AUDIO.currentMusic)return;
+  var a=document.getElementById(AUDIO.currentMusic);
+  if(!a)return;
+  if(_duckInterval){clearInterval(_duckInterval);_duckInterval=null;}
+  var target=AUDIO.muted?0:(AUDIO.vol.music*0.35);
+  _duckInterval=setInterval(function(){
+    if(Math.abs(a.volume-target)<0.02){a.volume=target;clearInterval(_duckInterval);_duckInterval=null;}
+    else if(a.volume>target){a.volume=Math.max(target,a.volume-0.025);}
+    else{a.volume=Math.min(target,a.volume+0.025);}
+  },20);  /* ~0.5 s a este paso */
+}
+function unduckMusicForQuiz(){
+  if(!AUDIO.unlocked||!AUDIO.currentMusic)return;
+  var a=document.getElementById(AUDIO.currentMusic);
+  if(!a)return;
+  if(_duckInterval){clearInterval(_duckInterval);_duckInterval=null;}
+  var target=AUDIO.muted?0:AUDIO.vol.music;
+  _duckInterval=setInterval(function(){
+    if(Math.abs(a.volume-target)<0.02){a.volume=target;clearInterval(_duckInterval);_duckInterval=null;}
+    else if(a.volume<target){a.volume=Math.min(target,a.volume+0.025);}
+    else{a.volume=Math.max(target,a.volume-0.025);}
+  },20);
+}
+
 function toggleMute(){
   AUDIO.muted=!AUDIO.muted;
   var btn=document.getElementById('btn-mute');
   if(btn)btn.textContent=AUDIO.muted?'🔇':'🔊';
-  /* música activa */
+  /* música activa — respeta si está duckeada */
   if(AUDIO.currentMusic){
     var a=document.getElementById(AUDIO.currentMusic);
-    if(a)a.volume=AUDIO.muted?0:AUDIO.vol.music;
+    if(a){
+      var isQuizPhase=(state==='question'||state==='result');
+      var targetVol=AUDIO.muted?0:(isQuizPhase?AUDIO.vol.music*0.35:AUDIO.vol.music);
+      a.volume=targetVol;
+    }
   }
   /* sirena loop */
   var sl=document.getElementById('sfx-siren-loop');
@@ -649,7 +684,7 @@ function update(dt){
         playSFX('sfx-question');  /* activación pregunta */
         qSeq=0;state='question';qPhase='reading';qReadTimer=2.8;
         pickQuestion();sndQ();
-        playMusic('mus-quiz');
+        duckMusicForQuiz();  /* baja volumen al 35%, no cambia pista */
         break;
       }
     }
@@ -1159,13 +1194,13 @@ function update(dt){
         qReadTimer=2.8;
         pickQuestion();
         sndQ();
+        duckMusicForQuiz();  /* mantiene volumen al 35% entre preguntas del par */
       }else{
         qSeq=0;
         state='running';
         spawnTimer=2.0;
         /* volver a música correcta al salir del quiz */
-        var _anyBossNow=(virusBoss&&!virusBoss.isDying)||(parasiteBoss&&!parasiteBoss.isDying)||(tumorBoss&&!tumorBoss.isDying);
-        playMusic(_anyBossNow?'mus-jefe':'mus-pasillo');
+        unduckMusicForQuiz();  /* sube volumen al 100%, misma pista */
       }
     }
   }
