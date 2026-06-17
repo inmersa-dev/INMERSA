@@ -59,6 +59,25 @@ function rr(x,y,w,h,r){
   ctx.closePath();
 }
 
+/* ── Botón clínico cyan (estilo unificado) ── */
+function drawBigBtn(label,cx,cy,bw,bh){
+  ctx.save();
+  var grad=ctx.createLinearGradient(cx-bw/2,cy-bh/2,cx+bw/2,cy+bh/2);
+  grad.addColorStop(0,'#00b4cc');grad.addColorStop(1,'#00d4ff');
+  ctx.shadowColor='rgba(0,180,204,0.45)';ctx.shadowBlur=14;
+  rr(cx-bw/2,cy-bh/2,bw,bh,12);
+  ctx.fillStyle=grad;ctx.fill();
+  ctx.shadowBlur=0;
+  ctx.fillStyle='#0a1628';
+  ctx.font='900 15px Nunito,sans-serif';
+  try{ctx.letterSpacing='1.5px';}catch(e){}
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(label,cx,cy);
+  try{ctx.letterSpacing='0px';}catch(e){}
+  ctx.restore();
+  return {x:cx-bw/2,y:cy-bh/2,w:bw,h:bh};
+}
+
 /* ── PREGUNTAS ── */
 var QS=[
   {q:'¿Cuál es un síntoma de la anemia?',                      a:'Cansancio, palidez y mareos',          b:'Sangrado prolongado'},
@@ -2826,20 +2845,9 @@ function drawVictory(){
   ctx.fillStyle='#664444';ctx.font='12px Nunito,sans-serif';
   ctx.fillText(Math.floor(elapsed)+' segundos · 3 jefes derrotados',W/2,by+148);
 
-  /* botón volver */
-  var btnW=240,btnH=48,btnX=W/2-btnW/2,btnY=H*0.72;
-  var pulse=0.7+0.3*Math.sin(t*2.5);
-  ctx.save();
-  ctx.shadowColor='rgba(255,60,60,0.7)';ctx.shadowBlur=20*pulse;
-  ctx.fillStyle='#880000';ctx.strokeStyle='#ff4444';ctx.lineWidth=2;
-  ctx.beginPath();ctx.roundRect(btnX,btnY,btnW,btnH,10);ctx.fill();ctx.stroke();
-  ctx.shadowBlur=0;
-  ctx.fillStyle='#ffffff';ctx.font='bold 18px Nunito,sans-serif';
-  ctx.fillText('Volver al inicio',W/2,btnY+btnH/2);
-  ctx.restore();
-
-  /* guardar rect para click */
-  drawVictory._btnRect={x:btnX,y:btnY,w:btnW,h:btnH};
+  /* botón VOLVER AL INICIO */
+  var btnW=260,btnH=50,btnY=H*0.72;
+  drawVictory._btnRect=drawBigBtn('VOLVER AL INICIO',W/2,btnY+btnH/2,btnW,btnH);
 }
 drawVictory._btnRect=null;
 
@@ -3281,6 +3289,25 @@ function drawHUD(){
   ctx.textAlign='center';
   ctx.fillText('píldoras',pillStartX+pillGap,pillDotY+18);
 
+  /* ── indicador de estado clínico (esquina inferior izquierda) ── */
+  var _bossActive=(virusBoss&&!virusBoss.isDying)||(parasiteBoss&&!parasiteBoss.isDying)||(tumorBoss&&!tumorBoss.isDying);
+  var _indCol,_indTxt;
+  if(_bossActive){_indCol='#f59e0b';_indTxt='Combate';}
+  else if(lives===1){_indCol='#ef4444';_indTxt='Emergencia';}
+  else{_indCol='#22c55e';_indTxt='Sistema activo';}
+  var _iPulse=0.45+0.55*Math.abs(Math.sin(Date.now()*0.004));
+  var _iX=14,_iY=H-22,_iW=126,_iH=20;
+  ctx.fillStyle='rgba(6,18,34,0.78)';rr(_iX-4,_iY-_iH/2,_iW,_iH,5);ctx.fill();
+  ctx.save();
+  ctx.globalAlpha=_iPulse;
+  ctx.beginPath();ctx.arc(_iX+5,_iY,4,0,Math.PI*2);
+  ctx.fillStyle=_indCol;ctx.shadowColor=_indCol;ctx.shadowBlur=8;
+  ctx.fill();
+  ctx.restore();
+  ctx.fillStyle='#00d4ff';ctx.font='10px Nunito,sans-serif';
+  ctx.textAlign='left';ctx.textBaseline='middle';
+  ctx.fillText(_indTxt,_iX+14,_iY);
+
 }
 
 function drawHeart(x,y,s){
@@ -3340,11 +3367,11 @@ function drawStart(){
     ctx.fillText(ic.label,lx+70+i*130,ly+63);
   });
 
-  var pulse=0.65+0.35*Math.sin(Date.now()*0.003);
-  ctx.globalAlpha=pulse;
-  ctx.fillStyle='#64b4ff';ctx.font='bold 15px Nunito,sans-serif';ctx.textAlign='center';
-  ctx.fillText('Presiona  ENTER  o  toca  para  comenzar',W/2,H*0.87);
-  ctx.globalAlpha=1;
+  /* botón JUGAR */
+  drawBigBtn('JUGAR',W/2,H*0.845,200,50);
+  ctx.fillStyle='rgba(100,180,255,0.45)';ctx.font='11px Nunito,sans-serif';
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('o presiona  ENTER',W/2,H*0.845+38);
 
   /* botón reiniciar progreso */
   var rbW=180,rbH=26,rbX=W-rbW-14,rbY=H-36;
@@ -3379,11 +3406,11 @@ function drawGameOver(){
   ctx.fillStyle='#8899aa';ctx.font='12px Nunito,sans-serif';
   ctx.fillText(Math.floor(elapsed)+' segundos sobrevividos',W/2,by+146);
 
-  var pulse=0.65+0.35*Math.sin(Date.now()*0.003);
-  ctx.globalAlpha=pulse;
-  ctx.fillStyle='#64b4ff';ctx.font='bold 15px Nunito,sans-serif';
-  ctx.fillText('Presiona  ENTER  para  reintentar',W/2,H*0.82);
-  ctx.globalAlpha=1;
+  /* botón JUGAR DE NUEVO */
+  drawBigBtn('JUGAR DE NUEVO',W/2,H*0.80,240,50);
+  ctx.fillStyle='rgba(100,180,255,0.45)';ctx.font='11px Nunito,sans-serif';
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('o presiona  ENTER',W/2,H*0.80+38);
 }
 
 /* ── BOOTSTRAP ── */
