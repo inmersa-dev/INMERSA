@@ -392,12 +392,145 @@ canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:90}
   .tile{width:38px;height:46px;font-size:1.2rem}
 }
 
+/* Attempts HUD */
+#attempts-hud{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:8px;padding:5px 10px;
+  background:rgba(0,180,204,.07);border:1px solid rgba(0,180,204,.2);
+  border-radius:6px;
+}
+.att-lbl{font-size:.58rem;font-weight:800;letter-spacing:2px;color:var(--teal);text-transform:uppercase}
+#att-val{font-size:1.1rem;font-weight:900;color:var(--teal);min-width:28px;text-align:right}
+
 /* Sparkle anim for stats */
 @keyframes sparkle{0%{transform:scale(1)}50%{transform:scale(1.25) rotate(8deg)}100%{transform:scale(1)}}
 .sparkle{animation:sparkle .35s}
+
+/* ═══════════════════════════════════════════
+   MODULE VICTORY OVERLAY
+═══════════════════════════════════════════ */
+#mv-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.88);z-index:120;
+  align-items:center;justify-content:center;
+  animation:fadeIn .4s;overflow-y:auto;
+}
+#mv-overlay.show{display:flex}
+#mv-box{
+  background:linear-gradient(160deg,#061524,#0a1e34,#061524);
+  border:1px solid rgba(0,210,230,.35);
+  border-radius:20px;padding:36px 32px 28px;
+  width:min(580px,94vw);
+  box-shadow:0 0 60px rgba(0,180,204,.2),0 0 120px rgba(0,100,160,.15);
+  animation:slideUp .4s;text-align:center;
+  margin:auto;
+}
+#mv-badge{font-size:3.6rem;margin-bottom:10px;filter:drop-shadow(0 0 12px gold)}
+#mv-title{
+  font-size:1.15rem;font-weight:900;letter-spacing:2px;
+  color:var(--teal);text-transform:uppercase;line-height:1.4;
+  margin-bottom:6px;
+}
+#mv-subtitle{font-size:1.5rem;letter-spacing:4px;color:#fff}
+#mv-tagline{font-size:.85rem;color:rgba(0,210,230,.7);margin-bottom:22px}
+#mv-stats{
+  display:flex;justify-content:center;gap:24px;
+  margin-bottom:24px;
+  border-top:1px solid rgba(0,180,204,.15);
+  border-bottom:1px solid rgba(0,180,204,.15);
+  padding:16px 0;
+}
+.mv-stat{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:80px}
+.mv-stat-lbl{font-size:.58rem;font-weight:800;letter-spacing:2px;color:rgba(0,210,230,.6);text-transform:uppercase}
+.mv-stat-val{font-size:1.7rem;font-weight:900;color:var(--teal)}
+#mv-list{display:flex;flex-direction:column;gap:8px;margin-bottom:20px;text-align:left}
+.mv-row{
+  display:flex;align-items:center;gap:12px;
+  background:rgba(0,180,204,.06);
+  border:1px solid rgba(0,180,204,.15);
+  border-radius:10px;padding:10px 14px;
+}
+.mv-row-icon{font-size:1.4rem;flex-shrink:0}
+.mv-row-name{font-weight:800;color:#fff;flex:1;letter-spacing:1px;font-size:.95rem}
+.mv-badge-won{font-size:.75rem;font-weight:700;color:var(--green);white-space:nowrap}
+.mv-badge-comp.ok  {font-size:.75rem;font-weight:700;color:var(--green);white-space:nowrap}
+.mv-badge-comp.skip{font-size:.75rem;font-weight:700;color:var(--yellow);white-space:nowrap}
+#mv-msg{font-size:.85rem;color:rgba(0,210,230,.75);margin-bottom:22px;font-style:italic}
+#mv-restart{
+  padding:13px 36px;
+  background:linear-gradient(135deg,var(--teal),var(--accent));
+  border:none;border-radius:var(--radius);
+  color:#0a1828;font-family:'Nunito',sans-serif;font-weight:900;font-size:1rem;
+  cursor:pointer;transition:all .2s;letter-spacing:1px;
+}
+#mv-restart:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,180,204,.45)}
+
+/* ═══════════════════════════════════════════
+   COMPREHENSION QUIZ OVERLAY
+═══════════════════════════════════════════ */
+#cq-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.82);z-index:110;
+  align-items:center;justify-content:center;
+  animation:fadeIn .3s;
+}
+#cq-overlay.show{display:flex}
+#cq-box{
+  background:linear-gradient(145deg,#0d1f2d,#0a1828);
+  border:1px solid rgba(0,180,204,.3);
+  border-radius:18px;padding:32px 28px 24px;
+  width:min(520px,92vw);
+  box-shadow:0 0 40px rgba(0,180,204,.15);
+  animation:slideUp .35s;
+  text-align:center;
+}
+#cq-header{
+  font-size:.75rem;font-weight:800;letter-spacing:3px;
+  color:var(--teal);text-transform:uppercase;margin-bottom:18px;
+  border-bottom:1px solid rgba(0,180,204,.2);padding-bottom:10px;
+}
+#cq-question{
+  font-size:1.05rem;font-weight:700;color:var(--text);
+  line-height:1.5;margin-bottom:22px;
+}
+#cq-options{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;
+}
+.cq-btn{
+  padding:11px 10px;border:none;border-radius:10px;
+  background:linear-gradient(135deg,var(--teal),var(--accent));
+  color:#0a1828;font-family:inherit;font-size:.9rem;font-weight:700;
+  cursor:pointer;transition:all .2s;line-height:1.3;
+}
+.cq-btn:hover{transform:translateY(-2px);box-shadow:0 5px 14px rgba(0,180,204,.35)}
+.cq-btn.correct{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;transform:scale(1.04)}
+.cq-btn.wrong  {background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff}
+.cq-btn:disabled{cursor:default;transform:none}
+#cq-skip{
+  background:none;border:none;color:var(--teal);
+  font-family:inherit;font-size:.85rem;font-weight:600;
+  cursor:pointer;opacity:.7;text-decoration:underline;
+  padding:4px 8px;
+}
+#cq-skip:hover{opacity:1}
 </style>
 </head>
 <body>
+
+<!-- ═══ AUDIO ═══ -->
+<audio id="mus-ambient"    src="Audio/Musica/ahorcado_ambient.mp3"  loop preload="auto"></audio>
+
+<audio id="sfx-letter-ok"  src="Audio/SFX/quiz_ok.mp3"                 preload="auto"></audio>
+<audio id="sfx-letter-bad" src="Audio/SFX/quiz_bad.mp3"                preload="auto"></audio>
+<audio id="sfx-word-won"   src="Audio/SFX/life_up.mp3"                 preload="auto"></audio>
+<audio id="sfx-word-lost"  src="Audio/SFX/game_over.mp3"               preload="auto"></audio>
+<audio id="sfx-alarm"      src="Audio/SFX/siren_loop.mp3"        loop  preload="auto"></audio>
+
+<audio id="sfx-quiz-ok"    src="Audio/SFX/quiz_correct.mp3"            preload="auto"></audio>
+<audio id="sfx-quiz-bad"   src="Audio/SFX/snake_rescate_incorrecto.mp3" preload="auto"></audio>
+<audio id="sfx-victory"    src="Audio/SFX/module_victory.mp3"          preload="auto"></audio>
+
+<button id="btn-mute" style="position:fixed;top:12px;right:12px;z-index:9999;width:42px;height:42px;border-radius:50%;border:2px solid #00d4ff;background:rgba(10,22,40,.92);color:#00d4ff;font-size:1.1rem;cursor:pointer;font-weight:900;box-shadow:0 2px 8px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:0">🔊</button>
 
 <canvas id="confetti"></canvas>
 
@@ -409,6 +542,42 @@ canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:90}
   <img src="hemoglobina.png" style="width:160px;bottom:5%;right:2%;transform:rotate(-14deg)">
   <img src="plasma.png"      style="width:120px;top:52%;right:0%;transform:rotate(6deg)">
   <img src="eritrocito2.png" style="width:120px;top:40%;left:0%;transform:rotate(30deg)">
+</div>
+
+<!-- Module Victory Overlay -->
+<div id="mv-overlay">
+  <div id="mv-box">
+    <div id="mv-badge">🏆</div>
+    <div id="mv-title">MÓDULO P01 — DIAGNÓSTICO SANGUÍNEO<br><span id="mv-subtitle">COMPLETADO</span></div>
+    <div id="mv-tagline">Has dominado las 5 enfermedades oficiales de la sangre.</div>
+    <div id="mv-stats">
+      <div class="mv-stat">
+        <span class="mv-stat-lbl">PALABRAS</span>
+        <span class="mv-stat-val" id="mv-words">5/5</span>
+      </div>
+      <div class="mv-stat">
+        <span class="mv-stat-lbl">COMPRENSIÓN</span>
+        <span class="mv-stat-val" id="mv-comp">0/5</span>
+      </div>
+      <div class="mv-stat">
+        <span class="mv-stat-lbl">PUNTOS</span>
+        <span class="mv-stat-val" id="mv-pts">0</span>
+      </div>
+    </div>
+    <div id="mv-list"></div>
+    <div id="mv-msg"></div>
+    <button id="mv-restart" onclick="restartFromVictory()">JUGAR DE NUEVO</button>
+  </div>
+</div>
+
+<!-- Comprehension Quiz Overlay -->
+<div id="cq-overlay">
+  <div id="cq-box">
+    <div id="cq-header">COMPRENSIÓN — <span id="cq-disease-name"></span></div>
+    <div id="cq-question"></div>
+    <div id="cq-options"></div>
+    <button id="cq-skip" onclick="skipComprehension()">Saltar</button>
+  </div>
 </div>
 
 <!-- Word Result Overlay -->
@@ -478,6 +647,7 @@ canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:90}
       <div id="hbar-bg"><div id="hbar-fill"></div></div>
       <div id="patient">🧑‍⚕️</div>
       <div id="mon-msg">Cada error debilita al paciente. ¡Adivina antes de que sea tarde!</div>
+      <div id="attempts-hud"><span class="att-lbl">INTENTOS RESTANTES</span><span id="att-val">—</span></div>
     </div>
 
     <div id="registro">
@@ -536,6 +706,108 @@ canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:90}
 
 <script>
 /* ════════════════════════════════════════
+   AUDIO SYSTEM
+════════════════════════════════════════ */
+const AUDIO = {
+  unlocked: false,
+  muted: false,
+  currentMusic: null,
+  vol: { music: 0.45, sfx: 0.6 },
+};
+
+function unlockAudio() {
+  if (AUDIO.unlocked) return;
+  AUDIO.unlocked = true;
+  document.querySelectorAll('audio').forEach(a => {
+    const v = a.volume; a.volume = 0;
+    a.play().then(() => { a.pause(); a.currentTime = 0; a.volume = v; }).catch(() => {});
+  });
+  playMusic('mus-ambient');
+}
+
+function playSFX(id) {
+  if (AUDIO.muted) return;
+  try {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.volume = AUDIO.vol.sfx;
+    el.currentTime = 0;
+    el.play().catch(() => {});
+  } catch(e) {}
+}
+
+function playMusic(id) {
+  if (AUDIO.currentMusic === id) return;
+  const prev = AUDIO.currentMusic ? document.getElementById(AUDIO.currentMusic) : null;
+  if (prev && !prev.paused) {
+    const fadeOut = setInterval(() => {
+      if (prev.volume > 0.05) { prev.volume = Math.max(0, prev.volume - 0.08); }
+      else { prev.pause(); prev.volume = AUDIO.vol.music; clearInterval(fadeOut); }
+    }, 60);
+  }
+  AUDIO.currentMusic = id;
+  const next = document.getElementById(id);
+  if (!next) return;
+  next.volume = 0;
+  next.currentTime = 0;
+  if (!AUDIO.muted) {
+    next.play().catch(() => {});
+    const fadeIn = setInterval(() => {
+      if (next.volume < AUDIO.vol.music - 0.05) { next.volume = Math.min(AUDIO.vol.music, next.volume + 0.06); }
+      else { next.volume = AUDIO.vol.music; clearInterval(fadeIn); }
+    }, 60);
+  }
+}
+
+function stopMusic() {
+  if (!AUDIO.currentMusic) return;
+  const el = document.getElementById(AUDIO.currentMusic);
+  if (!el || el.paused) { AUDIO.currentMusic = null; return; }
+  const fade = setInterval(() => {
+    if (el.volume > 0.05) { el.volume = Math.max(0, el.volume - 0.12); }
+    else { el.pause(); el.volume = AUDIO.vol.music; AUDIO.currentMusic = null; clearInterval(fade); }
+  }, 40);
+}
+
+function toggleMute() {
+  AUDIO.muted = !AUDIO.muted;
+  document.getElementById('btn-mute').textContent = AUDIO.muted ? '🔇' : '🔊';
+  document.querySelectorAll('audio').forEach(a => { a.muted = AUDIO.muted; });
+  if (!AUDIO.muted && AUDIO.currentMusic) {
+    const el = document.getElementById(AUDIO.currentMusic);
+    if (el) { el.volume = AUDIO.vol.music; el.play().catch(() => {}); }
+  }
+}
+
+let alarmPlaying = false;
+function playAlarmLoop() {
+  if (alarmPlaying || AUDIO.muted) return;
+  alarmPlaying = true;
+  const el = document.getElementById('sfx-alarm');
+  if (!el) return;
+  el.volume = AUDIO.vol.sfx * 0.35;
+  el.currentTime = 0;
+  el.play().catch(() => {});
+}
+
+function stopAlarmLoop() {
+  alarmPlaying = false;
+  const el = document.getElementById('sfx-alarm');
+  if (!el) return;
+  el.pause();
+  el.currentTime = 0;
+}
+
+// Unlock listeners
+['touchstart','click','keydown'].forEach(ev =>
+  document.addEventListener(ev, unlockAudio, { once: true })
+);
+document.getElementById('btn-mute').addEventListener('click', e => {
+  e.stopPropagation();
+  toggleMute();
+});
+
+/* ════════════════════════════════════════
    WORD DATA
 ════════════════════════════════════════ */
 const WORDS = [
@@ -546,28 +818,10 @@ const WORDS = [
     fact: 'Afecta a más de 1,620 millones de personas en el mundo según la OMS.',
   },
   {
-    word: 'POLICITEMIA',
-    icon: '🔴',
-    def:  'Producción excesiva de glóbulos rojos que aumenta la viscosidad de la sangre.',
-    fact: 'El exceso de eritrocitos puede elevar el riesgo de coágulos y accidentes cerebrovasculares.',
-  },
-  {
-    word: 'TALASEMIA',
-    icon: '🧬',
-    def:  'Producción anormal de hemoglobina causada por un defecto genético hereditario.',
-    fact: 'Es una de las enfermedades hereditarias más frecuentes a nivel mundial.',
-  },
-  {
     word: 'LEUCEMIA',
     icon: '🦠',
     def:  'Producción descontrolada de glóbulos blancos anormales originada en la médula ósea.',
     fact: 'Es el tipo de cáncer más común en niños y adolescentes menores de 15 años.',
-  },
-  {
-    word: 'LEUCOPENIA',
-    icon: '🛡️',
-    def:  'Reducción del número de leucocitos que debilita significativamente el sistema inmunológico.',
-    fact: 'Un conteo normal de leucocitos oscila entre 4,500 y 11,000 células por microlitro.',
   },
   {
     word: 'HEMOFILIA',
@@ -589,7 +843,10 @@ const WORDS = [
   },
 ];
 
-const MAX_WRONG = 6;
+let MAX_WRONG = 6; // recalculated per word in loadWord()
+function computeMaxWrong(word) {
+  return Math.max(5, new Set(word.toUpperCase().split('')).size - 1);
+}
 const ALPHABET  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const KBD_ROWS  = [
   ['Q','W','E','R','T','Y','U','I','O','P'],
@@ -598,14 +855,91 @@ const KBD_ROWS  = [
 ];
 
 /* ════════════════════════════════════════
+   COMPREHENSION QUESTIONS
+════════════════════════════════════════ */
+const COMPREHENSION_QS = {
+  ANEMIA: [
+    {q:'¿Cuál es un síntoma característico de la anemia?',
+     opts:['Manchas rojas en la piel','Cansancio, palidez y mareos','Fiebre alta y confusión','Sangrado prolongado'],a:1},
+    {q:'La anemia causa que los tejidos reciban menos...',
+     opts:['Calor','Oxígeno','Agua','Anticuerpos'],a:1},
+    {q:'¿Cuál es la enfermedad sanguínea más común del mundo?',
+     opts:['Leucemia','Hemofilia','Anemia','Sepsis'],a:2},
+    {q:'¿Cuál es la vida media de un eritrocito sano?',
+     opts:['8 a 11 días','24 horas','120 días','30 días'],a:2},
+    {q:'¿Qué molécula del eritrocito permite transportar oxígeno?',
+     opts:['Albúmina','Fibrinógeno','Hemoglobina','Globulina'],a:2},
+  ],
+  LEUCEMIA: [
+    {q:'¿Qué enfermedad produce leucocitos anormales de forma descontrolada?',
+     opts:['Anemia','Trombocitopenia','Hemofilia','Leucemia'],a:3},
+    {q:'¿Cuál es el nombre común de los leucocitos?',
+     opts:['Plaquetas','Glóbulos blancos','Glóbulos rojos','Trombocitos'],a:1},
+    {q:'¿Cuál es el nombre científico de los glóbulos rojos?',
+     opts:['Leucocitos','Trombocitos','Eritrocitos','Megacariocitos'],a:2},
+    {q:'¿Cuál es la función principal del eritrocito?',
+     opts:['Defender contra infecciones','Transportar oxígeno y recoger CO₂','Formar coágulos','Transportar hormonas'],a:1},
+    {q:'¿Qué componente sanguíneo tiene forma de disco bicóncavo?',
+     opts:['Leucocito','Plaqueta','Plasma','Eritrocito'],a:3},
+  ],
+  HEMOFILIA: [
+    {q:'¿De qué origen es la hemofilia?',
+     opts:['Viral','Bacteriano','Genético','Ambiental'],a:2},
+    {q:'¿Qué componente representa el 55% del volumen sanguíneo?',
+     opts:['Eritrocito','Leucocito','Plasma','Plaqueta'],a:2},
+    {q:'¿Qué componente fue descubierto en 1842?',
+     opts:['Eritrocito','Leucocito','Plasma','Plaqueta'],a:3},
+    {q:'¿De qué está compuesto principalmente el plasma?',
+     opts:['90% agua','55% agua','90% proteínas','50% glucosa'],a:0},
+  ],
+  TROMBOCITOPENIA: [
+    {q:'¿Qué componente está afectado en la trombocitopenia?',
+     opts:['Eritrocito','Leucocito','Plasma','Plaqueta'],a:3},
+    {q:'¿Qué otro nombre reciben las plaquetas?',
+     opts:['Eritrocitos','Leucocitos','Trombocitos','Linfocitos'],a:2},
+    {q:'¿Cuál es la vida media de las plaquetas?',
+     opts:['24 horas','8 a 11 días','30 días','120 días'],a:1},
+    {q:'¿Cuántas plaquetas por mm³ son normales?',
+     opts:['4,000 a 11,000','4.5 a 5.4 millones','150,000 a 450,000','100 a 500'],a:2},
+  ],
+  SEPSIS: [
+    {q:'¿Qué causa la sepsis?',
+     opts:['Una mutación genética','Falta de hierro','Una infección extendida en la sangre','Exceso de plaquetas'],a:2},
+    {q:'¿Cuáles son las células más numerosas de la sangre?',
+     opts:['Leucocitos','Plaquetas','Eritrocitos','Linfocitos'],a:2},
+    {q:'¿Por qué el eritrocito tiene color rojo?',
+     opts:['Por el plasma que lo rodea','Por el hierro de la hemoglobina','Por los leucocitos cercanos','Por reacción con el oxígeno'],a:1},
+    {q:'¿Qué componente defiende contra infecciones?',
+     opts:['Eritrocitos','Leucocitos','Plaquetas','Plasma'],a:1},
+  ],
+};
+
+/* ════════════════════════════════════════
    GAME STATE
 ════════════════════════════════════════ */
+// Fisher-Yates shuffle so each session presents words in random order
+(function shuffleWords() {
+  for (let i = WORDS.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [WORDS[i], WORDS[j]] = [WORDS[j], WORDS[i]];
+  }
+})();
+
 let wordIdx    = 0;
 let guessed    = new Set();   // correct letters
 let wrongSet   = new Set();   // wrong letters
 let results    = [];          // 'won'|'lost' per word
 let points     = 0;
 let wordActive = false;
+
+const SESSION_STATS_TEMPLATE = () => ({
+  ANEMIA:          { won: false, comprehension: null },
+  LEUCEMIA:        { won: false, comprehension: null },
+  HEMOFILIA:       { won: false, comprehension: null },
+  TROMBOCITOPENIA: { won: false, comprehension: null },
+  SEPSIS:          { won: false, comprehension: null },
+});
+let sessionStats = SESSION_STATS_TEMPLATE();
 
 /* ════════════════════════════════════════
    ECG ENGINE  (Gaussian buffer approach)
@@ -653,8 +987,14 @@ function initECG() {
   window.addEventListener('resize', resize);
 }
 
+function getECGState() {
+  const progress = MAX_WRONG > 0 ? wrongSet.size / MAX_WRONG : 1;
+  const idx = Math.min(Math.floor(progress * (ECG_STATES.length - 1)), ECG_STATES.length - 1);
+  return ECG_STATES[idx];
+}
+
 function ecgNextY() {
-  const st = ECG_STATES[Math.min(wrongSet.size, MAX_WRONG)];
+  const st = getECGState();
   if (st.amp === 0) {
     cycleT += 0.5;
     return ecgH * 0.5 + (Math.random() - 0.5) * st.noise;
@@ -666,7 +1006,7 @@ function ecgNextY() {
 
 function drawECG() {
   const nw = wrongSet.size;
-  const st = ECG_STATES[Math.min(nw, MAX_WRONG)];
+  const st = getECGState();
   const ctx = ecgCtx;
 
   ctx.fillStyle = '#040f1e';
@@ -732,6 +1072,13 @@ function triggerFlash(r, g, b) { flashT = 1; flashRGB = [r, g, b]; }
 /* ════════════════════════════════════════
    HEALTH UI
 ════════════════════════════════════════ */
+function updateAttemptsHUD() {
+  const remaining = Math.max(0, MAX_WRONG - wrongSet.size);
+  const el = document.getElementById('att-val');
+  el.textContent = remaining;
+  el.style.color = remaining <= 1 ? 'var(--red)' : remaining <= 2 ? 'var(--yellow)' : 'var(--teal)';
+}
+
 function updateHealthUI(animate = true) {
   const pct = Math.max(0, Math.round(100 - (wrongSet.size / MAX_WRONG) * 100));
   document.getElementById('health-pct').textContent = pct + '%';
@@ -758,11 +1105,12 @@ function updateHealthUI(animate = true) {
   }
 
   // ECG status line
-  const st = ECG_STATES[Math.min(wrongSet.size, MAX_WRONG)];
+  const st = getECGState();
   document.getElementById('mon-msg').textContent =
     (st.bpm ? st.bpm + ' BPM  ·  ' : '') + st.status;
   document.getElementById('mon-msg').style.color =
     wrongSet.size >= MAX_WRONG ? '#ff5555' : 'var(--muted)';
+  updateAttemptsHUD();
 }
 
 /* ════════════════════════════════════════
@@ -882,6 +1230,9 @@ function loadWord(idx) {
   wordActive = true;
 
   const w = WORDS[idx];
+  MAX_WRONG = computeMaxWrong(w.word);
+  stopAlarmLoop();
+  updateAttemptsHUD();
 
   // Top bar tag
   document.getElementById('pal-tag').textContent = `${w.icon} Enfermedad ${idx + 1} de 8`;
@@ -924,12 +1275,15 @@ function guessLetter(ch) {
     updateStats();
     updateRegistro();
     showToast('✅ +100 pts', 'green');
+    playSFX('sfx-letter-ok');
 
     // Win check
     if (word.split('').every(c => guessed.has(c))) {
       wordActive = false;
       points += 400;
       updateStats();
+      stopAlarmLoop();
+      playSFX('sfx-word-won');
       setTimeout(() => showWordResult(true), 700);
     }
   } else {
@@ -940,6 +1294,7 @@ function guessLetter(ch) {
     points = Math.max(0, points - 30);
     updateStats();
     updateRegistro();
+    playSFX('sfx-letter-bad');
 
     // Flash monitor
     const mon = document.getElementById('monitor');
@@ -949,8 +1304,13 @@ function guessLetter(ch) {
     updateHealthUI();
     showToast('❌ −30 pts', 'red');
 
+    // Alarm when critical (penultimate or last error)
+    if (wrongSet.size >= MAX_WRONG - 1) playAlarmLoop();
+
     if (wrongSet.size >= MAX_WRONG) {
       wordActive = false;
+      stopAlarmLoop();
+      playSFX('sfx-word-lost');
       setTimeout(() => {
         revealAll(true);
         setTimeout(() => showWordResult(false), 600);
@@ -965,6 +1325,7 @@ function guessLetter(ch) {
 function showWordResult(won) {
   const w = WORDS[wordIdx];
   results.push(won ? 'won' : 'lost');
+  if (sessionStats[w.word] !== undefined) sessionStats[w.word].won = won;
   updateStats();
 
   document.getElementById('wr-disease-icon').textContent = w.icon;
@@ -975,17 +1336,147 @@ function showWordResult(won) {
   document.getElementById('wr-def').textContent   = w.def;
   document.getElementById('wr-fact').textContent  = w.fact;
 
+  document.getElementById('btn-continue').onclick = () => continueGame(won);
   document.getElementById('wr-overlay').classList.add('show');
 }
 
-function continueGame() {
+function continueGame(won) {
   document.getElementById('wr-overlay').classList.remove('show');
+  if (won) {
+    showComprehensionOverlay();
+  } else {
+    advanceWord();
+  }
+}
+
+function advanceWord() {
   const next = wordIdx + 1;
   if (next >= WORDS.length) {
-    showFinalScreen();
+    const allWon = Object.values(sessionStats).every(s => s.won);
+    allWon ? showModuleVictory() : showFinalScreen();
   } else {
     loadWord(next);
   }
+}
+
+/* ════════════════════════════════════════
+   COMPREHENSION QUIZ
+════════════════════════════════════════ */
+function showComprehensionOverlay() {
+  const w    = WORDS[wordIdx];
+  const bank = COMPREHENSION_QS[w.word];
+  if (!bank) { advanceWord(); return; }
+
+  const item = bank[Math.floor(Math.random() * bank.length)];
+
+  // Build shuffled options preserving correct answer index
+  const indices = [0, 1, 2, 3];
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+  const correctShuffledIdx = indices.indexOf(item.a);
+
+  document.getElementById('cq-disease-name').textContent = w.word;
+  document.getElementById('cq-question').textContent     = item.q;
+
+  const container = document.getElementById('cq-options');
+  container.innerHTML = '';
+  indices.forEach((origIdx, pos) => {
+    const btn = document.createElement('button');
+    btn.className   = 'cq-btn';
+    btn.textContent = item.opts[origIdx];
+    btn.onclick     = () => answerComprehension(pos, correctShuffledIdx, container);
+    container.appendChild(btn);
+  });
+
+  document.getElementById('cq-skip').disabled = false;
+  document.getElementById('cq-overlay').classList.add('show');
+}
+
+function answerComprehension(chosen, correct, container) {
+  const btns = container.querySelectorAll('.cq-btn');
+  btns.forEach(b => b.disabled = true);
+  document.getElementById('cq-skip').disabled = true;
+
+  const wordName = WORDS[wordIdx].word;
+  if (chosen === correct) {
+    btns[chosen].classList.add('correct');
+    if (sessionStats[wordName] !== undefined) sessionStats[wordName].comprehension = true;
+    points += 50;
+    updateStats();
+    showToast('⭐ +50 bonus', 'green');
+    playSFX('sfx-quiz-ok');
+    setTimeout(closeComprehension, 900);
+  } else {
+    btns[chosen].classList.add('wrong');
+    btns[correct].classList.add('correct');
+    if (sessionStats[wordName] !== undefined) sessionStats[wordName].comprehension = false;
+    playSFX('sfx-quiz-bad');
+    setTimeout(closeComprehension, 1500);
+  }
+}
+
+function skipComprehension() {
+  // comprehension stays null (skipped)
+  closeComprehension();
+}
+
+function closeComprehension() {
+  document.getElementById('cq-overlay').classList.remove('show');
+  advanceWord();
+}
+
+/* ════════════════════════════════════════
+   MODULE VICTORY SCREEN
+════════════════════════════════════════ */
+function showModuleVictory() {
+  const compOk = Object.values(sessionStats).filter(s => s.comprehension === true).length;
+  const allComp = compOk === WORDS.length;
+
+  document.getElementById('mv-comp').textContent = `${compOk}/${WORDS.length}`;
+  document.getElementById('mv-pts').textContent  = points;
+
+  const list = document.getElementById('mv-list');
+  list.innerHTML = '';
+  WORDS.forEach(w => {
+    const st   = sessionStats[w.word] || { won: true, comprehension: null };
+    const comp = st.comprehension === true
+      ? '<span class="mv-badge-comp ok">✓ Comprensión</span>'
+      : '<span class="mv-badge-comp skip">◯ Comprensión</span>';
+    const row  = document.createElement('div');
+    row.className = 'mv-row';
+    row.innerHTML = `<span class="mv-row-icon">${w.icon}</span>
+                     <span class="mv-row-name">${w.word}</span>
+                     <span class="mv-badge-won">✓ Adivinada</span>
+                     ${comp}`;
+    list.appendChild(row);
+  });
+
+  document.getElementById('mv-msg').textContent = allComp
+    ? 'Dominio total. Estás listo para el siguiente módulo.'
+    : 'Excelente trabajo. Repasa las enfermedades marcadas para dominio total.';
+
+  document.getElementById('mv-overlay').classList.add('show');
+  launchConfetti();
+  stopMusic();
+  playSFX('sfx-victory');
+}
+
+function restartFromVictory() {
+  document.getElementById('mv-overlay').classList.remove('show');
+  stopConfetti();
+  playMusic('mus-ambient');
+  sessionStats = SESSION_STATS_TEMPLATE();
+  results = [];
+  points  = 0;
+  updateStats();
+  // re-shuffle and restart
+  for (let i = WORDS.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [WORDS[i], WORDS[j]] = [WORDS[j], WORDS[i]];
+  }
+  loadWord(0);
 }
 
 /* ════════════════════════════════════════
@@ -996,7 +1487,7 @@ function showFinalScreen() {
   const allOk = ok === WORDS.length;
 
   document.getElementById('final-emoji').textContent = allOk ? '🏆' : '💪';
-  document.getElementById('final-title').textContent = allOk ? '¡NIVEL COMPLETADO!' : `${ok}/8 CORRECTAS`;
+  document.getElementById('final-title').textContent = allOk ? '¡NIVEL COMPLETADO!' : `${ok}/${WORDS.length} CORRECTAS`;
   document.getElementById('final-title').className   = allOk ? 'win' : 'lose';
   document.getElementById('final-msg').textContent   = allOk
     ? '¡Dominas todas las enfermedades de la sangre! Estás listo para el siguiente nivel.'
@@ -1021,10 +1512,15 @@ function showFinalScreen() {
 
 function restartAll() {
   document.getElementById('final-overlay').classList.remove('show');
+  sessionStats = SESSION_STATS_TEMPLATE();
   results = [];
   points  = 0;
   stopConfetti();
   updateStats();
+  for (let i = WORDS.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [WORDS[i], WORDS[j]] = [WORDS[j], WORDS[i]];
+  }
   loadWord(0);
 }
 
