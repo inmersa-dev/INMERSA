@@ -521,7 +521,7 @@ canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:90}
 <audio id="mus-ambient"    src="Audio/Musica/ahorcado_ambient.mp3"  loop preload="auto"></audio>
 
 <audio id="sfx-letter-ok"  src="Audio/SFX/quiz_ok.mp3"                 preload="auto"></audio>
-<audio id="sfx-letter-bad" src="Audio/SFX/quiz_bad.mp3"                preload="auto"></audio>
+<audio id="sfx-letter-bad" src="Audio/SFX/letter_wrong.mp3"            preload="auto"></audio>
 <audio id="sfx-word-won"   src="Audio/SFX/life_up.mp3"                 preload="auto"></audio>
 <audio id="sfx-word-lost"  src="Audio/SFX/game_over.mp3"               preload="auto"></audio>
 <audio id="sfx-alarm"      src="Audio/SFX/siren_loop.mp3"        loop  preload="auto"></audio>
@@ -718,15 +718,16 @@ const AUDIO = {
 function unlockAudio() {
   if (AUDIO.unlocked) return;
   AUDIO.unlocked = true;
-  document.querySelectorAll('audio').forEach(a => {
-    const v = a.volume; a.volume = 0;
-    a.play().then(() => { a.pause(); a.currentTime = 0; a.volume = v; }).catch(() => {});
-  });
+  // Unlock audio context with a single silent element — never touch the SFX elements
+  const dummy = document.createElement('audio');
+  dummy.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+  dummy.volume = 0;
+  dummy.play().catch(() => {});
   playMusic('mus-ambient');
 }
 
 function playSFX(id) {
-  if (AUDIO.muted) return;
+  if (!AUDIO.unlocked || AUDIO.muted) return;
   try {
     const el = document.getElementById(id);
     if (!el) return;
