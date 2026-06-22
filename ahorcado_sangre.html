@@ -520,7 +520,7 @@ canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:90}
 <!-- ═══ AUDIO ═══ -->
 <audio id="mus-ambient"    src="Audio/Musica/ahorcado_ambient.mp3"  loop preload="auto"></audio>
 
-<audio id="sfx-letter-ok"  src="Audio/SFX/quiz_ok.mp3"                 preload="auto"></audio>
+<audio id="sfx-letter-ok"  src="Audio/SFX/letter_correct.mp3"          preload="auto"></audio>
 <audio id="sfx-letter-bad" src="Audio/SFX/letter_wrong.mp3"            preload="auto"></audio>
 <audio id="sfx-word-won"   src="Audio/SFX/life_up.mp3"                 preload="auto"></audio>
 <audio id="sfx-word-lost"  src="Audio/SFX/game_over.mp3"               preload="auto"></audio>
@@ -1590,6 +1590,19 @@ buildChips();
 initECG();
 loadWord(0);
 ecgTick();
+
+// Intentar autoplay inmediato; si el browser lo bloquea, se inicia en el primer gesto (unlockAudio)
+(function tryAutoplay() {
+  const el = document.getElementById('mus-ambient');
+  if (!el) return;
+  el.volume = AUDIO.vol.music;
+  el.play().then(() => {
+    AUDIO.unlocked = true;
+    AUDIO.currentMusic = 'mus-ambient';
+  }).catch(() => {
+    // Browser bloqueó autoplay — unlockAudio se encargará en el primer gesto
+  });
+})();
 </script>
 </body>
 </html>
