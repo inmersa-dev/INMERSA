@@ -25,7 +25,7 @@ h1,#score-bar{position:relative;z-index:1}
 #grid-wrap{overflow:auto}
 
 /* Grid */
-#grid{display:grid;grid-template-columns:repeat(11,36px);grid-template-rows:repeat(14,36px);gap:2px;background:#0A1628}
+#grid{display:grid;grid-template-columns:repeat(17,36px);grid-template-rows:repeat(15,36px);gap:2px;background:#0A1628}
 .cell{width:36px;height:36px;background:#fff;border:2px solid #bbb;position:relative;cursor:pointer;display:flex;align-items:center;justify-content:center;user-select:none;transition:background .15s,border-color .15s}
 .cell.empty{background:transparent;border-color:transparent;cursor:default;pointer-events:none}
 .cell-num{position:absolute;top:1px;left:2px;font-size:8px;color:#333;line-height:1;font-weight:bold;pointer-events:none}
@@ -72,6 +72,42 @@ h1,#score-bar{position:relative;z-index:1}
 @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.75)}}
 
 canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:499}
+
+/* ── Module Victory Overlay ── */
+#mv-overlay{position:fixed;inset:0;background:rgba(10,22,40,.92);display:none;
+  align-items:center;justify-content:center;z-index:600;overflow-y:auto;animation:mvFadeIn .4s}
+#mv-overlay.show{display:flex}
+@keyframes mvFadeIn{from{opacity:0}to{opacity:1}}
+#mv-box{background:linear-gradient(160deg,#061524,#0a1e34,#061524);
+  border:1px solid rgba(0,212,255,.35);border-radius:20px;
+  padding:32px 28px 26px;width:min(560px,93vw);margin:auto;text-align:center;
+  box-shadow:0 0 60px rgba(0,180,204,.2);animation:mvSlide .4s}
+@keyframes mvSlide{from{transform:translateY(32px);opacity:0}to{transform:translateY(0);opacity:1}}
+#mv-badge{font-size:3.4rem;margin-bottom:8px;filter:drop-shadow(0 0 10px gold)}
+#mv-title{font-size:1.05rem;font-weight:900;letter-spacing:2px;color:#00D4FF;
+  text-transform:uppercase;line-height:1.45;margin-bottom:4px}
+#mv-subtitle{font-size:.82rem;color:rgba(0,212,255,.65);margin-bottom:20px}
+#mv-stats{display:flex;justify-content:center;gap:22px;
+  border-top:1px solid rgba(0,212,255,.15);border-bottom:1px solid rgba(0,212,255,.15);
+  padding:14px 0;margin-bottom:20px}
+.mv-stat{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:74px}
+.mv-stat-lbl{font-size:.56rem;font-weight:800;letter-spacing:2px;color:rgba(0,212,255,.6);text-transform:uppercase}
+.mv-stat-val{font-size:1.6rem;font-weight:900;color:#00D4FF}
+#mv-list{display:flex;flex-direction:column;gap:7px;margin-bottom:18px;text-align:left}
+.mv-row{display:flex;align-items:center;gap:10px;
+  background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.14);
+  border-radius:9px;padding:9px 13px}
+.mv-row-icon{font-size:1.3rem;flex-shrink:0}
+.mv-row-name{font-weight:800;color:#fff;flex:1;letter-spacing:.5px;font-size:.9rem}
+.mv-badge-word{font-size:.72rem;font-weight:700;color:#22c55e;white-space:nowrap}
+.mv-badge-comp.ok  {font-size:.72rem;font-weight:700;color:#22c55e;white-space:nowrap}
+.mv-badge-comp.skip{font-size:.72rem;font-weight:700;color:#f5c518;white-space:nowrap}
+#mv-msg{font-size:.82rem;color:rgba(0,212,255,.7);margin-bottom:20px;font-style:italic}
+#mv-play-again{padding:12px 34px;background:linear-gradient(135deg,#00B4CC,#00D4FF);
+  border:none;border-radius:8px;color:#0A1628;font-family:'Nunito',sans-serif;
+  font-weight:900;font-size:.95rem;cursor:pointer;letter-spacing:1px;
+  text-transform:uppercase;transition:all .2s}
+#mv-play-again:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,180,204,.45)}
 
 /* ── DNA Panel ── */
 #dna-panel{
@@ -152,19 +188,39 @@ canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:499}
   </div>
 </div>
 
-<!-- Win overlay -->
-<div id="win-overlay" class="overlay hidden">
-  <div class="overlay-box">
-    <h2>🎉 ¡Excelente!</h2>
-    <p id="win-msg"></p>
-    <button id="play-again-btn" onclick="restartGame()">Jugar de nuevo</button>
+<!-- Win overlay (legacy, kept hidden) -->
+<div id="win-overlay" class="overlay hidden"></div>
+
+<!-- Module Victory Overlay -->
+<div id="mv-overlay">
+  <div id="mv-box">
+    <div id="mv-badge">🏆</div>
+    <div id="mv-title">MÓDULO P01 — ANATOMÍA SANGUÍNEA<br><span style="font-size:1.4rem;letter-spacing:4px;color:#fff">COMPLETADA</span></div>
+    <div id="mv-subtitle">Has dominado los componentes de la sangre.</div>
+    <div id="mv-stats">
+      <div class="mv-stat">
+        <span class="mv-stat-lbl">PALABRAS</span>
+        <span class="mv-stat-val" id="mv-words">5/5</span>
+      </div>
+      <div class="mv-stat">
+        <span class="mv-stat-lbl">COMPRENSIÓN</span>
+        <span class="mv-stat-val" id="mv-comp">0/5</span>
+      </div>
+      <div class="mv-stat">
+        <span class="mv-stat-lbl">PUNTOS</span>
+        <span class="mv-stat-val" id="mv-pts">0</span>
+      </div>
+    </div>
+    <div id="mv-list"></div>
+    <div id="mv-msg"></div>
+    <button id="mv-play-again" onclick="restartGame()">JUGAR DE NUEVO</button>
   </div>
 </div>
 
 <h1>Crucigrama: Componentes de la Sangre</h1>
 <div id="score-bar">
   <span class="hud-label">Puntuación:</span> <span id="score-val">0</span>
-  &nbsp;|&nbsp; <span class="hud-label">Palabras:</span> <span id="words-done">0</span>/7
+  &nbsp;|&nbsp; <span class="hud-label">Palabras:</span> <span id="words-done">0</span>/12
   <div id="progress-bar"><div id="progress-fill"></div></div>
 </div>
 
@@ -190,75 +246,86 @@ canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:499}
 
 <script>
 /*
-Grid layout (14 rows × 11 cols):
-      0    1    2    3    4    5    6    7    8    9   10
- 0:   .    .    .    .    .   [1P] [2L]  A    S    M    A
- 1:   .   [3P]  L    A    Q    U    E    T    A    .    .
- 2:   .    .    .    .    .    .    U    .    .    .    .
- 3:   .    .    .    .    .    .    C    .    .    .    .
- 4:  [4H] [5E]  M    O    G    L    O   [6B]  I    N    A
- 5:   .   [7R]  O    J    O    .    C    L    .    .    .
- 6:   .    I    .    .    .    .    I    A    .    .    .
- 7:   .    T    .    .    .    .    T    N    .    .    .
- 8:   .    R    .    .    .    .    O    C    .    .    .
- 9:   .    O    .    .    .    .    .    O    .    .    .
-10:   .    C    .    .    .    .    .    .    .    .    .
-11:   .    I    .    .    .    .    .    .    .    .    .
-12:   .    T    .    .    .    .    .    .    .    .    .
-13:   .    O    .    .    .    .    .    .    .    .    .
+Grid layout (15 rows × 17 cols) — TROMBOCITOPENIA vertical en col 8:
+     0    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15   16
+ 0:  .    .    .    .    .  [1E]  R    I   [2T]  R    O    C    I    T    O    .    .
+ 1:  .    .    .    .    .    .    .    .    R    .    .    .    .    .    .    .    .
+ 2:  .    .    .    .    .    .    .    .    O    .    .    .    .    .    .    .    .
+ 3:  .    .    .    .    .    . [3H]   E   [M]   O    G    L    O    B    I    N    A
+ 4:  .    .    .    .    .    .    .    .  [4B]  L    A    N    C    O    .    .    .
+ 5:  .    .    .    .    .    .    .  [5R]  O    J    O    .    .    .    .    .    .
+ 6:  .    .    . [6L]   E    U    C    O   [C]   I    T    O    .    .    .    .    .
+ 7:  .    .    . [7H]   E    M    O    F   [I]   L    I    A    .    .    .    .    .
+ 8:  .    .    .    .    .    .    .    .    T    .    .    .    .    .    .    .    .
+ 9:  .    .    .    .    .    .    .    .    O    .    .    .    .    .    .    .    .
+10:  .    .    .    .    .    .    .    .  [8P]  L    A    Q    U    E    T    A    .
+11:  .    .    .    .  [9L]   E    U    C   [E]   M    I    A    .    .    .    .    .
+12:  .    .    .    .    .    .    . [10A] [N]   E    M    I    A    .    .    .    .
+13:  .    .    .    . [11S]   E    P    S   [I]   S    .    .    .    .    .    .    .
+14:  .    .    . [12P]  L    A    S    M   [A]   .    .    .    .    .    .    .    .
 */
 
 /* ── Banco de preguntas de comprensión ── */
 const COMPREHENSION_QS = {
   PLASMA: [
     {
+      // correct:2 — "55%"
       q: '¿Qué porcentaje aproximado del volumen sanguíneo total representa el plasma?',
       opts: ['35%','45%','55%','65%'],
       correct: 2
     },
     {
+      // correct:0 — "Agua"  (variado desde índice 2)
       q: '¿Cuál es el componente más abundante del plasma sanguíneo?',
-      opts: ['Glucosa','Proteínas','Agua','Sales minerales'],
-      correct: 2
+      opts: ['Agua','Glucosa','Proteínas','Sales minerales'],
+      correct: 0
     },
     {
-      q: '¿Cuál de estas proteínas plasmáticas es la más abundante y mantiene la presión oncótica?',
-      opts: ['Fibrinógeno','Globulina','Albumina','Transferrina'],
-      correct: 2
+      // correct:1 — "Albúmina" (corregida tilde; variado desde índice 2)
+      q: '¿Cuál proteína plasmática es la más abundante en la sangre?',
+      opts: ['Fibrinógeno','Albúmina','Globulina','Transferrina'],
+      correct: 1
     },
     {
+      // correct:1 — "Producción de anticuerpos"  (variado desde índice 2)
       q: '¿Qué función NO realiza el plasma sanguíneo?',
-      opts: ['Transporte de hormonas','Regulación del pH','Producción de anticuerpos','Transporte de nutrientes'],
-      correct: 2
+      opts: ['Transporte de hormonas','Producción de anticuerpos','Regulación del pH','Transporte de nutrientes'],
+      correct: 1
     },
     {
+      // correct:2 — "Factores de coagulación"  (variado desde índice 2→2, ok)
       q: 'El suero sanguíneo se diferencia del plasma porque carece de:',
-      opts: ['Agua','Albumina','Factores de coagulación','Glucosa'],
+      opts: ['Agua','Glucosa','Factores de coagulación','Albúmina'],
       correct: 2
     }
   ],
   LEUCOCITO: [
     {
+      // correct:2 — "Neutrófilo"
       q: '¿Cuál es el tipo de leucocito más abundante en sangre periférica normal?',
       opts: ['Monocito','Linfocito','Neutrófilo','Eosinófilo'],
       correct: 2
     },
     {
+      // correct:1 — "Linfocito B"  (variado desde índice 2)
       q: '¿Qué leucocito produce anticuerpos (inmunoglobulinas)?',
-      opts: ['Neutrófilo','Basófilo','Linfocito B','Monocito'],
-      correct: 2
+      opts: ['Neutrófilo','Linfocito B','Basófilo','Monocito'],
+      correct: 1
     },
     {
+      // correct:1 — "Diapédesis"
       q: '¿Cómo se llama el proceso por el que los leucocitos atraviesan la pared del vaso hacia el tejido inflamado?',
       opts: ['Fagocitosis','Diapédesis','Hemostasia','Opsonización'],
       correct: 1
     },
     {
+      // correct:2 — "Médula ósea roja"
       q: '¿En qué órgano se producen la mayoría de los leucocitos?',
       opts: ['Hígado','Bazo','Médula ósea roja','Timo'],
       correct: 2
     },
     {
+      // correct:1 — "4 500–11 000"
       q: '¿Cuál es el rango normal de leucocitos por microlitro de sangre?',
       opts: ['500–1 500','4 500–11 000','20 000–30 000','50 000–100 000'],
       correct: 1
@@ -266,96 +333,251 @@ const COMPREHENSION_QS = {
   ],
   PLAQUETA: [
     {
+      // correct:0 — "Megacariocito"  (variado desde índice 1)
       q: '¿De qué célula se originan las plaquetas?',
-      opts: ['Eritroblasto','Megacariocito','Monocito','Linfocito'],
-      correct: 1
+      opts: ['Megacariocito','Eritroblasto','Monocito','Linfocito'],
+      correct: 0
     },
     {
+      // correct:1 — "8–10 días"
       q: '¿Cuál es la vida media aproximada de una plaqueta en circulación?',
-      opts: ['24 horas','5–10 días','30 días','120 días'],
+      opts: ['24 horas','8–10 días','30 días','120 días'],
       correct: 1
     },
     {
+      // correct:2 — "ADP"  (variado desde índice 1)
       q: '¿Qué sustancia liberan las plaquetas para atraer a otras plaquetas al sitio de lesión?',
-      opts: ['Heparina','ADP','Histamina','Eritropoyetina'],
-      correct: 1
+      opts: ['Heparina','Histamina','ADP','Eritropoyetina'],
+      correct: 2
     },
     {
+      // correct:2 — "Trombocitopenia"
       q: 'Una cifra de plaquetas inferior a 150 000/µL se denomina:',
       opts: ['Policitemia','Leucopenia','Trombocitopenia','Neutropenia'],
       correct: 2
     },
     {
+      // correct:3 — "No, son fragmentos citoplasmáticos"  (variado desde índice 2)
       q: '¿Las plaquetas tienen núcleo?',
-      opts: ['Sí, uno bilobulado','Sí, segmentado','No, son fragmentos citoplasmáticos','No, como los eritrocitos maduros'],
-      correct: 2
+      opts: ['Sí, uno bilobulado','Sí, segmentado','No, como los eritrocitos maduros','No, son fragmentos citoplasmáticos'],
+      correct: 3
     }
   ],
   ERITROCITO: [
     {
+      // correct:3 — "120 días"
       q: '¿Cuál es la vida media aproximada de un eritrocito en circulación?',
       opts: ['10 días','30 días','60 días','120 días'],
       correct: 3
     },
     {
+      // correct:1 — "Para tener más espacio para hemoglobina"
       q: '¿Por qué el eritrocito maduro NO tiene núcleo?',
       opts: ['Lo pierde por apoptosis','Para tener más espacio para hemoglobina','El núcleo migra al plasma','Por acción de los macrófagos del bazo'],
       correct: 1
     },
     {
+      // correct:1 — "Bicóncava"
       q: '¿Qué forma característica tiene el eritrocito humano normal?',
       opts: ['Esférica','Bicóncava','Biconvexa','Triangular'],
       correct: 1
     },
     {
+      // correct:2 — "Bazo"
       q: '¿En qué órgano se destruyen principalmente los eritrocitos envejecidos?',
       opts: ['Riñón','Hígado','Bazo','Médula ósea'],
       correct: 2
     },
     {
+      // correct:1 — "Eritropoyetina"
       q: '¿Qué hormona estimula la producción de eritrocitos?',
       opts: ['Insulina','Eritropoyetina','Trombopoyetina','Aldosterona'],
       correct: 1
     }
   ],
+  ANEMIA: [
+    {
+      q: '¿Cuál de los siguientes síntomas es más característico de la anemia?',
+      opts: ['Fiebre alta','Fatiga y palidez','Sangrado espontáneo','Inflamación de ganglios'],
+      correct: 1
+    },
+    {
+      q: '¿Qué valor de hemoglobina indica anemia en un adulto varón según la OMS?',
+      opts: ['Menos de 15 g/dL','Menos de 13 g/dL','Menos de 10 g/dL','Menos de 8 g/dL'],
+      correct: 1
+    },
+    {
+      q: '¿Cuál es la causa más frecuente de anemia a nivel mundial?',
+      opts: ['Deficiencia de vitamina B12','Deficiencia de hierro','Pérdida crónica de sangre','Destrucción de eritrocitos'],
+      correct: 1
+    },
+    {
+      q: '¿Qué órgano produce la eritropoyetina que estimula la corrección de la anemia?',
+      opts: ['Hígado','Bazo','Riñón','Médula ósea'],
+      correct: 2
+    },
+    {
+      q: 'En la anemia ferropénica, los eritrocitos se observan:',
+      opts: ['Grandes y pálidos','Pequeños y pálidos (microcíticos hipocrómicos)','Normales en tamaño y color','Deformados con espículas'],
+      correct: 1
+    }
+  ],
+  LEUCEMIA: [
+    {
+      q: '¿Cuál es la característica principal de la leucemia?',
+      opts: ['Descenso de plaquetas','Proliferación descontrolada de glóbulos blancos','Destrucción masiva de eritrocitos','Falta de factores de coagulación'],
+      correct: 1
+    },
+    {
+      q: '¿Cuál de estos es un signo frecuente de leucemia?',
+      opts: ['Hipertensión arterial','Sangrado espontáneo y moretones','Pérdida de audición','Dolor articular severo'],
+      correct: 1
+    },
+    {
+      q: '¿Qué tipo de leucemia es más común en niños?',
+      opts: ['Leucemia mieloide crónica','Leucemia linfocítica crónica','Leucemia linfoblástica aguda','Leucemia mieloide aguda'],
+      correct: 2
+    },
+    {
+      q: '¿En qué órgano se produce la proliferación anormal de células en la leucemia?',
+      opts: ['Bazo','Hígado','Médula ósea','Timo'],
+      correct: 2
+    },
+    {
+      q: '¿Cuál de los siguientes NO es un tratamiento para la leucemia?',
+      opts: ['Quimioterapia','Trasplante de médula ósea','Diálisis renal','Radioterapia'],
+      correct: 2
+    }
+  ],
+  HEMOFILIA: [
+    {
+      q: '¿Qué proceso biológico está afectado en la hemofilia?',
+      opts: ['Producción de eritrocitos','Coagulación de la sangre','Defensa inmunológica','Transporte de oxígeno'],
+      correct: 1
+    },
+    {
+      q: '¿Qué factor de coagulación falta en la hemofilia A?',
+      opts: ['Factor V','Factor VII','Factor VIII','Factor IX'],
+      correct: 2
+    },
+    {
+      q: '¿Cómo se hereda la hemofilia clásica?',
+      opts: ['Autosómica dominante','Ligada al cromosoma X','Autosómica recesiva','Mitocondrial'],
+      correct: 1
+    },
+    {
+      q: '¿Cuál es el principal riesgo para una persona con hemofilia?',
+      opts: ['Infecciones bacterianas frecuentes','Hemorragias difíciles de detener','Formación excesiva de coágulos','Destrucción rápida de leucocitos'],
+      correct: 1
+    },
+    {
+      q: '¿Qué articulaciones son las más afectadas por sangrados en la hemofilia?',
+      opts: ['Hombros y codos','Rodillas, tobillos y codos','Caderas y columna','Muñecas y dedos'],
+      correct: 1
+    }
+  ],
+  TROMBOCITOPENIA: [
+    {
+      q: '¿Qué cifra de plaquetas define la trombocitopenia?',
+      opts: ['Menos de 400 000/µL','Menos de 150 000/µL','Menos de 50 000/µL','Menos de 10 000/µL'],
+      correct: 1
+    },
+    {
+      q: '¿Cuál es el principal riesgo de la trombocitopenia severa?',
+      opts: ['Formación de trombos','Hemorragias espontáneas','Infecciones oportunistas','Anemia hemolítica'],
+      correct: 1
+    },
+    {
+      q: '¿Qué célula precursora de las plaquetas se ve afectada en la trombocitopenia central?',
+      opts: ['Eritroblasto','Linfoblasto','Megacariocito','Monoblasto'],
+      correct: 2
+    },
+    {
+      q: 'Un paciente con trombocitopenia presenta petequias. ¿Qué son las petequias?',
+      opts: ['Bultos debajo de la piel','Pequeñas manchas rojas por sangrado capilar','Úlceras en la mucosa','Inflamación de ganglios linfáticos'],
+      correct: 1
+    },
+    {
+      q: '¿Cuál de estos medicamentos puede causar trombocitopenia como efecto secundario?',
+      opts: ['Paracetamol','Heparina','Amoxicilina','Ibuprofeno'],
+      correct: 1
+    }
+  ],
+  SEPSIS: [
+    {
+      q: '¿Cómo se define la sepsis?',
+      opts: ['Infección localizada en un órgano','Respuesta inflamatoria sistémica desregulada a una infección','Envenenamiento por toxinas alimentarias','Acumulación de bacterias en sangre sin síntomas'],
+      correct: 1
+    },
+    {
+      q: '¿Cuál es la complicación más grave de la sepsis?',
+      opts: ['Fiebre persistente','Choque séptico con falla multiorgánica','Erupción cutánea generalizada','Pérdida de consciencia temporal'],
+      correct: 1
+    },
+    {
+      q: '¿Qué tipo de microorganismo puede desencadenar sepsis?',
+      opts: ['Solo bacterias','Solo virus','Bacterias, hongos, virus o parásitos','Solo bacterias gram negativas'],
+      correct: 2
+    },
+    {
+      q: '¿Qué componente sanguíneo suele elevarse primero en una sepsis bacteriana?',
+      opts: ['Eritrocitos','Plaquetas','Leucocitos (leucocitosis)','Plasma'],
+      correct: 2
+    },
+    {
+      q: '¿Cuál es el tratamiento urgente más importante al diagnosticar sepsis?',
+      opts: ['Antiinflamatorios orales','Antibióticos intravenosos inmediatos','Transfusión de sangre','Diálisis preventiva'],
+      correct: 1
+    }
+  ],
   HEMOGLOBINA: [
     {
-      q: '¿Cuántas cadenas polipeptídicas forman la hemoglobina adulta (HbA)?',
+      // correct:1 — "4"
+      q: '¿Cuántas cadenas polipeptídicas forman la hemoglobina adulta?',
       opts: ['2','4','6','8'],
       correct: 1
     },
     {
-      q: '¿Qué metal es el centro del grupo hemo de la hemoglobina?',
+      // correct:2 — "Hierro"
+      q: '¿Qué metal contiene el grupo hemo de la hemoglobina y le da el color rojo a la sangre?',
       opts: ['Cobre','Zinc','Hierro','Magnesio'],
       correct: 2
     },
     {
+      // correct:2 — "Oxihemoglobina"
       q: '¿Qué nombre recibe la hemoglobina cuando está unida al oxígeno?',
       opts: ['Carboxihemoglobina','Metahemoglobina','Oxihemoglobina','Deoxihemoglobina'],
       correct: 2
     },
     {
+      // correct:1 — "Forma carboxihemoglobina..."
       q: '¿Qué ocurre con la hemoglobina cuando se expone al monóxido de carbono (CO)?',
       opts: ['Libera el oxígeno con mayor facilidad','Forma carboxihemoglobina que no puede transportar O₂','Se destruye inmediatamente','Se convierte en mioglobina'],
       correct: 1
     },
     {
-      q: 'La hemoglobina fetal (HbF) difiere de la adulta en que:',
-      opts: ['Tiene cadenas beta en lugar de alfa','Tiene cadenas gamma en lugar de beta','Contiene cobre en lugar de hierro','Carece de grupo hemo'],
-      correct: 1
+      // correct:3 — "4 moléculas"  (reemplaza pregunta sobre HbF, demasiado avanzada)
+      q: '¿Cuántas moléculas de oxígeno puede transportar una sola molécula de hemoglobina?',
+      opts: ['1','2','3','4'],
+      correct: 3
     }
   ]
 };
 
-const ROWS=14, COLS=11;
+const ROWS=15, COLS=17;
 const WORDS=[
-  {id:1,num:1,word:'PLASMA',     dir:'across',row:0,col:5, clue:'Parte líquida de la sangre que forma el 55% del volumen sanguíneo'},
-  {id:2,num:2,word:'LEUCOCITO',  dir:'down',  row:0,col:6, clue:'Glóbulo blanco que defiende el cuerpo de infecciones'},
-  {id:3,num:3,word:'PLAQUETA',   dir:'across',row:1,col:1, clue:'Fragmento celular que forma coágulos para detener hemorragias'},
-  {id:4,num:4,word:'HEMOGLOBINA',dir:'across',row:4,col:0, clue:'Proteína con hierro que capta el oxígeno en los pulmones'},
-  {id:5,num:5,word:'ERITROCITO', dir:'down',  row:4,col:1, clue:'Glóbulo rojo que transporta oxígeno y nutrientes'},
-  {id:6,num:6,word:'BLANCO',     dir:'down',  row:4,col:7, clue:'Glóbulo ___: otro nombre que reciben los leucocitos'},
-  {id:7,num:7,word:'ROJO',       dir:'across',row:5,col:1, clue:'Glóbulo ___: otro nombre que reciben los eritrocitos'},
+  {id:1, num:1,  word:'ERITROCITO',      dir:'across', row:0,  col:5,  clue:'Glóbulo rojo que transporta oxígeno por la sangre'},
+  {id:2, num:2,  word:'TROMBOCITOPENIA', dir:'down',   row:0,  col:8,  clue:'Recuento anormalmente bajo de plaquetas en sangre'},
+  {id:3, num:3,  word:'HEMOGLOBINA',     dir:'across', row:3,  col:6,  clue:'Proteína con hierro que capta oxígeno en los pulmones'},
+  {id:4, num:4,  word:'BLANCO',          dir:'across', row:4,  col:8,  clue:'Glóbulo ___: otro nombre de los leucocitos'},
+  {id:5, num:5,  word:'ROJO',            dir:'across', row:5,  col:7,  clue:'Glóbulo ___: otro nombre de los eritrocitos'},
+  {id:6, num:6,  word:'LEUCOCITO',       dir:'across', row:6,  col:3,  clue:'Glóbulo blanco que defiende el cuerpo de infecciones'},
+  {id:7, num:7,  word:'HEMOFILIA',       dir:'across', row:7,  col:3,  clue:'Trastorno hereditario que impide la coagulación normal'},
+  {id:8, num:8,  word:'PLAQUETA',        dir:'across', row:10, col:8,  clue:'Fragmento celular que forma coágulos y detiene hemorragias'},
+  {id:9, num:9,  word:'LEUCEMIA',        dir:'across', row:11, col:4,  clue:'Cáncer que afecta a los glóbulos blancos'},
+  {id:10,num:10, word:'ANEMIA',          dir:'across', row:12, col:7,  clue:'Deficiencia de glóbulos rojos o hemoglobina en sangre'},
+  {id:11,num:11, word:'SEPSIS',          dir:'across', row:13, col:4,  clue:'Respuesta inflamatoria sistémica grave a una infección'},
+  {id:12,num:12, word:'PLASMA',          dir:'across', row:14, col:3,  clue:'Parte líquida de la sangre, representa el 55% del volumen'},
 ];
 
 // State
@@ -369,7 +591,10 @@ let scoreBase=0;
 let compBonus=0;
 let compQ1Component=null;
 let compQ1Index=null;
+let compQ2Component=null;
 let compCurrentQ=0; // 1 or 2
+// null=no preguntado, true=correcto, false=incorrecto
+let compResults={PLASMA:null,LEUCOCITO:null,PLAQUETA:null,ERITROCITO:null,HEMOGLOBINA:null,ANEMIA:null,LEUCEMIA:null,HEMOFILIA:null,TROMBOCITOPENIA:null,SEPSIS:null};
 
 const key=(r,c)=>r+','+c;
 
@@ -642,6 +867,7 @@ function startComprehension(){
   document.getElementById('partial-victory-overlay').classList.add('hidden');
   compBonus=0;
   compCurrentQ=1;
+  compResults={PLASMA:null,LEUCOCITO:null,PLAQUETA:null,ERITROCITO:null,HEMOGLOBINA:null,ANEMIA:null,LEUCEMIA:null,HEMOFILIA:null,TROMBOCITOPENIA:null,SEPSIS:null};
   const {component,idx,q}=pickQuestion(null);
   compQ1Component=component;
   compQ1Index=idx;
@@ -669,6 +895,8 @@ function checkAnswer(chosen,correctIdx,qNum){
   document.querySelectorAll('#q-options .opt-btn').forEach(b=>b.disabled=true);
   const btns=document.querySelectorAll('#q-options .opt-btn');
   const isCorrect=(chosen===correctIdx);
+  const activeComp = compCurrentQ===1 ? compQ1Component : compQ2Component;
+  if(activeComp) compResults[activeComp] = isCorrect;
 
   btns[chosen].classList.add(isCorrect?'correct-ans':'wrong-ans');
   if(!isCorrect){
@@ -689,6 +917,7 @@ function advanceQuestion(){
     compCurrentQ=2;
     document.getElementById('question-overlay').classList.add('hidden');
     const {component,idx,q}=pickQuestion(compQ1Component);
+    compQ2Component=component;
     renderQuestion(2,q);
   } else {
     document.getElementById('question-overlay').classList.add('hidden');
@@ -697,15 +926,44 @@ function advanceQuestion(){
 }
 
 function showFinalVictory(){
-  const finalScore=scoreBase+compBonus;
-  document.getElementById('score-val').textContent=finalScore;
-  let compLine='';
-  if(compBonus===100) compLine='Preguntas de comprensión: +100 pts (¡2/2 correctas!) 🧠';
-  else if(compBonus===50) compLine='Preguntas de comprensión: +50 pts (1/2 correctas)';
-  else compLine='Preguntas de comprensión: +0 pts (0/2 correctas)';
-  document.getElementById('win-msg').textContent=
-    `Crucigrama completado. Puntuación base: ${scoreBase} pts. ${compLine} Puntuación final: ${finalScore} pts.`;
-  document.getElementById('win-overlay').classList.remove('hidden');
+  const finalScore = scoreBase + compBonus;
+  document.getElementById('score-val').textContent = finalScore;
+
+  const compOk = Object.values(compResults).filter(v => v === true).length;
+
+  document.getElementById('mv-words').textContent = WORDS.length + '/' + WORDS.length;
+  document.getElementById('mv-comp').textContent  = compOk + '/2';
+  document.getElementById('mv-pts').textContent   = finalScore;
+
+  const ICONS = {
+    ERITROCITO:'🔴', TROMBOCITOPENIA:'⬇️', HEMOGLOBINA:'⛓️', BLANCO:'🛡️',
+    ROJO:'🩸', LEUCOCITO:'🔬', HEMOFILIA:'💉', PLAQUETA:'🩹',
+    LEUCEMIA:'🦠', ANEMIA:'😮‍💨', SEPSIS:'🌡️', PLASMA:'🩺'
+  };
+  const list = document.getElementById('mv-list');
+  list.innerHTML = '';
+  WORDS.forEach(w => {
+    const name = w.word;
+    const res  = compResults[name]; // null | true | false
+    const hasQ = COMPREHENSION_QS[name] !== undefined;
+    const comp = res === true  ? '<span class="mv-badge-comp ok">✓ Comprensión</span>'
+               : res === false ? '<span class="mv-badge-comp skip">✗ Comprensión</span>'
+               : hasQ          ? '<span class="mv-badge-comp skip">◯ No preguntado</span>'
+               :                 '';
+    const row = document.createElement('div');
+    row.className = 'mv-row';
+    row.innerHTML = `<span class="mv-row-icon">${ICONS[name]||'📌'}</span>
+                     <span class="mv-row-name">${name}</span>
+                     <span class="mv-badge-word">✓ Completada</span>
+                     ${comp}`;
+    list.appendChild(row);
+  });
+
+  document.getElementById('mv-msg').textContent = compOk === 2
+    ? 'Dominio total. Estás listo para el siguiente módulo.'
+    : 'Excelente trabajo. Repasa los temas marcados para dominio total.';
+
+  document.getElementById('mv-overlay').classList.add('show');
   launchConfetti();
   stopMusic();
   playSFX('sfx-victory');
@@ -793,11 +1051,13 @@ document.getElementById('btn-mute').addEventListener('click', e => {
 })();
 
 function restartGame(){
-  document.getElementById('win-overlay').classList.add('hidden');
+  document.getElementById('mv-overlay').classList.remove('show');
   document.getElementById('partial-victory-overlay').classList.add('hidden');
   document.getElementById('question-overlay').classList.add('hidden');
   mistakes=0; scoreBase=0; selWordId=null; curR=-1; curC=-1;
   compBonus=0; compQ1Component=null; compQ1Index=null; compCurrentQ=0;
+  compQ2Component=null;
+  compResults={PLASMA:null,LEUCOCITO:null,PLAQUETA:null,ERITROCITO:null,HEMOGLOBINA:null,ANEMIA:null,LEUCEMIA:null,HEMOFILIA:null,TROMBOCITOPENIA:null,SEPSIS:null};
   document.getElementById('score-val').textContent='0';
   document.getElementById('words-done').textContent='0';
   document.getElementById('progress-fill').style.width='0%';
