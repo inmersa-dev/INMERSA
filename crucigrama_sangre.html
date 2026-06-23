@@ -4,14 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Crucigrama – Componentes de la Sangre</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#0A1628;color:#fff;font-family:'Segoe UI',sans-serif;min-height:100vh;padding:14px}
-h1{text-align:center;color:#00C9A7;margin-bottom:8px;font-size:1.3rem;letter-spacing:.5px}
+body{background:#0A1628;color:#fff;font-family:'Nunito',sans-serif;min-height:100vh;padding:14px}
+h1{text-align:center;color:#00D4FF;margin-bottom:8px;font-size:1.3rem;letter-spacing:.5px}
 #score-bar{text-align:center;margin-bottom:12px;font-size:.85rem;color:#aaa}
-#score-val{color:#00C9A7;font-weight:bold;font-size:1rem}
+#score-val{color:#00D4FF;font-weight:bold;font-size:1rem}
 #progress-bar{width:200px;height:6px;background:#112240;border-radius:3px;display:inline-block;vertical-align:middle;margin-left:8px;overflow:hidden}
-#progress-fill{height:100%;background:#00C9A7;width:0%;transition:width .4s}
+#progress-fill{height:100%;background:#00D4FF;width:0%;transition:width .4s}
+
+/* HUD labels */
+.hud-label{text-transform:uppercase;letter-spacing:2px;font-size:.72rem;color:#00D4FF}
 
 /* Layout */
 #main{display:flex;gap:20px;justify-content:center;align-items:flex-start;flex-wrap:wrap;position:relative;z-index:1}
@@ -24,41 +30,61 @@ h1,#score-bar{position:relative;z-index:1}
 .cell.empty{background:transparent;border-color:transparent;cursor:default;pointer-events:none}
 .cell-num{position:absolute;top:1px;left:2px;font-size:8px;color:#333;line-height:1;font-weight:bold;pointer-events:none}
 .cell-letter{font-size:1rem;font-weight:bold;color:#111;text-transform:uppercase;pointer-events:none}
-.cell.word-hl{background:#cce8ff;border-color:#5ab4f5}
-.cell.cursor-hl{background:#5ab4f5;border-color:#0277bd}
+.cell.word-hl{background:#cce8ff;border-color:#00D4FF}
+.cell.cursor-hl{background:#00D4FF;border-color:#0099bb}
 .cell.correct{background:#c8e6c9 !important;border-color:#388e3c !important}
 .cell.correct .cell-letter{color:#1b5e20}
 .cell.wrong{background:#ffcdd2 !important;border-color:#c62828 !important}
 .cell.wrong .cell-letter{color:#b71c1c}
-.cell.cursor-hl{background:#5ab4f5 !important;border-color:#0277bd !important}
+.cell.cursor-hl{background:#00D4FF !important;border-color:#0099bb !important}
 .cell.cursor-hl .cell-letter{color:#003}
 
 /* Clue panel */
 #clue-panel{width:290px;min-width:220px;flex-shrink:0}
-#active-clue-box{background:#112240;border:2px solid #00C9A7;border-radius:10px;padding:14px;margin-bottom:14px;min-height:80px}
-#active-clue-num{color:#00C9A7;font-weight:bold;font-size:.95rem;margin-bottom:6px}
+#active-clue-box{background:#112240;border:1px solid #1A3A5C;border-radius:10px;padding:14px;margin-bottom:14px;min-height:80px}
+#active-clue-num{color:#00D4FF;font-weight:bold;font-size:.95rem;margin-bottom:6px}
 #active-clue-text{color:#fff;font-size:1rem;line-height:1.45}
-.clue-section h3{color:#00C9A7;font-size:.88rem;margin:10px 0 6px;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #1a3560;padding-bottom:3px}
+.clue-section h3{color:#00D4FF;font-size:.88rem;margin:10px 0 6px;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #1a3560;padding-bottom:3px}
 .clue-item{font-size:.88rem;color:#bbb;padding:5px 7px;border-radius:4px;cursor:pointer;margin-bottom:3px;line-height:1.4;transition:background .15s,color .15s}
 .clue-item:hover{background:#112240;color:#fff}
 .clue-item.active-clue{background:#112240;color:#fff}
-.clue-item.done-clue{color:#00C9A7}
-.clue-item.done-clue.active-clue{color:#00C9A7}
+.clue-item.done-clue{color:#00D4FF}
+.clue-item.done-clue.active-clue{color:#00D4FF}
 
 /* Overlays */
-.overlay{position:fixed;inset:0;background:rgba(10,22,40,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:500}
+.overlay{position:fixed;inset:0;background:rgba(10,22,40,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:500;border:1px solid #1A3A5C}
 .overlay.hidden{display:none}
-.overlay-box{background:#112240;border:2px solid #00C9A7;border-radius:16px;padding:28px 32px;max-width:400px;width:90%;text-align:center}
-.overlay-box h2{color:#00C9A7;margin-bottom:12px;font-size:1.3rem}
+.overlay-box{background:#112240;border:1px solid #1A3A5C;border-radius:16px;padding:28px 32px;max-width:400px;width:90%;text-align:center}
+.overlay-box h2{color:#00D4FF;margin-bottom:12px;font-size:1.3rem}
 .overlay-box p{color:#fff;margin-bottom:18px;font-size:.92rem;line-height:1.45}
-.opt-btn{display:block;width:100%;background:#0d1d3a;border:2px solid #00C9A7;color:#fff;padding:10px 14px;margin:6px 0;border-radius:8px;cursor:pointer;font-size:.88rem;text-align:left;transition:background .18s;font-family:inherit}
+.opt-btn{display:block;width:100%;background:#0d1d3a;border:2px solid #00D4FF;color:#fff;padding:10px 14px;margin:6px 0;border-radius:8px;cursor:pointer;font-size:.88rem;text-align:left;transition:background .18s;font-family:'Nunito',sans-serif;font-weight:700}
 .opt-btn:hover:not(:disabled){background:#1a3560}
 .opt-btn:disabled{cursor:default}
-.opt-btn.correct-ans{background:#00C9A7 !important;color:#000;font-weight:bold}
+.opt-btn.correct-ans{background:#00D4FF !important;color:#0A1628;font-weight:900}
 .opt-btn.wrong-ans{background:#c62828 !important;border-color:#c62828}
-#win-btn,#play-again-btn{margin-top:14px;background:#00C9A7;color:#000;border:none;padding:11px 28px;border-radius:8px;cursor:pointer;font-size:.95rem;font-weight:bold;font-family:inherit}
+#win-btn,#play-again-btn,#continue-btn,#next-q-btn{margin-top:14px;background:linear-gradient(135deg,#00B4CC,#00D4FF);color:#0A1628;border:none;padding:11px 28px;border-radius:8px;cursor:pointer;font-size:.95rem;font-weight:900;font-family:'Nunito',sans-serif;text-transform:uppercase;letter-spacing:1.5px}
+#next-q-btn{display:none}
+
+/* Sistema activo */
+#sistema-activo{position:fixed;top:12px;left:14px;display:flex;align-items:center;gap:7px;z-index:200;pointer-events:none}
+#dot-activo{width:9px;height:9px;border-radius:50%;background:#00FF88;box-shadow:0 0 6px #00FF88;animation:pulse-dot 1.6s ease-in-out infinite}
+#sistema-activo span{font-family:'Nunito',sans-serif;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#00D4FF}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.75)}}
 
 canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:499}
+
+/* ── DNA Panel ── */
+#dna-panel{
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  background:#112240;border:1px solid #1A3A5C;border-radius:12px;
+  padding:14px 10px;min-width:90px;flex-shrink:0;
+}
+.dna-lbl{font-size:.58rem;font-weight:800;letter-spacing:2px;color:#00D4FF;
+  text-transform:uppercase;text-align:center;line-height:1.3}
+#dna-cv{display:block}
+#dna-pct{font-size:1.5rem;font-weight:900;color:#00D4FF;line-height:1}
+#dna-status{font-size:.6rem;font-weight:700;letter-spacing:1px;
+  color:rgba(0,212,255,.55);text-transform:uppercase;min-height:12px;text-align:center}
 
 /* ── Watermarks ── */
 #watermarks{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
@@ -66,7 +92,24 @@ canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:499}
 </style>
 </head>
 <body>
+
+<!-- ═══ AUDIO ═══ -->
+<audio id="mus-ambient"    src="Audio/Musica/ahorcado_ambient.mp3"       loop preload="auto"></audio>
+<audio id="sfx-letter-ok"  src="Audio/SFX/letter_correct.mp3"                 preload="auto"></audio>
+<audio id="sfx-letter-bad" src="Audio/SFX/letter_wrong.mp3"                   preload="auto"></audio>
+<audio id="sfx-quiz-ok"    src="Audio/SFX/quiz_correct.mp3"                   preload="auto"></audio>
+<audio id="sfx-quiz-bad"   src="Audio/SFX/snake_rescate_incorrecto.mp3"       preload="auto"></audio>
+<audio id="sfx-victory"    src="Audio/SFX/module_victory.mp3"                 preload="auto"></audio>
+
+<button id="btn-mute" style="position:fixed;top:12px;right:12px;z-index:9999;width:42px;height:42px;border-radius:50%;border:2px solid #00d4ff;background:rgba(10,22,40,.92);color:#00d4ff;font-size:1.1rem;cursor:pointer;font-weight:900;box-shadow:0 2px 8px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:0">🔊</button>
+
 <canvas id="confetti"></canvas>
+
+<!-- Indicador sistema activo -->
+<div id="sistema-activo">
+  <div id="dot-activo"></div>
+  <span>Sistema activo</span>
+</div>
 <!-- Input oculto para teclado móvil -->
 <input id="kb" type="text" autocomplete="off" autocorrect="off" autocapitalize="characters"
   style="position:fixed;opacity:0;width:1px;height:1px;top:0;left:0;pointer-events:none;z-index:-1;font-size:16px">
@@ -90,15 +133,22 @@ canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:499}
   <img src="plasma.png"      style="width:120px;top:10%;left:38%;transform:rotate(-25deg)">
 </div>
 
-<!-- Bonus overlay -->
-<div id="bonus-overlay" class="overlay hidden">
+<!-- Partial Victory overlay -->
+<div id="partial-victory-overlay" class="overlay hidden">
   <div class="overlay-box">
-    <h2>¡Crucigrama Completado!</h2>
-    <p>Responde la pregunta bonus para puntos extra:<br><strong>¿Cuál de estas células sanguíneas NO tiene núcleo en su forma madura?</strong></p>
-    <button class="opt-btn" onclick="checkBonus(this,'A')">A) Leucocito</button>
-    <button class="opt-btn" onclick="checkBonus(this,'B')">B) Eritrocito</button>
-    <button class="opt-btn" onclick="checkBonus(this,'C')">C) Plaqueta</button>
-    <button class="opt-btn" onclick="checkBonus(this,'D')">D) Hemoglobina</button>
+    <h2>¡Crucigrama completo!</h2>
+    <p>Ahora, dos preguntas para demostrar tu comprensión.</p>
+    <button id="continue-btn" onclick="startComprehension()">Continuar</button>
+  </div>
+</div>
+
+<!-- Question overlay -->
+<div id="question-overlay" class="overlay hidden">
+  <div class="overlay-box">
+    <h2 id="q-title">Pregunta 1 de 2</h2>
+    <p id="q-text"></p>
+    <div id="q-options"></div>
+    <button id="next-q-btn" onclick="advanceQuestion()">Siguiente</button>
   </div>
 </div>
 
@@ -113,13 +163,21 @@ canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:499}
 
 <h1>Crucigrama: Componentes de la Sangre</h1>
 <div id="score-bar">
-  Puntuación: <span id="score-val">0</span>
-  &nbsp;|&nbsp; Palabras: <span id="words-done">0</span>/7
+  <span class="hud-label">Puntuación:</span> <span id="score-val">0</span>
+  &nbsp;|&nbsp; <span class="hud-label">Palabras:</span> <span id="words-done">0</span>/7
   <div id="progress-bar"><div id="progress-fill"></div></div>
 </div>
 
 <div id="main">
   <div id="grid-wrap"><div id="grid"></div></div>
+  <!-- DNA Helix Panel -->
+  <div id="dna-panel">
+    <div class="dna-lbl">HÉLICE<br>EN FORMACIÓN</div>
+    <canvas id="dna-cv" width="90" height="300"></canvas>
+    <div id="dna-pct">0%</div>
+    <div id="dna-status">Hebra 2</div>
+  </div>
+
   <div id="clue-panel">
     <div id="active-clue-box">
       <div id="active-clue-num">Selecciona una celda</div>
@@ -148,15 +206,146 @@ Grid layout (14 rows × 11 cols):
 11:   .    I    .    .    .    .    .    .    .    .    .
 12:   .    T    .    .    .    .    .    .    .    .    .
 13:   .    O    .    .    .    .    .    .    .    .    .
-
-Intersections verified:
-  (0,6): PLASMA[1]=L, LEUCOCITO[0]=L ✓
-  (1,6): PLAQUETA[5]=E, LEUCOCITO[1]=E ✓
-  (4,1): HEMOGLOBINA[1]=E, ERITROCITO[0]=E ✓
-  (4,6): HEMOGLOBINA[6]=O, LEUCOCITO[4]=O ✓
-  (4,7): HEMOGLOBINA[7]=B, BLANCO[0]=B ✓
-  (5,1): ERITROCITO[1]=R, ROJO[0]=R ✓
 */
+
+/* ── Banco de preguntas de comprensión ── */
+const COMPREHENSION_QS = {
+  PLASMA: [
+    {
+      q: '¿Qué porcentaje aproximado del volumen sanguíneo total representa el plasma?',
+      opts: ['35%','45%','55%','65%'],
+      correct: 2
+    },
+    {
+      q: '¿Cuál es el componente más abundante del plasma sanguíneo?',
+      opts: ['Glucosa','Proteínas','Agua','Sales minerales'],
+      correct: 2
+    },
+    {
+      q: '¿Cuál de estas proteínas plasmáticas es la más abundante y mantiene la presión oncótica?',
+      opts: ['Fibrinógeno','Globulina','Albumina','Transferrina'],
+      correct: 2
+    },
+    {
+      q: '¿Qué función NO realiza el plasma sanguíneo?',
+      opts: ['Transporte de hormonas','Regulación del pH','Producción de anticuerpos','Transporte de nutrientes'],
+      correct: 2
+    },
+    {
+      q: 'El suero sanguíneo se diferencia del plasma porque carece de:',
+      opts: ['Agua','Albumina','Factores de coagulación','Glucosa'],
+      correct: 2
+    }
+  ],
+  LEUCOCITO: [
+    {
+      q: '¿Cuál es el tipo de leucocito más abundante en sangre periférica normal?',
+      opts: ['Monocito','Linfocito','Neutrófilo','Eosinófilo'],
+      correct: 2
+    },
+    {
+      q: '¿Qué leucocito produce anticuerpos (inmunoglobulinas)?',
+      opts: ['Neutrófilo','Basófilo','Linfocito B','Monocito'],
+      correct: 2
+    },
+    {
+      q: '¿Cómo se llama el proceso por el que los leucocitos atraviesan la pared del vaso hacia el tejido inflamado?',
+      opts: ['Fagocitosis','Diapédesis','Hemostasia','Opsonización'],
+      correct: 1
+    },
+    {
+      q: '¿En qué órgano se producen la mayoría de los leucocitos?',
+      opts: ['Hígado','Bazo','Médula ósea roja','Timo'],
+      correct: 2
+    },
+    {
+      q: '¿Cuál es el rango normal de leucocitos por microlitro de sangre?',
+      opts: ['500–1 500','4 500–11 000','20 000–30 000','50 000–100 000'],
+      correct: 1
+    }
+  ],
+  PLAQUETA: [
+    {
+      q: '¿De qué célula se originan las plaquetas?',
+      opts: ['Eritroblasto','Megacariocito','Monocito','Linfocito'],
+      correct: 1
+    },
+    {
+      q: '¿Cuál es la vida media aproximada de una plaqueta en circulación?',
+      opts: ['24 horas','5–10 días','30 días','120 días'],
+      correct: 1
+    },
+    {
+      q: '¿Qué sustancia liberan las plaquetas para atraer a otras plaquetas al sitio de lesión?',
+      opts: ['Heparina','ADP','Histamina','Eritropoyetina'],
+      correct: 1
+    },
+    {
+      q: 'Una cifra de plaquetas inferior a 150 000/µL se denomina:',
+      opts: ['Policitemia','Leucopenia','Trombocitopenia','Neutropenia'],
+      correct: 2
+    },
+    {
+      q: '¿Las plaquetas tienen núcleo?',
+      opts: ['Sí, uno bilobulado','Sí, segmentado','No, son fragmentos citoplasmáticos','No, como los eritrocitos maduros'],
+      correct: 2
+    }
+  ],
+  ERITROCITO: [
+    {
+      q: '¿Cuál es la vida media aproximada de un eritrocito en circulación?',
+      opts: ['10 días','30 días','60 días','120 días'],
+      correct: 3
+    },
+    {
+      q: '¿Por qué el eritrocito maduro NO tiene núcleo?',
+      opts: ['Lo pierde por apoptosis','Para tener más espacio para hemoglobina','El núcleo migra al plasma','Por acción de los macrófagos del bazo'],
+      correct: 1
+    },
+    {
+      q: '¿Qué forma característica tiene el eritrocito humano normal?',
+      opts: ['Esférica','Bicóncava','Biconvexa','Triangular'],
+      correct: 1
+    },
+    {
+      q: '¿En qué órgano se destruyen principalmente los eritrocitos envejecidos?',
+      opts: ['Riñón','Hígado','Bazo','Médula ósea'],
+      correct: 2
+    },
+    {
+      q: '¿Qué hormona estimula la producción de eritrocitos?',
+      opts: ['Insulina','Eritropoyetina','Trombopoyetina','Aldosterona'],
+      correct: 1
+    }
+  ],
+  HEMOGLOBINA: [
+    {
+      q: '¿Cuántas cadenas polipeptídicas forman la hemoglobina adulta (HbA)?',
+      opts: ['2','4','6','8'],
+      correct: 1
+    },
+    {
+      q: '¿Qué metal es el centro del grupo hemo de la hemoglobina?',
+      opts: ['Cobre','Zinc','Hierro','Magnesio'],
+      correct: 2
+    },
+    {
+      q: '¿Qué nombre recibe la hemoglobina cuando está unida al oxígeno?',
+      opts: ['Carboxihemoglobina','Metahemoglobina','Oxihemoglobina','Deoxihemoglobina'],
+      correct: 2
+    },
+    {
+      q: '¿Qué ocurre con la hemoglobina cuando se expone al monóxido de carbono (CO)?',
+      opts: ['Libera el oxígeno con mayor facilidad','Forma carboxihemoglobina que no puede transportar O₂','Se destruye inmediatamente','Se convierte en mioglobina'],
+      correct: 1
+    },
+    {
+      q: 'La hemoglobina fetal (HbF) difiere de la adulta en que:',
+      opts: ['Tiene cadenas beta en lugar de alfa','Tiene cadenas gamma en lugar de beta','Contiene cobre en lugar de hierro','Carece de grupo hemo'],
+      correct: 1
+    }
+  ]
+};
 
 const ROWS=14, COLS=11;
 const WORDS=[
@@ -170,11 +359,17 @@ const WORDS=[
 ];
 
 // State
-let cells={};       // "r,c" → cell object
+let cells={};
 let selWordId=null;
 let curR=-1,curC=-1;
 let mistakes=0;
 let scoreBase=0;
+
+// Comprehension state
+let compBonus=0;
+let compQ1Component=null;
+let compQ1Index=null;
+let compCurrentQ=0; // 1 or 2
 
 const key=(r,c)=>r+','+c;
 
@@ -250,7 +445,6 @@ const kb=document.getElementById('kb');
 
 kb.addEventListener('input',e=>{
   if(!selWordId) return;
-  // Borrar (móvil)
   if(e.inputType==='deleteContentBackward'){
     const cell=cells[key(curR,curC)];
     if(cell&&cell.entered){
@@ -263,7 +457,7 @@ kb.addEventListener('input',e=>{
   }
   const data=e.data;
   if(!data) return;
-  const typed=data.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const typed=data.toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
   processLetter(typed);
   kb.value='';
 });
@@ -292,10 +486,12 @@ function processLetter(typed){
   cell.el.classList.remove('correct','wrong');
   if(typed===cell.letter){
     cell.el.classList.add('correct');
+    playSFX('sfx-letter-ok');
   } else {
     cell.el.classList.add('wrong');
     if(!wasCorrect) mistakes++;
     shakeCell(cell.el);
+    playSFX('sfx-letter-bad');
   }
   updateProgress();
   updateWordDone();
@@ -318,7 +514,6 @@ function clickCell(r,c){
   if(!cell||!cell.wordIds.length) return;
 
   if(selWordId&&cell.wordIds.includes(selWordId)){
-    // Same word → move cursor, or toggle if intersection
     if(curR===r&&curC===c&&cell.wordIds.length>1){
       const other=cell.wordIds.find(id=>id!==selWordId);
       selectWord(other,r,c); return;
@@ -326,7 +521,6 @@ function clickCell(r,c){
     curR=r; curC=c;
     updateHighlights(); return;
   }
-  // Prefer across
   const preferAcross=cell.wordIds.find(id=>WORDS.find(w=>w.id===id).dir==='across');
   selectWord(preferAcross||cell.wordIds[0],r,c);
 }
@@ -374,7 +568,7 @@ function moveCursor(delta){
 /* ── Keyboard (desktop fallback) ── */
 document.addEventListener('keydown',e=>{
   if(!selWordId) return;
-  if(document.activeElement===kb) return; // ya manejado por kb listeners
+  if(document.activeElement===kb) return;
   if(e.key==='Backspace'){
     e.preventDefault();
     const cell=cells[key(curR,curC)];
@@ -387,7 +581,7 @@ document.addEventListener('keydown',e=>{
   }
   if(e.key.length===1&&/[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]/.test(e.key)){
     e.preventDefault();
-    processLetter(e.key.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''));
+    processLetter(e.key.toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g,''));
   }
 });
 
@@ -406,6 +600,7 @@ function updateProgress(){
   const score=Math.max(0,total*5-mistakes*3);
   document.getElementById('score-val').textContent=score;
   scoreBase=score;
+  drawDNA(correct/total);
 }
 
 function updateWordDone(){
@@ -425,46 +620,190 @@ function checkAllDone(){
   return Object.values(cells).every(c=>c.entered===c.letter);
 }
 
-/* ── Win / Bonus ── */
+/* ── Win flow ── */
 function onWin(){
   updateWordDone();
+  startDNAGlow();
   setTimeout(()=>{
-    document.getElementById('bonus-overlay').classList.remove('hidden');
+    document.getElementById('partial-victory-overlay').classList.remove('hidden');
   },700);
 }
 
-function checkBonus(btn,ans){
-  document.querySelectorAll('.opt-btn').forEach(b=>b.disabled=true);
-  const correct=ans==='B';
-  btn.classList.add(correct?'correct-ans':'wrong-ans');
-  if(!correct){
-    document.querySelectorAll('.opt-btn').forEach(b=>{
-      if(b.textContent.startsWith('B)')) b.classList.add('correct-ans');
-    });
-  }
-  const bonus=correct?30:0;
-  const finalScore=scoreBase+bonus;
-  document.getElementById('score-val').textContent=finalScore;
-  setTimeout(()=>{
-    document.getElementById('bonus-overlay').classList.add('hidden');
-    const msg=correct
-      ?`¡Correcto! Los eritrocitos no tienen núcleo para llevar más hemoglobina. Puntuación final: ${finalScore} pts 🎉`
-      :`Incorrecto — la respuesta es B) Eritrocito. Los glóbulos rojos no tienen núcleo. Puntuación: ${finalScore} pts`;
-    document.getElementById('win-msg').textContent=msg;
-    document.getElementById('win-overlay').classList.remove('hidden');
-    launchConfetti();
-  },1400);
+/* ── Comprehension questions ── */
+function pickQuestion(excludeComponent){
+  const components=Object.keys(COMPREHENSION_QS).filter(c=>c!==excludeComponent);
+  const component=components[Math.floor(Math.random()*components.length)];
+  const qList=COMPREHENSION_QS[component];
+  const idx=Math.floor(Math.random()*qList.length);
+  return {component, idx, q:qList[idx]};
 }
+
+function startComprehension(){
+  document.getElementById('partial-victory-overlay').classList.add('hidden');
+  compBonus=0;
+  compCurrentQ=1;
+  const {component,idx,q}=pickQuestion(null);
+  compQ1Component=component;
+  compQ1Index=idx;
+  renderQuestion(1,q);
+}
+
+function renderQuestion(num,qData){
+  document.getElementById('q-title').textContent='Pregunta '+num+' de 2';
+  document.getElementById('q-text').textContent=qData.q;
+  const optDiv=document.getElementById('q-options');
+  optDiv.innerHTML='';
+  const labels=['A','B','C','D'];
+  qData.opts.forEach((opt,i)=>{
+    const btn=document.createElement('button');
+    btn.className='opt-btn';
+    btn.textContent=labels[i]+') '+opt;
+    btn.onclick=()=>checkAnswer(i,qData.correct,num);
+    optDiv.appendChild(btn);
+  });
+  document.getElementById('next-q-btn').style.display='none';
+  document.getElementById('question-overlay').classList.remove('hidden');
+}
+
+function checkAnswer(chosen,correctIdx,qNum){
+  document.querySelectorAll('#q-options .opt-btn').forEach(b=>b.disabled=true);
+  const btns=document.querySelectorAll('#q-options .opt-btn');
+  const isCorrect=(chosen===correctIdx);
+
+  btns[chosen].classList.add(isCorrect?'correct-ans':'wrong-ans');
+  if(!isCorrect){
+    btns[correctIdx].classList.add('correct-ans');
+    playSFX('sfx-quiz-bad');
+  } else {
+    compBonus+=50;
+    document.getElementById('score-val').textContent=scoreBase+compBonus;
+    playSFX('sfx-quiz-ok');
+  }
+
+  document.getElementById('next-q-btn').style.display='block';
+  document.getElementById('next-q-btn').textContent=qNum===1?'Siguiente pregunta':'Ver resultado';
+}
+
+function advanceQuestion(){
+  if(compCurrentQ===1){
+    compCurrentQ=2;
+    document.getElementById('question-overlay').classList.add('hidden');
+    const {component,idx,q}=pickQuestion(compQ1Component);
+    renderQuestion(2,q);
+  } else {
+    document.getElementById('question-overlay').classList.add('hidden');
+    showFinalVictory();
+  }
+}
+
+function showFinalVictory(){
+  const finalScore=scoreBase+compBonus;
+  document.getElementById('score-val').textContent=finalScore;
+  let compLine='';
+  if(compBonus===100) compLine='Preguntas de comprensión: +100 pts (¡2/2 correctas!) 🧠';
+  else if(compBonus===50) compLine='Preguntas de comprensión: +50 pts (1/2 correctas)';
+  else compLine='Preguntas de comprensión: +0 pts (0/2 correctas)';
+  document.getElementById('win-msg').textContent=
+    `Crucigrama completado. Puntuación base: ${scoreBase} pts. ${compLine} Puntuación final: ${finalScore} pts.`;
+  document.getElementById('win-overlay').classList.remove('hidden');
+  launchConfetti();
+  stopMusic();
+  playSFX('sfx-victory');
+}
+
+/* ── AUDIO SYSTEM ── */
+const AUDIO = { unlocked:false, muted:false, currentMusic:null, vol:{music:0.45, sfx:0.6} };
+
+function unlockAudio() {
+  if (AUDIO.unlocked) return;
+  AUDIO.unlocked = true;
+  const dummy = document.createElement('audio');
+  dummy.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+  dummy.volume = 0;
+  dummy.play().catch(()=>{});
+  playMusic('mus-ambient');
+}
+
+function playSFX(id) {
+  if (!AUDIO.unlocked || AUDIO.muted) return;
+  try {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.volume = AUDIO.vol.sfx;
+    el.currentTime = 0;
+    el.play().catch(()=>{});
+  } catch(e) {}
+}
+
+function playMusic(id) {
+  if (AUDIO.currentMusic === id) return;
+  const prev = AUDIO.currentMusic ? document.getElementById(AUDIO.currentMusic) : null;
+  if (prev && !prev.paused) {
+    const fo = setInterval(()=>{
+      if (prev.volume > 0.05) prev.volume = Math.max(0, prev.volume - 0.08);
+      else { prev.pause(); prev.volume = AUDIO.vol.music; clearInterval(fo); }
+    }, 60);
+  }
+  AUDIO.currentMusic = id;
+  const next = document.getElementById(id);
+  if (!next) return;
+  next.volume = 0; next.currentTime = 0;
+  if (!AUDIO.muted) {
+    next.play().catch(()=>{});
+    const fi = setInterval(()=>{
+      if (next.volume < AUDIO.vol.music - 0.05) next.volume = Math.min(AUDIO.vol.music, next.volume + 0.06);
+      else { next.volume = AUDIO.vol.music; clearInterval(fi); }
+    }, 60);
+  }
+}
+
+function stopMusic() {
+  if (!AUDIO.currentMusic) return;
+  const el = document.getElementById(AUDIO.currentMusic);
+  if (!el || el.paused) { AUDIO.currentMusic = null; return; }
+  const fade = setInterval(()=>{
+    if (el.volume > 0.05) el.volume = Math.max(0, el.volume - 0.12);
+    else { el.pause(); el.volume = AUDIO.vol.music; AUDIO.currentMusic = null; clearInterval(fade); }
+  }, 40);
+}
+
+function toggleMute() {
+  AUDIO.muted = !AUDIO.muted;
+  document.getElementById('btn-mute').textContent = AUDIO.muted ? '🔇' : '🔊';
+  document.querySelectorAll('audio').forEach(a => a.muted = AUDIO.muted);
+  if (!AUDIO.muted && AUDIO.currentMusic) {
+    const el = document.getElementById(AUDIO.currentMusic);
+    if (el) { el.volume = AUDIO.vol.music; el.play().catch(()=>{}); }
+  }
+}
+
+['touchstart','click','keydown'].forEach(ev =>
+  document.addEventListener(ev, unlockAudio, { once: true })
+);
+document.getElementById('btn-mute').addEventListener('click', e => {
+  e.stopPropagation(); toggleMute();
+});
+
+// Intentar autoplay inmediato
+(function tryAutoplay() {
+  const el = document.getElementById('mus-ambient');
+  if (!el) return;
+  el.volume = AUDIO.vol.music;
+  el.play().then(() => { AUDIO.unlocked = true; AUDIO.currentMusic = 'mus-ambient'; }).catch(()=>{});
+})();
 
 function restartGame(){
   document.getElementById('win-overlay').classList.add('hidden');
+  document.getElementById('partial-victory-overlay').classList.add('hidden');
+  document.getElementById('question-overlay').classList.add('hidden');
   mistakes=0; scoreBase=0; selWordId=null; curR=-1; curC=-1;
+  compBonus=0; compQ1Component=null; compQ1Index=null; compCurrentQ=0;
   document.getElementById('score-val').textContent='0';
   document.getElementById('words-done').textContent='0';
   document.getElementById('progress-fill').style.width='0%';
   document.getElementById('active-clue-num').textContent='Selecciona una celda';
   document.getElementById('active-clue-text').textContent='Haz clic en cualquier celda del crucigrama para ver la pista.';
-  document.querySelectorAll('.opt-btn').forEach(b=>{ b.disabled=false; b.classList.remove('correct-ans','wrong-ans'); });
+  document.querySelectorAll('#q-options .opt-btn').forEach(b=>{ b.disabled=false; b.classList.remove('correct-ans','wrong-ans'); });
   document.querySelectorAll('.clue-item').forEach(el=>el.classList.remove('done-clue','active-clue'));
   Object.values(cells).forEach(cell=>{
     cell.entered='';
@@ -472,6 +811,9 @@ function restartGame(){
     if(cell.el){ cell.el.classList.remove('correct','wrong','word-hl','cursor-hl'); cell.el.style.animation=''; }
   });
   stopConfetti();
+  stopDNAGlow();
+  drawDNA(0);
+  playMusic('mus-ambient');
 }
 
 /* ── Confetti ── */
@@ -510,10 +852,163 @@ const style=document.createElement('style');
 style.textContent='@keyframes shk{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}';
 document.head.appendChild(style);
 
+/* ── DNA HELIX ── */
+let dnaGlow = 0, dnaGlowDir = 1, dnaRaf = null, dnaProgress = 0;
+
+function drawDNA(progress) {
+  dnaProgress = progress;
+  const cv = document.getElementById('dna-cv');
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const cx = W / 2;
+  const A  = 28;   // amplitude
+  const T  = 58;   // period (px per full cycle)
+  const builtY = H * (1 - progress); // strand 2 starts from here
+
+  // ── Base pairs ──
+  const rungStep = T / 2;
+  const rungOff  = T / 4;
+  for (let y = rungOff; y <= H; y += rungStep) {
+    const s  = Math.sin(2 * Math.PI * y / T);
+    const x1 = cx + A * s;
+    const x2 = cx - A * s;
+    const built = y >= builtY;
+    if (!built) {
+      // unbuilt — only left stub from strand 1 to center
+      ctx.beginPath();
+      ctx.strokeStyle = 'rgba(0,212,255,0.13)';
+      ctx.lineWidth = 1;
+      ctx.moveTo(x1, y); ctx.lineTo(cx, y);
+      ctx.stroke();
+    } else {
+      const fade = Math.min(1, (y - builtY) / 24);
+      ctx.beginPath();
+      ctx.strokeStyle = `rgba(180,255,200,${0.15 + 0.55 * fade + dnaGlow * 0.3})`;
+      ctx.lineWidth = 1.5 + dnaGlow;
+      ctx.shadowColor = '#00FF88';
+      ctx.shadowBlur = dnaGlow * 6;
+      ctx.moveTo(x1, y); ctx.lineTo(x2, y);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+  }
+
+  // ── Strand 1 — template (always full, two-pass for depth) ──
+  [1, 0].forEach(front => {
+    ctx.beginPath();
+    let pen = false;
+    for (let y = 0; y <= H; y++) {
+      const s = Math.sin(2 * Math.PI * y / T);
+      if ((front ? s >= 0 : s < 0)) {
+        const x = cx + A * s;
+        pen ? ctx.lineTo(x, y) : (ctx.moveTo(x, y), pen = true);
+      } else { pen = false; }
+    }
+    ctx.strokeStyle = front ? 'rgba(0,212,255,0.45)' : 'rgba(0,212,255,0.18)';
+    ctx.lineWidth   = front ? 2.5 : 1.5;
+    ctx.stroke();
+  });
+
+  // ── Strand 2 — complementary (builds from bottom) ──
+  if (progress > 0) {
+    [1, 0].forEach(front => {
+      ctx.beginPath();
+      let pen = false;
+      for (let y = builtY; y <= H; y++) {
+        const s = Math.sin(2 * Math.PI * y / T);
+        if ((front ? s <= 0 : s > 0)) {
+          const x = cx - A * s;
+          pen ? ctx.lineTo(x, y) : (ctx.moveTo(x, y), pen = true);
+        } else { pen = false; }
+      }
+      ctx.shadowColor = '#00FF88';
+      ctx.shadowBlur  = front ? 4 + dnaGlow * 12 : 0;
+      ctx.strokeStyle = front
+        ? `rgba(0,${200 + Math.round(dnaGlow*55)},${80 + Math.round(dnaGlow*40)},${0.85 + dnaGlow * 0.15})`
+        : 'rgba(0,255,136,0.28)';
+      ctx.lineWidth = front ? 2.5 + dnaGlow : 1.5;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    });
+  }
+
+  // ── Labels ──
+  const pct = Math.round(progress * 100);
+  document.getElementById('dna-pct').textContent = pct + '%';
+  const status = document.getElementById('dna-status');
+  if (progress >= 1) {
+    status.style.color = `rgba(0,${220 + Math.round(dnaGlow*35)},${100 + Math.round(dnaGlow*60)},1)`;
+    status.textContent = '✦ COMPLETA ✦';
+  } else if (progress > 0) {
+    status.style.color = 'rgba(0,255,136,.6)';
+    status.textContent = 'construyendo…';
+  } else {
+    status.style.color = 'rgba(0,212,255,.35)';
+    status.textContent = 'Hebra 2';
+  }
+}
+
+function startDNAGlow() {
+  if (dnaRaf) return;
+  const panel = document.getElementById('dna-panel');
+  // Fase 1: celebración rápida (1.8 s) → Fase 2: pulso suave continuo
+  let celebFrames = 108; // ~1.8s a 60fps
+  let speed = 0.12;
+
+  function tick() {
+    if (celebFrames > 0) {
+      celebFrames--;
+      // flash rápido durante celebración
+      dnaGlow += dnaGlowDir * speed;
+      if (dnaGlow >= 1) { dnaGlow = 1; dnaGlowDir = -1; }
+      else if (dnaGlow <= 0) { dnaGlow = 0; dnaGlowDir = 1; }
+      // reducir velocidad gradualmente
+      if (celebFrames < 60) speed = 0.06;
+    } else {
+      // pulso suave
+      dnaGlow += dnaGlowDir * 0.025;
+      if (dnaGlow >= 1) { dnaGlow = 1; dnaGlowDir = -1; }
+      else if (dnaGlow <= 0) { dnaGlow = 0; dnaGlowDir = 1; }
+    }
+    drawDNA(dnaProgress);
+    dnaRaf = requestAnimationFrame(tick);
+  }
+
+  // Animación CSS en el panel
+  panel.style.transition = 'box-shadow .15s, border-color .15s';
+  const panelFlash = setInterval(() => {
+    panel.style.boxShadow = '0 0 24px rgba(0,255,136,.7), 0 0 48px rgba(0,255,136,.35)';
+    panel.style.borderColor = '#00FF88';
+    setTimeout(() => {
+      panel.style.boxShadow = '0 0 8px rgba(0,255,136,.2)';
+      panel.style.borderColor = '#00cc66';
+    }, 120);
+  }, 240);
+  setTimeout(() => {
+    clearInterval(panelFlash);
+    panel.style.boxShadow = '0 0 14px rgba(0,255,136,.25)';
+    panel.style.borderColor = '#00cc66';
+  }, 1800);
+
+  dnaRaf = requestAnimationFrame(tick);
+}
+
+function stopDNAGlow() {
+  if (dnaRaf) { cancelAnimationFrame(dnaRaf); dnaRaf = null; }
+  dnaGlow = 0;
+  const panel = document.getElementById('dna-panel');
+  panel.style.boxShadow = '';
+  panel.style.borderColor = '';
+}
+
 /* ── Init ── */
 initCells();
 buildGrid();
 buildClues();
+drawDNA(0);
 </script>
 </body>
 </html>
