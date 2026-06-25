@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memoria – Componentes de la Sangre</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a1628;
+  --card:#0f2040;
+  --card2:#112244;
+  --card3:#0d1e38;
+  --accent:#00C9A7;
+  --teal:#00b4d8;
+  --green:#22c55e;
+  --yellow:#f59e0b;
+  --red:#ef4444;
+  --text:#e2f0ff;
+  --muted:#7a9cc0;
+  --border:#1a3a5c;
+  --gold:#fbbf24;
+  --radius:12px;
+  --radius-s:8px;
+}
+body{
+  font-family:'Nunito',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+  background-image:
+    radial-gradient(ellipse at 15% 50%,rgba(0,180,204,.07) 0%,transparent 60%),
+    radial-gradient(ellipse at 85% 20%,rgba(0,153,204,.05) 0%,transparent 50%);
+  user-select:none;-webkit-user-select:none;
+}
+
+/* WATERMARKS */
+#wm{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+#wm img{position:absolute;opacity:.05;filter:blur(1.5px) grayscale(30%);pointer-events:none}
+
+/* TOP BAR */
+#topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 20px;background:var(--card);
+  border-bottom:1px solid var(--border);
+  flex-wrap:wrap;gap:10px;position:relative;z-index:2;
+}
+#title-area{display:flex;flex-direction:column}
+#game-title{
+  font-size:1.35rem;font-weight:900;color:var(--accent);
+  text-transform:uppercase;letter-spacing:1px;
+  display:flex;align-items:center;gap:8px;
+}
+#game-sub{font-size:.7rem;color:var(--muted);margin-top:2px}
+#level-bar-area{text-align:center;flex:1}
+#lvl-label{font-size:.62rem;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:3px}
+#lvl-tag{
+  font-size:.78rem;color:var(--text);font-weight:700;
+  background:rgba(0,180,204,.12);padding:4px 14px;
+  border-radius:20px;border:1px solid rgba(0,180,204,.25);
+  display:inline-block;
+}
+#stats-area{display:flex;align-items:center;gap:12px}
+.sbox{
+  display:flex;flex-direction:column;align-items:center;
+  background:var(--card3);padding:5px 14px;
+  border-radius:var(--radius-s);border:1px solid var(--border);
+}
+.sbox-lbl{font-size:.58rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted)}
+.sbox-val{font-size:1.05rem;font-weight:900;color:var(--accent)}
+
+/* LAYOUT */
+#layout{
+  display:grid;
+  grid-template-columns:260px 1fr 280px;
+  gap:14px;
+  padding:14px 20px;
+  max-width:1380px;
+  margin:0 auto;
+  position:relative;z-index:1;
+}
+
+/* LEFT */
+#left-col{display:flex;flex-direction:column;gap:12px}
+#monitor{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:14px;
+  position:relative;overflow:hidden;
+}
+#mon-label{
+  font-size:.58rem;text-transform:uppercase;letter-spacing:2px;
+  color:var(--accent);margin-bottom:8px;
+  display:flex;align-items:center;gap:6px;
+}
+#mon-label::before{
+  content:'';width:8px;height:8px;
+  background:var(--green);border-radius:50%;
+  box-shadow:0 0 6px var(--green);
+  animation:blink 1s infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+#ecg-cv{
+  width:100%;height:60px;
+  background:#040f1e;border-radius:var(--radius-s);
+  border:1px solid #0a2040;margin-bottom:10px;display:block;
+}
+#progress-pct{
+  font-size:1.9rem;font-weight:900;text-align:center;
+  color:var(--accent);line-height:1;
+}
+#progress-lbl{
+  text-align:center;font-size:.82rem;color:var(--muted);margin-bottom:7px;
+}
+#pbar-bg{
+  background:#040f1e;border-radius:20px;height:11px;
+  border:1px solid var(--border);overflow:hidden;margin-bottom:8px;
+}
+#pbar-fill{
+  height:100%;border-radius:20px;background:var(--accent);
+  transition:width .5s ease,background .5s;width:0%;
+}
+#patient{
+  text-align:center;padding:6px 0;font-size:2.6rem;
+  transition:all .5s;
+}
+#mon-msg{
+  font-size:.88rem;color:var(--muted);text-align:center;
+  line-height:1.4;font-style:italic;padding:5px 8px;
+  background:rgba(0,0,0,.2);border-radius:var(--radius-s);margin-top:4px;
+}
+@keyframes flash-red{0%,100%{background:var(--card)}50%{background:rgba(239,68,68,.18)}}
+@keyframes flash-green{0%,100%{background:var(--card)}50%{background:rgba(34,197,94,.18)}}
+#monitor.flash-r{animation:flash-red .4s}
+#monitor.flash-g{animation:flash-green .4s}
+
+#registro{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:12px;
+}
+.panel-hdr{
+  font-size:.58rem;text-transform:uppercase;letter-spacing:2px;
+  color:var(--accent);margin-bottom:10px;
+  display:flex;align-items:center;gap:5px;
+}
+.reg-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05);
+  font-size:.95rem;
+}
+.reg-row:last-child{border:none}
+.reg-key{color:var(--muted)}
+.reg-val{font-weight:800;font-size:1rem}
+
+/* CENTER */
+#center-col{display:flex;flex-direction:column;align-items:center;gap:14px}
+#level-header{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:14px 18px;width:100%;
+  text-align:center;
+}
+#lvl-title{font-size:1.1rem;font-weight:900;color:var(--accent);margin-bottom:4px}
+#lvl-desc{font-size:.78rem;color:var(--muted)}
+
+#grid-wrap{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:16px;width:100%;
+}
+#grid{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:10px;
+  justify-items:center;
+}
+
+/* Cards */
+.card{
+  width:110px;height:130px;
+  perspective:800px;cursor:pointer;
+}
+.card-inner{
+  width:100%;height:100%;position:relative;
+  transform-style:preserve-3d;
+  transition:transform .45s cubic-bezier(.4,0,.2,1);
+}
+.card.flipped .card-inner,
+.card.matched .card-inner{transform:rotateY(180deg)}
+.card-front,.card-back{
+  position:absolute;inset:0;border-radius:var(--radius);
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+}
+.card-back{
+  background:linear-gradient(135deg,var(--teal),#006688);
+  display:flex;align-items:center;justify-content:center;
+  border:2px solid rgba(255,255,255,.12);
+  box-shadow:0 4px 16px rgba(0,0,0,.4);
+}
+.card-back svg{width:40px;height:40px;opacity:.28}
+
+/* Image card */
+.card-front{
+  background:var(--card3);
+  border:2px solid rgba(0,201,167,.2);
+  transform:rotateY(180deg);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:6px;padding:8px;
+  box-shadow:0 4px 16px rgba(0,0,0,.4);
+}
+.card-front img{width:68px;height:68px;object-fit:contain;border-radius:6px}
+
+/* Name card */
+.card-front.name-card{
+  background:linear-gradient(135deg,#0a2035,#061828);
+  border-color:rgba(0,201,167,.35);
+  justify-content:center;
+}
+.name-text{
+  font-size:.98rem;font-weight:900;color:var(--accent);
+  text-align:center;letter-spacing:.5px;line-height:1.2;
+}
+
+/* Func card */
+.card-front.func-card{
+  background:linear-gradient(135deg,#0f2035,#0d2d1e);
+  border-color:rgba(34,197,94,.25);
+  padding:10px;justify-content:center;
+}
+.func-text{
+  font-size:.65rem;font-weight:600;color:#e0f4ec;
+  text-align:center;line-height:1.45;
+}
+
+/* Matched */
+.card.matched .card-front{
+  border-color:var(--green);
+  box-shadow:0 0 0 2px var(--green),0 4px 20px rgba(34,197,94,.25);
+  animation:matchPop .4s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes matchPop{
+  0%{transform:rotateY(180deg) scale(.9)}
+  60%{transform:rotateY(180deg) scale(1.06)}
+  100%{transform:rotateY(180deg) scale(1)}
+}
+.card.wrong .card-inner{animation:wrongShake .4s ease}
+@keyframes wrongShake{
+  0%,100%{transform:rotateY(180deg) translateX(0)}
+  25%{transform:rotateY(180deg) translateX(-6px)}
+  75%{transform:rotateY(180deg) translateX(6px)}
+}
+
+/* RIGHT */
+#right-col{display:flex;flex-direction:column;gap:12px}
+#info-box{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:12px;
+}
+#info-body{
+  font-size:1rem;color:var(--text);line-height:1.6;
+  background:rgba(0,0,0,.22);border-radius:var(--radius-s);
+  padding:12px 14px;
+  border-left:3px solid var(--accent);
+}
+#tips-box{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:12px;
+}
+.tip-row{
+  display:flex;align-items:flex-start;gap:8px;
+  padding:6px 0;font-size:.95rem;color:var(--muted);
+  border-bottom:1px solid rgba(255,255,255,.05);
+  line-height:1.45;
+}
+.tip-row:last-child{border:none}
+
+/* BONUS OVERLAY */
+#bonus-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.82);z-index:200;
+  align-items:center;justify-content:center;
+}
+#bonus-overlay.show{display:flex}
+#bonus-box{
+  background:var(--card);border:2px solid var(--border);
+  border-radius:20px;padding:28px 32px;
+  text-align:center;max-width:490px;width:92%;
+  animation:slideUp .4s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes slideUp{from{transform:translateY(40px) scale(.9);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+#bonus-q-num{
+  font-size:.62rem;text-transform:uppercase;letter-spacing:2px;
+  color:var(--muted);margin-bottom:6px;
+}
+.bonus-badge{
+  display:inline-block;
+  background:rgba(0,201,167,.1);border:1px solid var(--accent);
+  color:var(--accent);font-size:.72rem;font-weight:800;
+  letter-spacing:1.5px;text-transform:uppercase;
+  border-radius:999px;padding:4px 14px;margin-bottom:10px;
+}
+#bonus-icon{font-size:2rem;margin-bottom:6px}
+#bonus-question{
+  font-size:.95rem;color:var(--text);font-weight:700;
+  margin-bottom:16px;line-height:1.5;
+}
+#bonus-options{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.opt-btn{
+  background:rgba(255,255,255,.04);
+  border:2px solid rgba(0,201,167,.18);
+  border-radius:var(--radius);color:var(--text);
+  font-family:'Nunito',sans-serif;font-size:.88rem;font-weight:600;
+  padding:10px 14px;cursor:pointer;text-align:left;
+  transition:all .18s;
+}
+.opt-btn:hover:not(:disabled){
+  background:rgba(0,201,167,.1);border-color:var(--accent);
+  transform:translateX(4px);
+}
+.opt-btn.correct{background:rgba(34,197,94,.18);border-color:var(--green);color:var(--green)}
+.opt-btn.wrong{background:rgba(239,68,68,.14);border-color:var(--red);color:#f87171}
+.opt-btn:disabled{cursor:default}
+#bonus-feedback{
+  font-size:.88rem;font-weight:700;border-radius:var(--radius-s);
+  padding:9px 14px;margin-bottom:12px;display:none;
+}
+#bonus-feedback.success{background:rgba(34,197,94,.14);border:1px solid var(--green);color:var(--green);display:block}
+#bonus-feedback.fail{background:rgba(239,68,68,.12);border:1px solid var(--red);color:#f87171;display:block}
+#btn-bonus-next{
+  background:linear-gradient(135deg,var(--teal),var(--accent));
+  border:none;border-radius:var(--radius);color:#fff;
+  font-family:'Nunito',sans-serif;font-weight:900;font-size:.92rem;
+  padding:11px 30px;cursor:pointer;display:none;
+  transition:all .2s;
+}
+#btn-bonus-next:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,180,204,.4)}
+
+/* LEVEL COMPLETE */
+#lvl-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.87);z-index:210;
+  align-items:center;justify-content:center;
+}
+#lvl-overlay.show{display:flex}
+#lvl-box{
+  background:var(--card);border:2px solid var(--border);
+  border-radius:20px;padding:34px 42px;
+  text-align:center;max-width:440px;width:92%;
+  animation:slideUp .45s cubic-bezier(.34,1.56,.64,1);
+}
+#lvl-emoji{font-size:3.5rem;margin-bottom:8px}
+#lvl-result-title{font-size:1.65rem;font-weight:900;color:var(--gold);margin-bottom:6px}
+#lvl-result-msg{font-size:.84rem;color:var(--muted);margin-bottom:16px;line-height:1.5}
+.lvl-stats{display:flex;gap:12px;justify-content:center;margin-bottom:20px;flex-wrap:wrap}
+.lvl-stat{
+  background:rgba(0,201,167,.07);border:1px solid rgba(0,201,167,.18);
+  border-radius:var(--radius);padding:10px 16px;
+}
+.lvl-stat .val{font-size:1.6rem;font-weight:900;color:#fff;display:block}
+.lvl-stat .lbl{font-size:.66rem;color:var(--muted);letter-spacing:.5px}
+#btn-next-level{
+  background:linear-gradient(135deg,var(--teal),var(--accent));
+  border:none;border-radius:var(--radius);color:#fff;
+  font-family:'Nunito',sans-serif;font-weight:900;font-size:.98rem;
+  padding:13px 38px;cursor:pointer;transition:all .2s;
+}
+#btn-next-level:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,180,204,.4)}
+
+/* FINAL */
+#final-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.9);z-index:220;
+  align-items:center;justify-content:center;
+}
+#final-overlay.show{display:flex}
+#final-box{
+  background:var(--card);border:2px solid var(--border);
+  border-radius:20px;padding:34px 42px;
+  text-align:center;max-width:480px;width:92%;
+  animation:slideUp .5s cubic-bezier(.34,1.56,.64,1);
+}
+#final-emoji{font-size:3.8rem;margin-bottom:10px}
+#final-title{font-size:1.8rem;font-weight:900;color:var(--gold);margin-bottom:6px}
+#final-msg{font-size:.85rem;color:var(--muted);margin-bottom:16px;line-height:1.5}
+.final-lvl-list{display:flex;flex-direction:column;gap:6px;margin-bottom:18px;text-align:left}
+.fl-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:7px 12px;border-radius:var(--radius-s);
+  background:rgba(255,255,255,.04);font-size:.82rem;
+}
+.fl-row .fl-name{color:var(--text);font-weight:700}
+.fl-row .fl-pts{color:var(--gold);font-weight:900}
+#final-total{font-size:1.4rem;font-weight:900;color:var(--gold);margin-bottom:18px}
+#btn-restart{
+  background:linear-gradient(135deg,var(--teal),var(--accent));
+  border:none;border-radius:var(--radius);color:#fff;
+  font-family:'Nunito',sans-serif;font-weight:900;font-size:.98rem;
+  padding:13px 38px;cursor:pointer;transition:all .2s;
+}
+#btn-restart:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,180,204,.4)}
+
+/* TOAST */
+#toast{
+  position:fixed;bottom:28px;left:50%;
+  transform:translateX(-50%) translateY(80px);
+  background:var(--card);border:1px solid var(--border);
+  border-radius:30px;padding:9px 22px;
+  font-size:.84rem;font-weight:700;color:var(--text);
+  z-index:300;transition:transform .4s cubic-bezier(.34,1.56,.64,1),opacity .4s;
+  opacity:0;pointer-events:none;white-space:nowrap;
+}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+#toast.green{border-color:var(--green);color:var(--green)}
+#toast.red{border-color:var(--red);color:var(--red)}
+#toast.yellow{border-color:var(--yellow);color:var(--yellow)}
+
+canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:90}
+
+/* SOUND BUTTON */
+#btn-sound{
+  position:fixed;top:12px;right:14px;z-index:400;
+  width:40px;height:40px;border-radius:50%;
+  background:rgba(0,201,167,.12);border:1.5px solid var(--border);
+  color:var(--text);font-size:1.15rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .18s,transform .15s;
+}
+#btn-sound:hover{background:rgba(0,201,167,.28);transform:scale(1.1)}
+
+/* HINT BUTTON */
+#btn-hint{
+  margin-top:10px;
+  background:linear-gradient(135deg,var(--yellow),#d97706);
+  border:none;border-radius:var(--radius);color:#1a1000;
+  font-family:'Nunito',sans-serif;font-weight:900;font-size:.82rem;
+  padding:9px 18px;cursor:pointer;transition:transform .15s,box-shadow .15s,opacity .2s;
+  display:inline-flex;align-items:center;gap:6px;
+}
+#btn-hint:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 16px rgba(245,158,11,.4)}
+#btn-hint:disabled{opacity:.45;cursor:default}
+.card.peek .card-inner{transform:rotateY(180deg)}
+
+/* MEDAL (final) */
+#final-medal{font-size:3rem;margin-bottom:4px;line-height:1}
+#final-rank{
+  font-size:1.05rem;font-weight:900;letter-spacing:1px;
+  text-transform:uppercase;margin-bottom:14px;
+}
+#final-rank.oro{color:#fbbf24}
+#final-rank.plata{color:#cbd5e1}
+#final-rank.bronce{color:#d99058}
+
+@media(max-width:1100px){#layout{grid-template-columns:240px 1fr 260px}}
+@media(max-width:900px){
+  #layout{grid-template-columns:1fr 1fr}
+  #left-col{grid-column:1}
+  #center-col{grid-column:1/3;order:-1}
+  #right-col{grid-column:2}
+}
+@media(max-width:640px){
+  #layout{grid-template-columns:1fr;padding:10px}
+  #left-col,#right-col,#center-col{grid-column:1}
+  #grid{grid-template-columns:repeat(4,1fr)}
+  .card{width:80px;height:100px}
+  .card-front img{width:46px;height:46px}
+  .name-text{font-size:.78rem}
+  .func-text{font-size:.58rem}
+}
+@keyframes sparkle{0%{transform:scale(1)}50%{transform:scale(1.25) rotate(8deg)}100%{transform:scale(1)}}
+.sparkle{animation:sparkle .35s}
+</style>
+</head>
+<body>
+
+<canvas id="confetti"></canvas>
+<button id="btn-sound" title="Sonido">🔊</button>
+
+<!-- AUDIO (archivos alojados en el repositorio) -->
+<audio id="mus-ambient" src="https://inmersa-dev.github.io/INMERSA/Audio/Musica/ahorcado_ambient.mp3" loop preload="auto"></audio>
+<audio id="sfx-match"   src="https://inmersa-dev.github.io/INMERSA/Audio/SFX/letter_correct.mp3"      preload="auto"></audio>
+<audio id="sfx-wrong"   src="https://inmersa-dev.github.io/INMERSA/Audio/SFX/letter_wrong.mp3"        preload="auto"></audio>
+<audio id="sfx-quiz-ok" src="https://inmersa-dev.github.io/INMERSA/Audio/SFX/quiz_correct.mp3"        preload="auto"></audio>
+<audio id="sfx-quiz-bad" src="https://inmersa-dev.github.io/INMERSA/Audio/SFX/snake_rescate_incorrecto.mp3" preload="auto"></audio>
+<audio id="sfx-victory" src="https://inmersa-dev.github.io/INMERSA/Audio/SFX/module_victory.mp3"      preload="auto"></audio>
+
+<div id="wm">
+  <img src="../Imagenes/eritrocito2.png" style="width:180px;top:5%;left:1%;transform:rotate(-12deg)">
+  <img src="../Imagenes/leucocito.png"   style="width:150px;top:22%;right:1%;transform:rotate(10deg)">
+  <img src="../Imagenes/plaqueta.png"    style="width:130px;bottom:8%;left:2%;transform:rotate(20deg)">
+  <img src="../Imagenes/hemoglobina.png" style="width:160px;bottom:5%;right:2%;transform:rotate(-14deg)">
+  <img src="../Imagenes/plasma.png"      style="width:120px;top:52%;right:0%;transform:rotate(6deg)">
+</div>
+
+<!-- BONUS OVERLAY -->
+<div id="bonus-overlay">
+  <div id="bonus-box">
+    <div id="bonus-q-num">Pregunta 1 de 2</div>
+    <div class="bonus-badge">⭐ Pregunta Bonus · +50 pts</div>
+    <div id="bonus-icon">🧬</div>
+    <div id="bonus-question"></div>
+    <div id="bonus-options"></div>
+    <div id="bonus-feedback"></div>
+    <button id="btn-bonus-next">Siguiente →</button>
+  </div>
+</div>
+
+<!-- LEVEL COMPLETE -->
+<div id="lvl-overlay">
+  <div id="lvl-box">
+    <div id="lvl-emoji">🎯</div>
+    <div id="lvl-result-title">¡Nivel Completado!</div>
+    <div id="lvl-result-msg"></div>
+    <div class="lvl-stats">
+      <div class="lvl-stat"><span class="val" id="lstat-time">—</span><span class="lbl">Tiempo</span></div>
+      <div class="lvl-stat"><span class="val" id="lstat-attempts">—</span><span class="lbl">Intentos</span></div>
+      <div class="lvl-stat"><span class="val" id="lstat-bonus">—</span><span class="lbl">Bonus rapidez</span></div>
+      <div class="lvl-stat"><span class="val" id="lstat-score">—</span><span class="lbl">Puntos</span></div>
+    </div>
+    <button id="btn-next-level">Siguiente Nivel →</button>
+  </div>
+</div>
+
+<!-- FINAL -->
+<div id="final-overlay">
+  <div id="final-box">
+    <div id="final-emoji">🏆</div>
+    <div id="final-title">¡Memoria Completada!</div>
+    <div id="final-medal">🥇</div>
+    <div id="final-rank"></div>
+    <div id="final-msg"></div>
+    <div class="final-lvl-list" id="final-lvl-list"></div>
+    <div id="final-total"></div>
+    <button id="btn-restart" onclick="restartAll()">🔄 Jugar de nuevo</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div id="title-area">
+    <div id="game-title"><span>🧬</span> MEMORIA BIOLÓGICA</div>
+    <div id="game-sub">Componentes de la Sangre · Sistema Circulatorio</div>
+  </div>
+  <div id="level-bar-area">
+    <div id="lvl-label">NIVEL ACTUAL</div>
+    <div id="lvl-tag">Nivel 1 — Nombre e Imagen</div>
+  </div>
+  <div id="stats-area">
+    <div class="sbox">
+      <span class="sbox-lbl">⭐ PUNTOS</span>
+      <span class="sbox-val" id="s-pts">0</span>
+    </div>
+    <div class="sbox">
+      <span class="sbox-lbl">✅ PARES</span>
+      <span class="sbox-val" id="s-pairs" style="color:var(--green)">0/5</span>
+    </div>
+    <div class="sbox">
+      <span class="sbox-lbl">🔄 INTENTOS</span>
+      <span class="sbox-val" id="s-attempts" style="color:var(--muted)">0</span>
+    </div>
+    <div class="sbox">
+      <span class="sbox-lbl">⏱️ TIEMPO</span>
+      <span class="sbox-val" id="s-time" style="color:var(--yellow)">00:00</span>
+    </div>
+  </div>
+</div>
+
+<!-- LAYOUT -->
+<div id="layout">
+
+  <!-- LEFT -->
+  <div id="left-col">
+    <div id="monitor">
+      <div id="mon-label">MONITOR CARDÍACO</div>
+      <canvas id="ecg-cv"></canvas>
+      <div id="progress-pct">0%</div>
+      <div id="progress-lbl">Progreso del Nivel</div>
+      <div id="pbar-bg"><div id="pbar-fill"></div></div>
+      <div id="patient">🧑‍🔬</div>
+      <div id="mon-msg">Encuentra todos los pares para avanzar al siguiente nivel.</div>
+    </div>
+
+    <div id="registro">
+      <div class="panel-hdr">📋 REGISTRO DE ANÁLISIS</div>
+      <div class="reg-row">
+        <span class="reg-key">Nivel actual</span>
+        <span class="reg-val" id="reg-lvl" style="color:var(--accent)">1 / 3</span>
+      </div>
+      <div class="reg-row">
+        <span class="reg-key">Pares encontrados</span>
+        <span class="reg-val" id="reg-pairs" style="color:var(--green)">0 / 5</span>
+      </div>
+      <div class="reg-row">
+        <span class="reg-key">Intentos</span>
+        <span class="reg-val" id="reg-attempts">0</span>
+      </div>
+      <div class="reg-row">
+        <span class="reg-key">Tiempo del nivel</span>
+        <span class="reg-val" id="reg-time" style="color:var(--yellow)">00:00</span>
+      </div>
+      <div class="reg-row">
+        <span class="reg-key">Pistas usadas</span>
+        <span class="reg-val" id="reg-hints" style="color:var(--yellow)">0</span>
+      </div>
+      <div class="reg-row">
+        <span class="reg-key">Precisión</span>
+        <span class="reg-val" id="reg-acc" style="color:var(--gold)">—</span>
+      </div>
+      <div class="reg-row">
+        <span class="reg-key">Puntos totales</span>
+        <span class="reg-val" id="reg-pts" style="color:var(--gold)">0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTER -->
+  <div id="center-col">
+    <div id="level-header">
+      <div id="lvl-title">Nivel 1 — Nombre e Imagen</div>
+      <div id="lvl-desc">Empareja cada nombre con la imagen del componente sanguíneo correspondiente.</div>
+      <button id="btn-hint">💡 Pista <span style="opacity:.8;font-weight:700">(−30 pts)</span></button>
+    </div>
+    <div id="grid-wrap">
+      <div id="grid"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div id="right-col">
+    <div id="info-box">
+      <div class="panel-hdr">🔬 CONTEXTO CLÍNICO</div>
+      <div id="info-body"></div>
+    </div>
+    <div id="tips-box">
+      <div class="panel-hdr">💡 CÓMO JUGAR</div>
+      <div class="tip-row"><span>🎯</span><span>Voltea dos cartas buscando el par correcto.</span></div>
+      <div class="tip-row"><span>🧠</span><span>Memoriza la posición de las cartas que ya viste.</span></div>
+      <div class="tip-row"><span>⭐</span><span>Al terminar cada nivel responde 2 preguntas bonus.</span></div>
+      <div class="tip-row"><span>🏆</span><span>3 niveles: Nombre, Función y el desafío final sin imágenes.</span></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ════════════════════════════
+   DATA
+════════════════════════════ */
+const PAIRS = [
+  { id:'eritrocito',  name:'Eritrocito',   img:'../Imagenes/eritrocito.png',  func:'Glóbulo rojo que transporta nutrientes y oxígeno' },
+  { id:'leucocito',   name:'Leucocito',    img:'../Imagenes/leucocito.png',   func:'Glóbulo blanco que defiende el cuerpo de infecciones' },
+  { id:'plaqueta',    name:'Plaqueta',     img:'../Imagenes/plaqueta.png',    func:'Forma coágulos para detener hemorragias' },
+  { id:'hemoglobina', name:'Hemoglobina',  img:'../Imagenes/hemoglobina.png', func:'Proteína que capta y transporta oxígeno' },
+  { id:'plasma',      name:'Plasma',       img:'../Imagenes/plasma.png',      func:'Parte líquida que transporta células, nutrientes y desechos' },
+];
+
+const LEVELS = [
+  {
+    title: 'Nivel 1 — Nombre e Imagen',
+    desc:  'Empareja cada nombre con la imagen del componente sanguíneo correspondiente.',
+    info:  'Los componentes sanguíneos tienen estructuras visuales características. Los eritrocitos tienen forma de disco bicóncavo, los leucocitos son esféricos con núcleo prominente, y las plaquetas son pequeños fragmentos celulares sin núcleo.',
+    typeA: 'name',
+    typeB: 'image',
+    questions: [
+      {
+        icon:'🩸',
+        q:'¿Cuál de estos componentes sanguíneos carece de núcleo en su estado maduro?',
+        opts:['A) Leucocito','B) Plasma','C) Eritrocito','D) Plaqueta'],
+        correct:'C',
+      },
+      {
+        icon:'🛡️',
+        q:'¿Qué componente de la sangre se encarga principalmente de la defensa inmunológica?',
+        opts:['A) Eritrocito','B) Hemoglobina','C) Plaqueta','D) Leucocito'],
+        correct:'D',
+      },
+    ],
+  },
+  {
+    title: 'Nivel 2 — Función e Imagen',
+    desc:  'Empareja cada imagen con la función correcta del componente sanguíneo.',
+    info:  'Cada componente de la sangre cumple una función vital e insustituible. Sin eritrocitos no hay transporte de oxígeno; sin leucocitos no hay defensa; sin plaquetas no hay coagulación; sin plasma no hay medio de transporte.',
+    typeA: 'image',
+    typeB: 'func',
+    questions: [
+      {
+        icon:'🩹',
+        q:'¿Qué ocurre cuando el número de plaquetas en sangre es muy bajo?',
+        opts:['A) El cuerpo produce menos oxígeno','B) Se dificulta la coagulación y se producen hemorragias','C) Los glóbulos blancos aumentan automáticamente','D) La hemoglobina deja de funcionar'],
+        correct:'B',
+      },
+      {
+        icon:'💧',
+        q:'¿Cuál es la parte no celular de la sangre que actúa como medio de transporte?',
+        opts:['A) Eritrocito','B) Leucocito','C) Plasma','D) Hemoglobina'],
+        correct:'C',
+      },
+    ],
+  },
+  {
+    title: 'Nivel 3 — Nombre y Función',
+    desc:  'Empareja el nombre con su función. Sin imágenes — ¡el desafío máximo!',
+    info:  'Dominar la relación nombre-función es esencial en fisiología sanguínea. Este nivel evalúa la comprensión conceptual completa de los cinco componentes principales de la sangre.',
+    typeA: 'name',
+    typeB: 'func',
+    questions: [
+      {
+        icon:'🧬',
+        q:'¿En qué componente sanguíneo se almacena y transporta principalmente la hemoglobina?',
+        opts:['A) Leucocito','B) Plaqueta','C) Eritrocito','D) Plasma'],
+        correct:'C',
+      },
+      {
+        icon:'📚',
+        q:'¿Cuál de las siguientes afirmaciones sobre la sangre es correcta?',
+        opts:['A) Los eritrocitos defienden el cuerpo contra infecciones','B) El plasma es un tipo de célula sanguínea','C) Las plaquetas transportan oxígeno a los tejidos','D) La hemoglobina es la proteína que da el color rojo a la sangre'],
+        correct:'D',
+      },
+    ],
+  },
+];
+
+/* ════════════════════════════
+   STATE
+════════════════════════════ */
+let currentLevel    = 0;
+let flipped         = [];
+let matched         = 0;
+let attempts        = 0;
+let levelPoints     = 0;
+let totalPoints     = 0;
+let allLevelScores  = [0, 0, 0];
+let bonusPoints     = 0;
+let locked          = false;
+let levelActive     = false;
+let startTime       = null;
+let bonusQIdx       = 0;
+let currentBonusPts = 0;
+let speedBonus      = 0;
+
+/* timer */
+let timerInt        = null;
+let elapsed         = 0;   // segundos del nivel actual
+
+/* hints */
+let levelHints      = 0;
+let totalHints      = 0;
+let peekActive      = false;
+
+/* acumulados para el ranking final */
+let totalAttemptsAll = 0;
+let totalPairsAll    = 0;
+
+/* ════════════════════════════
+   AUDIO ENGINE
+   Archivos del repositorio (mismo set que palabras_sangre),
+   con respaldo sintetizado (Web Audio) si algún archivo falla.
+════════════════════════════ */
+const Audio2 = {
+  ctx:null, muted:false, started:false, vol:{music:0.4, sfx:0.7},
+
+  initCtx(){
+    if (this.ctx) return;
+    try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch(e){ /* sin contexto: solo archivos */ }
+  },
+  resume(){ if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); },
+  el(id){ return document.getElementById(id); },
+
+  startAmbient(){
+    if (this.started || this.muted) return;
+    const m = this.el('mus-ambient');
+    if (!m) return;
+    this.started = true;
+    m.volume = 0;
+    m.play().then(() => {
+      const target = this.vol.music;
+      const fi = setInterval(() => {
+        if (this.muted) { clearInterval(fi); return; }
+        if (m.volume < target - 0.04) m.volume = Math.min(target, m.volume + 0.03);
+        else { m.volume = target; clearInterval(fi); }
+      }, 60);
+    }).catch(() => { this.started = false; });
+  },
+
+  setMuted(m){
+    this.muted = m;
+    document.querySelectorAll('audio').forEach(a => a.muted = m);
+    if (!m && !this.started) this.startAmbient();
+  },
+
+  // Reproduce un <audio> del repo; devuelve true si lo intentó
+  playFile(id, vol){
+    if (this.muted) return false;
+    const e = this.el(id);
+    if (!e || !e.getAttribute('src')) return false;
+    try { e.volume = (vol != null ? vol : this.vol.sfx); e.currentTime = 0; e.play().catch(()=>{}); return true; }
+    catch(err){ return false; }
+  },
+
+  // Respaldo sintetizado
+  blip(freq, dur, type='sine', vol=0.18){
+    if (!this.ctx || this.muted) return;
+    const o = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    o.type = type; o.frequency.value = freq;
+    o.connect(g); g.connect(this.ctx.destination);
+    const t = this.ctx.currentTime;
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol, t + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.start(t); o.stop(t + dur + 0.02);
+  },
+  arp(freqs, step=0.09, type='triangle', vol=0.2){
+    freqs.forEach((f,i) => setTimeout(() => this.blip(f, 0.18, type, vol), i*step*1000));
+  },
+
+  // SFX del juego (archivo → respaldo sintetizado)
+  sFlip(){  this.blip(520, 0.08, 'sine', 0.10); },                                   // flip: solo sintetizado (sutil)
+  sHint(){  this.blip(880, 0.12, 'sine', 0.14); },                                   // pista: sintetizado
+  sMatch(){   if (!this.playFile('sfx-match'))   this.arp([523.25,659.25,783.99], 0.08, 'triangle', 0.18); },
+  sWrong(){   if (!this.playFile('sfx-wrong'))   this.blip(150, 0.22, 'square', 0.16); },
+  sQuizOk(){  if (!this.playFile('sfx-quiz-ok')) this.arp([523.25,659.25,783.99], 0.08, 'triangle', 0.18); },
+  sQuizBad(){ if (!this.playFile('sfx-quiz-bad'))this.blip(150, 0.22, 'square', 0.16); },
+  sWin(){     if (!this.playFile('sfx-victory')) this.arp([523.25,659.25,783.99,1046.5], 0.1, 'triangle', 0.22); },
+};
+
+/* ════════════════════════════
+   ECG ENGINE
+════════════════════════════ */
+const ECG_N = 200;
+const ECG_CYCLE = (() => {
+  const c = new Float32Array(ECG_N);
+  for (let i = 0; i < ECG_N; i++) {
+    const t = i / ECG_N;
+    const g = (ct, sg) => Math.exp(-0.5 * ((t - ct) / sg) ** 2);
+    c[i] = .13*g(.14,.025) - .08*g(.30,.010) + 1.0*g(.33,.011)
+          - .20*g(.385,.010) + .28*g(.56,.058);
+  }
+  return c;
+})();
+
+let ecgCanvas, ecgCtx, ecgW, ecgH;
+let ecgBuf  = [];
+let cycleT  = 0;
+let rafId   = null;
+let flashT  = 0, flashRGB = [0,0,0];
+
+function initECG() {
+  ecgCanvas = document.getElementById('ecg-cv');
+  ecgCtx    = ecgCanvas.getContext('2d');
+  function resize() {
+    ecgW = ecgCanvas.offsetWidth;
+    ecgH = ecgCanvas.offsetHeight || 60;
+    ecgCanvas.width  = ecgW;
+    ecgCanvas.height = ecgH;
+    ecgBuf = new Array(ecgW).fill(ecgH / 2);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+}
+
+function ecgNextY() {
+  const amp    = 34 + matched * 2;
+  const sample = ECG_CYCLE[Math.floor(cycleT) % ECG_N];
+  cycleT += 3.6;
+  return ecgH * 0.5 - sample * amp + (Math.random() - 0.5) * 1.5;
+}
+
+function drawECG() {
+  const pct   = matched / PAIRS.length;
+  const color = pct < 0.4 ? '#00C9A7' : pct < 0.8 ? '#22c55e' : '#fbbf24';
+  const ctx   = ecgCtx;
+
+  ctx.fillStyle = '#040f1e';
+  ctx.fillRect(0, 0, ecgW, ecgH);
+
+  ctx.strokeStyle = 'rgba(0,130,60,.14)';
+  ctx.lineWidth   = .5;
+  for (let x = 0; x < ecgW; x += 20) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,ecgH); ctx.stroke(); }
+  for (let y = 0; y < ecgH; y += 10) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(ecgW,y); ctx.stroke(); }
+
+  ctx.shadowColor = color;
+  ctx.shadowBlur  = 6;
+  ctx.strokeStyle = color;
+  ctx.lineWidth   = 2;
+  ctx.lineJoin    = 'round';
+  ctx.beginPath();
+  ecgBuf.forEach((y, x) => x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y));
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  const grd = ctx.createLinearGradient(ecgW - 24, 0, ecgW, 0);
+  grd.addColorStop(0, 'transparent');
+  grd.addColorStop(1, 'rgba(255,255,255,.05)');
+  ctx.fillStyle = grd;
+  ctx.fillRect(ecgW - 24, 0, 24, ecgH);
+
+  if (flashT > 0) {
+    ctx.fillStyle = `rgba(${flashRGB[0]},${flashRGB[1]},${flashRGB[2]},${(flashT * .3).toFixed(2)})`;
+    ctx.fillRect(0, 0, ecgW, ecgH);
+    flashT = Math.max(0, flashT - .07);
+  }
+}
+
+function ecgTick() {
+  for (let i = 0; i < 2; i++) { ecgBuf.push(ecgNextY()); ecgBuf.shift(); }
+  drawECG();
+  rafId = requestAnimationFrame(ecgTick);
+}
+
+function triggerFlash(r, g, b) { flashT = 1; flashRGB = [r, g, b]; }
+
+/* ════════════════════════════
+   UI
+════════════════════════════ */
+function updateProgressUI() {
+  const pct = Math.round((matched / PAIRS.length) * 100);
+  document.getElementById('progress-pct').textContent = pct + '%';
+  document.getElementById('pbar-fill').style.width    = pct + '%';
+
+  const fill = document.getElementById('pbar-fill');
+  if      (pct < 40) fill.style.background = 'var(--accent)';
+  else if (pct < 80) fill.style.background = 'var(--green)';
+  else               fill.style.background = 'var(--gold)';
+
+  const pat = document.getElementById('patient');
+  if      (matched === 0)           pat.textContent = '🧑‍🔬';
+  else if (matched < 3)             pat.textContent = '😊';
+  else if (matched < PAIRS.length)  pat.textContent = '😄';
+  else                              pat.textContent = '🎉';
+
+  const msgs = [
+    'Encuentra todos los pares para avanzar al siguiente nivel.',
+    '¡Buen comienzo! Sigue encontrando pares.',
+    '¡Excelente ritmo! Ya llevas la mitad.',
+    '¡Casi terminado! Solo falta un par más.',
+    '¡Último par! ¡Tú puedes!',
+    '¡Todos los pares encontrados! Responde las preguntas bonus.',
+  ];
+  document.getElementById('mon-msg').textContent = msgs[Math.min(matched, msgs.length - 1)];
+}
+
+function updateStatsUI() {
+  const total = totalPoints + levelPoints;
+  const el = document.getElementById('s-pts');
+  el.textContent = total;
+  el.classList.add('sparkle');
+  setTimeout(() => el.classList.remove('sparkle'), 350);
+
+  document.getElementById('s-pairs').textContent    = matched + '/5';
+  document.getElementById('s-attempts').textContent = attempts;
+  document.getElementById('reg-pairs').textContent  = matched + ' / 5';
+  document.getElementById('reg-attempts').textContent = attempts;
+  const acc = attempts > 0 ? Math.round((matched / attempts) * 100) + '%' : '—';
+  document.getElementById('reg-acc').textContent = acc;
+  document.getElementById('reg-pts').textContent = total;
+}
+
+/* ════════════════════════════
+   GRID
+════════════════════════════ */
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildGrid() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  const lvl = LEVELS[currentLevel];
+  const cards = [];
+  PAIRS.forEach(p => {
+    cards.push({ pairId: p.id, type: lvl.typeA, pair: p });
+    cards.push({ pairId: p.id, type: lvl.typeB, pair: p });
+  });
+  shuffle(cards).forEach(data => grid.appendChild(createCard(data)));
+}
+
+function createCard(data) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.dataset.pairId = data.pairId;
+  card.dataset.type   = data.type;
+
+  const back = document.createElement('div');
+  back.className = 'card-back';
+  back.innerHTML = `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="24" cy="24" r="18" stroke="white" stroke-width="2"/>
+    <circle cx="24" cy="24" r="8"  stroke="white" stroke-width="2"/>
+    <line x1="24" y1="6"  x2="24" y2="14" stroke="white" stroke-width="2"/>
+    <line x1="24" y1="34" x2="24" y2="42" stroke="white" stroke-width="2"/>
+    <line x1="6"  y1="24" x2="14" y2="24" stroke="white" stroke-width="2"/>
+    <line x1="34" y1="24" x2="42" y2="24" stroke="white" stroke-width="2"/>
+  </svg>`;
+
+  const front = document.createElement('div');
+  const p = data.pair;
+
+  if (data.type === 'image') {
+    front.className = 'card-front';
+    const img = document.createElement('img');
+    img.src = p.img; img.alt = p.id;
+    front.appendChild(img);
+  } else if (data.type === 'name') {
+    front.className = 'card-front name-card';
+    const txt = document.createElement('div');
+    txt.className = 'name-text';
+    txt.textContent = p.name;
+    front.appendChild(txt);
+  } else {
+    front.className = 'card-front func-card';
+    const txt = document.createElement('div');
+    txt.className = 'func-text';
+    txt.textContent = p.func;
+    front.appendChild(txt);
+  }
+
+  const inner = document.createElement('div');
+  inner.className = 'card-inner';
+  inner.appendChild(back);
+  inner.appendChild(front);
+  card.appendChild(inner);
+  card.addEventListener('click', () => onCardClick(card));
+  return card;
+}
+
+/* ════════════════════════════
+   CARD LOGIC
+════════════════════════════ */
+function onCardClick(card) {
+  if (!levelActive) return;
+  if (locked) return;
+  if (card.classList.contains('flipped')) return;
+  if (card.classList.contains('matched')) return;
+  if (flipped.length === 2) return;
+  if (!startTime){ startTime = Date.now(); startTimer(); }
+
+  Audio2.sFlip();
+  card.classList.add('flipped');
+  flipped.push(card);
+
+  if (flipped.length === 2) {
+    attempts++;
+    locked = true;
+    updateStatsUI();
+    setTimeout(evaluate, 900);
+  }
+}
+
+function evaluate() {
+  const [a, b] = flipped;
+  const sameId   = a.dataset.pairId === b.dataset.pairId;
+  const diffType = a.dataset.type   !== b.dataset.type;
+
+  if (sameId && diffType) {
+    a.classList.add('matched');
+    b.classList.add('matched');
+    matched++;
+    levelPoints += 100;
+    Audio2.sMatch();
+    triggerFlash(0, 180, 80);
+    const mon = document.getElementById('monitor');
+    mon.classList.remove('flash-r','flash-g'); void mon.offsetWidth; mon.classList.add('flash-g');
+    setTimeout(() => mon.classList.remove('flash-g'), 400);
+    updateProgressUI();
+    updateStatsUI();
+    showToast('✅ +100 pts · ¡Par encontrado!', 'green');
+    if (matched === PAIRS.length) {
+      levelActive = false;
+      stopTimer();
+      setTimeout(startBonus, 700);
+    }
+  } else {
+    a.classList.add('wrong');
+    b.classList.add('wrong');
+    levelPoints = Math.max(0, levelPoints - 20);
+    Audio2.sWrong();
+    triggerFlash(200, 20, 20);
+    const mon = document.getElementById('monitor');
+    mon.classList.remove('flash-r','flash-g'); void mon.offsetWidth; mon.classList.add('flash-r');
+    setTimeout(() => mon.classList.remove('flash-r'), 400);
+    updateStatsUI();
+    showToast('❌ −20 pts · Inténtalo de nuevo', 'red');
+    setTimeout(() => {
+      a.classList.remove('flipped','wrong');
+      b.classList.remove('flipped','wrong');
+    }, 600);
+  }
+
+  flipped = [];
+  locked  = false;
+}
+
+/* ════════════════════════════
+   BONUS QUESTIONS
+════════════════════════════ */
+function startBonus() {
+  currentBonusPts = 0;
+  showBonusQuestion(0);
+}
+
+function showBonusQuestion(qIdx) {
+  const q = LEVELS[currentLevel].questions[qIdx];
+
+  document.getElementById('bonus-q-num').textContent    = `Pregunta ${qIdx + 1} de 2`;
+  document.getElementById('bonus-icon').textContent     = q.icon;
+  document.getElementById('bonus-question').textContent = q.q;
+
+  const opts = document.getElementById('bonus-options');
+  opts.innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const key = ['A','B','C','D'][i];
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.dataset.key = key;
+    btn.textContent = opt;
+    btn.addEventListener('click', () => handleBonusAnswer(key, q.correct, qIdx));
+    opts.appendChild(btn);
+  });
+
+  const fb = document.getElementById('bonus-feedback');
+  fb.className = '';
+  fb.textContent = '';
+  fb.style.display = 'none';
+
+  const btnNext = document.getElementById('btn-bonus-next');
+  btnNext.style.display = 'none';
+
+  if (qIdx === 0) {
+    btnNext.textContent = 'Siguiente pregunta →';
+    btnNext.onclick = () => {
+      document.getElementById('bonus-overlay').classList.remove('show');
+      setTimeout(() => { showBonusQuestion(1); document.getElementById('bonus-overlay').classList.add('show'); }, 300);
+    };
+  } else {
+    btnNext.textContent = 'Ver resultados del nivel →';
+    btnNext.onclick = () => {
+      document.getElementById('bonus-overlay').classList.remove('show');
+      setTimeout(showLevelComplete, 300);
+    };
+  }
+
+  document.getElementById('bonus-overlay').classList.add('show');
+}
+
+function handleBonusAnswer(key, correct, qIdx) {
+  document.querySelectorAll('.opt-btn').forEach(b => b.disabled = true);
+  const fb = document.getElementById('bonus-feedback');
+  if (key === correct) {
+    document.querySelector(`.opt-btn[data-key="${key}"]`).classList.add('correct');
+    currentBonusPts += 50;
+    fb.textContent = '⭐ ¡Correcto! +50 puntos bonus.';
+    fb.className = 'success';
+    Audio2.sQuizOk();
+    triggerFlash(0, 180, 80);
+  } else {
+    document.querySelector(`.opt-btn[data-key="${key}"]`).classList.add('wrong');
+    document.querySelector(`.opt-btn[data-key="${correct}"]`).classList.add('correct');
+    fb.textContent = `❌ Incorrecto. La respuesta correcta era ${correct}.`;
+    fb.className = 'fail';
+    Audio2.sQuizBad();
+    triggerFlash(200, 20, 20);
+  }
+  fb.style.display = 'block';
+  document.getElementById('btn-bonus-next').style.display = 'inline-block';
+}
+
+/* ════════════════════════════
+   LEVEL COMPLETE
+════════════════════════════ */
+function showLevelComplete() {
+  stopTimer();
+  speedBonus = Math.max(0, 150 - elapsed * 2);   // +150 si es muy rápido, 0 si tarda >75s
+  const score = levelPoints + currentBonusPts + speedBonus;
+  allLevelScores[currentLevel] = score;
+  totalPoints += score;
+
+  // acumulados para el ranking final
+  totalAttemptsAll += attempts;
+  totalPairsAll    += PAIRS.length;
+
+  document.getElementById('lstat-time').textContent     = fmtTime(elapsed);
+  document.getElementById('lstat-attempts').textContent = attempts;
+  document.getElementById('lstat-bonus').textContent    = '+' + speedBonus;
+  document.getElementById('lstat-score').textContent    = score + ' pts';
+
+  const isLast = currentLevel === LEVELS.length - 1;
+  document.getElementById('lvl-emoji').textContent       = isLast ? '🏆' : '🎯';
+  document.getElementById('lvl-result-title').textContent = isLast ? '¡Completado!' : '¡Nivel Completado!';
+  document.getElementById('lvl-result-msg').textContent   = isLast
+    ? `¡Has dominado todos los componentes! Total acumulado: ${totalPoints} pts.`
+    : `¡Excelente! Avanzas al ${LEVELS[currentLevel + 1].title}. Puntos del nivel: ${score}.`;
+
+  const btnNext = document.getElementById('btn-next-level');
+  btnNext.textContent = isLast ? '🏆 Ver resultados finales' : 'Siguiente Nivel →';
+  btnNext.onclick = () => {
+    document.getElementById('lvl-overlay').classList.remove('show');
+    if (isLast) setTimeout(showFinal, 300);
+    else        setTimeout(() => loadLevel(currentLevel + 1), 300);
+  };
+
+  updateStatsUI();
+  document.getElementById('lvl-overlay').classList.add('show');
+}
+
+/* ════════════════════════════
+   FINAL SCREEN
+════════════════════════════ */
+function showFinal() {
+  document.getElementById('final-emoji').textContent = '🏆';
+  document.getElementById('final-title').textContent = '¡Memoria Completada!';
+
+  // ── Ranking por precisión global y pistas usadas ──
+  const acc = totalAttemptsAll > 0 ? totalPairsAll / totalAttemptsAll : 0;
+  const accPct = Math.round(acc * 100);
+  let medal, rank, cls;
+  if (acc >= 0.75 && totalHints <= 2)      { medal='🥇'; rank='Rango Oro';    cls='oro'; }
+  else if (acc >= 0.55)                    { medal='🥈'; rank='Rango Plata';  cls='plata'; }
+  else                                     { medal='🥉'; rank='Rango Bronce'; cls='bronce'; }
+
+  document.getElementById('final-medal').textContent = medal;
+  const rankEl = document.getElementById('final-rank');
+  rankEl.textContent = rank;
+  rankEl.className = cls;
+
+  document.getElementById('final-msg').textContent =
+    `Precisión global: ${accPct}% · Pistas usadas: ${totalHints}`;
+  document.getElementById('final-total').textContent = `⭐ Total: ${totalPoints} puntos`;
+  Audio2.sWin();
+
+  const list = document.getElementById('final-lvl-list');
+  list.innerHTML = '';
+  LEVELS.forEach((lvl, i) => {
+    const row = document.createElement('div');
+    row.className = 'fl-row';
+    row.innerHTML = `<span class="fl-name">${lvl.title}</span><span class="fl-pts">${allLevelScores[i]} pts</span>`;
+    list.appendChild(row);
+  });
+
+  document.getElementById('final-overlay').classList.add('show');
+  launchConfetti();
+}
+
+function restartAll() {
+  document.getElementById('final-overlay').classList.remove('show');
+  totalPoints      = 0;
+  allLevelScores   = [0, 0, 0];
+  totalAttemptsAll = 0;
+  totalPairsAll    = 0;
+  totalHints       = 0;
+  stopConfetti();
+  loadLevel(0);
+}
+
+/* ════════════════════════════
+   LOAD LEVEL
+════════════════════════════ */
+function loadLevel(idx) {
+  currentLevel = idx;
+  flipped      = [];
+  matched      = 0;
+  attempts     = 0;
+  levelPoints  = 0;
+  locked       = false;
+  levelActive  = true;
+  startTime    = null;
+  levelHints   = 0;
+  speedBonus   = 0;
+
+  stopTimer();
+  elapsed = 0;
+  document.getElementById('s-time').textContent   = '00:00';
+  document.getElementById('reg-time').textContent = '00:00';
+  document.getElementById('reg-hints').textContent = '0';
+
+  const lvl = LEVELS[idx];
+
+  document.getElementById('lvl-tag').textContent   = lvl.title;
+  document.getElementById('reg-lvl').textContent   = `${idx + 1} / 3`;
+  document.getElementById('lvl-title').textContent = lvl.title;
+  document.getElementById('lvl-desc').textContent  = lvl.desc;
+  document.getElementById('info-body').textContent = lvl.info;
+
+  updateProgressUI();
+  updateStatsUI();
+  buildGrid();
+}
+
+/* ════════════════════════════
+   TOAST
+════════════════════════════ */
+let toastTmr = null;
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  if (toastTmr) clearTimeout(toastTmr);
+  t.textContent = msg;
+  t.className = 'show ' + type;
+  toastTmr = setTimeout(() => { t.className = ''; }, 2200);
+}
+
+/* ════════════════════════════
+   CONFETTI
+════════════════════════════ */
+let confRaf = null;
+function launchConfetti() {
+  const cv = document.getElementById('confetti');
+  const cx = cv.getContext('2d');
+  cv.width = innerWidth; cv.height = innerHeight;
+  const ps = Array.from({length:120}, () => ({
+    x: Math.random() * cv.width,
+    y: Math.random() * -cv.height * .6,
+    w: 7 + Math.random() * 8, h: 4 + Math.random() * 5,
+    color: ['#22c55e','#00C9A7','#fbbf24','#ef4444','#fff','#a78bfa'][Math.floor(Math.random()*6)],
+    vel: 2 + Math.random() * 4,
+    angle: Math.random() * 360,
+    spin: (Math.random() - .5) * 6,
+  }));
+  (function draw() {
+    cx.clearRect(0, 0, cv.width, cv.height);
+    ps.forEach(p => {
+      cx.save(); cx.translate(p.x + p.w/2, p.y + p.h/2); cx.rotate(p.angle * Math.PI / 180);
+      cx.fillStyle = p.color; cx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+      cx.restore(); p.y += p.vel; p.angle += p.spin;
+      if (p.y > cv.height) p.y = -20;
+    });
+    confRaf = requestAnimationFrame(draw);
+  })();
+}
+function stopConfetti() {
+  if (confRaf) { cancelAnimationFrame(confRaf); confRaf = null; }
+  const cv = document.getElementById('confetti');
+  cv.getContext('2d').clearRect(0, 0, cv.width, cv.height);
+}
+
+/* ════════════════════════════
+   TIMER
+════════════════════════════ */
+function fmtTime(s){
+  const m = Math.floor(s/60), ss = s%60;
+  return String(m).padStart(2,'0') + ':' + String(ss).padStart(2,'0');
+}
+function startTimer(){
+  stopTimer();
+  elapsed = 0;
+  document.getElementById('s-time').textContent  = '00:00';
+  document.getElementById('reg-time').textContent = '00:00';
+  timerInt = setInterval(() => {
+    elapsed++;
+    const f = fmtTime(elapsed);
+    document.getElementById('s-time').textContent  = f;
+    document.getElementById('reg-time').textContent = f;
+  }, 1000);
+}
+function stopTimer(){ if (timerInt){ clearInterval(timerInt); timerInt = null; } }
+
+/* ════════════════════════════
+   HINT
+════════════════════════════ */
+function useHint(){
+  if (!levelActive || locked || peekActive) return;
+  const hidden = [...document.querySelectorAll('.card:not(.matched):not(.flipped)')];
+  if (hidden.length === 0) return;
+
+  peekActive = true;
+  levelHints++; totalHints++;
+  levelPoints = Math.max(0, levelPoints - 30);
+  Audio2.sHint();
+  document.getElementById('reg-hints').textContent = levelHints;
+  updateStatsUI();
+  showToast('💡 −30 pts · Pista revelada', 'yellow');
+
+  hidden.forEach(c => c.classList.add('peek'));
+  setTimeout(() => {
+    hidden.forEach(c => c.classList.remove('peek'));
+    peekActive = false;
+  }, 1100);
+}
+
+/* ════════════════════════════
+   CONTROLS WIRING
+════════════════════════════ */
+document.getElementById('btn-hint').addEventListener('click', useHint);
+
+document.getElementById('btn-sound').addEventListener('click', () => {
+  const m = !Audio2.muted;
+  Audio2.setMuted(m);
+  document.getElementById('btn-sound').textContent = m ? '🔇' : '🔊';
+});
+
+// Desbloqueo de audio en el primer gesto del usuario
+function primeAudio(){
+  Audio2.initCtx(); Audio2.resume(); Audio2.startAmbient();
+  window.removeEventListener('pointerdown', primeAudio);
+  window.removeEventListener('keydown', primeAudio);
+}
+window.addEventListener('pointerdown', primeAudio);
+window.addEventListener('keydown', primeAudio);
+
+/* ════════════════════════════
+   INIT
+════════════════════════════ */
+initECG();
+loadLevel(0);
+ecgTick();
+
+window.addEventListener('resize', () => {
+  const cv = document.getElementById('confetti');
+  cv.width = innerWidth; cv.height = innerHeight;
+});
+</script>
+</body>
+</html>
