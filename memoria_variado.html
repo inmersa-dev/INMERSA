@@ -209,6 +209,9 @@ body{
   box-shadow:0 4px 16px rgba(0,0,0,.4);
 }
 .card-front img{width:68px;height:68px;object-fit:contain;border-radius:6px}
+/* Imagen agrandada solo para la carta de Hemoglobina (Hemo1) */
+.card[data-pair-id="hemoglobina"] .card-front img{width:96px;height:96px}
+.card[data-pair-id="hemoglobina"] .card-front{padding:4px}
 
 /* Name card */
 .card-front.name-card{
@@ -653,7 +656,7 @@ const PAIRS = [
   { id:'eritrocito',  name:'Eritrocito',   img:'../Imagenes/eritrocito.png',  func:'Glóbulo rojo que transporta nutrientes y oxígeno' },
   { id:'leucocito',   name:'Leucocito',    img:'../Imagenes/leucocito.png',   func:'Glóbulo blanco que defiende el cuerpo de infecciones' },
   { id:'plaqueta',    name:'Plaqueta',     img:'../Imagenes/plaqueta.png',    func:'Forma coágulos para detener hemorragias' },
-  { id:'hemoglobina', name:'Hemoglobina',  img:'../Imagenes/hemoglobina.png', func:'Proteína que capta y transporta oxígeno' },
+  { id:'hemoglobina', name:'Hemoglobina',  img:'../Imagenes/Hemo1.png', func:'Proteína que capta y transporta oxígeno' },
   { id:'plasma',      name:'Plasma',       img:'../Imagenes/plasma.png',      func:'Parte líquida que transporta células, nutrientes y desechos' },
 ];
 
