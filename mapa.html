@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>INMERSA — Mapa de Progreso</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0A1628;
+      --bg-card: #0F2236;
+      --bg-nav: #0D1F38;
+      --accent: #00D4FF;
+      --accent-dim: rgba(0, 212, 255, 0.15);
+      --done: #1D9E75;
+      --done-dim: rgba(29, 158, 117, 0.15);
+      --locked: #334455;
+      --text: #FFFFFF;
+      --text-sec: #8899AA;
+      --radius: 12px;
+      --border: rgba(136, 153, 170, 0.2);
+      --nav-h: 64px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Nunito', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: calc(var(--nav-h) + 24px);
+      -webkit-tap-highlight-color: transparent;
+      background-image: radial-gradient(circle at 50% -5%, rgba(0,212,255,0.08), transparent 50%);
+    }
+
+    /* ---------- Loading ---------- */
+    #loading {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100;
+    }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--accent-dim);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ---------- Header ---------- */
+    .header {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 22px 20px 8px;
+      position: relative;
+    }
+    .logout-btn {
+      position: absolute;
+      top: 20px; right: 18px;
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-sec);
+      font-size: 18px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .logout-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+    .header .pildora {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .header h1 {
+      font-size: 24px;
+      font-weight: 900;
+      margin: 4px 0 2px;
+      padding-right: 48px;
+    }
+    .header .sub {
+      font-size: 13px;
+      color: var(--text-sec);
+      font-weight: 600;
+    }
+
+    .progress-badge {
+      display: inline-block;
+      margin-top: 12px;
+      background: var(--accent-dim);
+      border: 1px solid rgba(0,212,255,0.4);
+      color: var(--accent);
+      font-weight: 800;
+      font-size: 13px;
+      padding: 5px 12px;
+      border-radius: 999px;
+    }
+
+    /* ---------- Stats ---------- */
+    .stats {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .stat {
+      flex: 1;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 8px;
+      text-align: center;
+    }
+    .stat .ico { font-size: 18px; }
+    .stat .val { font-size: 18px; font-weight: 900; margin-top: 2px; }
+    .stat .lbl { font-size: 11px; color: var(--text-sec); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* ---------- Progress bar ---------- */
+    .progress-bar-wrap {
+      margin-top: 16px;
+      height: 8px;
+      background: var(--bg-card);
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--done), var(--accent));
+      border-radius: 999px;
+      transition: width 0.8s ease;
+    }
+    .progress-pct {
+      font-size: 12px;
+      color: var(--text-sec);
+      font-weight: 700;
+      margin-top: 6px;
+      text-align: right;
+    }
+
+    /* ---------- Map ---------- */
+    .map {
+      max-width: 520px;
+      margin: 18px auto 0;
+      padding: 0 20px;
+      position: relative;
+    }
+
+    .section-label {
+      text-align: center;
+      margin: 26px 0 14px;
+      position: relative;
+    }
+    .section-label span {
+      display: inline-block;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-sec);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      border-radius: 999px;
+    }
+
+    /* central line */
+    .nodes { position: relative; }
+    .nodes::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 0; bottom: 0;
+      width: 3px;
+      transform: translateX(-50%);
+      background: repeating-linear-gradient(to bottom, var(--locked) 0 8px, transparent 8px 16px);
+      z-index: 0;
+    }
+
+    .node {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 14px 0;
+      cursor: pointer;
+    }
+    .node.left { flex-direction: row; }
+    .node.right { flex-direction: row-reverse; }
+
+    .node-circle {
+      flex-shrink: 0;
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      border: 3px solid;
+      background: var(--bg-card);
+      transition: transform 0.12s;
+    }
+    .node:active .node-circle { transform: scale(0.93); }
+
+    .node-card {
+      flex: 1;
+      background: var(--bg-card);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      transition: border-color 0.15s, opacity 0.15s;
+      max-width: 200px;
+    }
+    .node.left .node-card { text-align: left; }
+    .node.right .node-card { text-align: right; }
+    .node-card .tipo {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+    .node-card .nombre {
+      font-size: 14px;
+      font-weight: 700;
+      margin-top: 2px;
+      line-height: 1.25;
+    }
+    .node-num {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--text-sec);
+      margin-bottom: 1px;
+    }
+
+    /* states */
+    .node.done .node-circle { border-color: var(--done); background: var(--done-dim); color: var(--done); }
+    .node.done .node-card { opacity: 0.6; }
+    .node.done .node-card .tipo { color: var(--done); }
+
+    .node.active .node-circle {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+      color: var(--accent);
+      animation: pulse 1.6s ease-in-out infinite;
+    }
+    .node.active .node-card { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+
+    .node.locked .node-circle { border-color: var(--locked); color: var(--locked); }
+    .node.locked .node-card { opacity: 0.5; }
+    .node.locked .node-card .tipo { color: var(--text-sec); }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(0,212,255,0.5); }
+      50% { box-shadow: 0 0 0 10px rgba(0,212,255,0); }
+    }
+
+    /* ---------- Detail panel (bottom sheet) ---------- */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(4, 12, 24, 0.7);
+      backdrop-filter: blur(2px);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 50;
+    }
+    .overlay.show { opacity: 1; pointer-events: auto; }
+
+    .sheet {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      max-width: 520px;
+      margin: 0 auto;
+      background: var(--bg-card);
+      border-top-left-radius: 22px;
+      border-top-right-radius: 22px;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      padding: 10px 22px calc(28px + var(--nav-h));
+      transform: translateY(110%);
+      transition: transform 0.28s cubic-bezier(0.22,1,0.36,1);
+      z-index: 60;
+    }
+    .sheet.show { transform: translateY(0); }
+    .sheet-handle {
+      width: 42px; height: 5px;
+      background: var(--locked);
+      border-radius: 999px;
+      margin: 0 auto 16px;
+    }
+    .sheet .s-tipo {
+      font-size: 11px; font-weight: 800; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--accent);
+    }
+    .sheet h3 { font-size: 21px; font-weight: 900; margin: 4px 0 10px; }
+    .sheet .s-desc { font-size: 15px; color: var(--text-sec); line-height: 1.5; }
+    .sheet .s-meta {
+      display: flex; gap: 10px; margin: 16px 0 18px;
+    }
+    .s-chip {
+      flex: 1;
+      background: var(--bg-input, #142A41);
+      background: #142A41;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px;
+      text-align: center;
+    }
+    .s-chip .c-lbl { font-size: 11px; color: var(--text-sec); font-weight: 700; text-transform: uppercase; }
+    .s-chip .c-val { font-size: 14px; font-weight: 800; margin-top: 3px; }
+
+    .sheet .btn {
+      width: 100%;
+      border: none;
+      border-radius: var(--radius);
+      padding: 15px;
+      font-size: 16px; font-weight: 800;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .btn-play { background: var(--accent); color: #04222E; }
+    .btn-repeat { background: var(--done); color: #04221A; }
+    .btn-locked { background: var(--locked); color: var(--text-sec); cursor: not-allowed; }
+
+    /* ---------- Bottom nav ---------- */
+    .nav {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      height: var(--nav-h);
+      background: var(--bg-nav);
+      border-top: 1px solid var(--border);
+      display: flex;
+      z-index: 70;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+    .nav button {
+      flex: 1;
+      background: none; border: none;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 11px; font-weight: 700;
+      cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px;
+      transition: color 0.15s;
+    }
+    .nav button .nav-ico { font-size: 20px; }
+    .nav button.active { color: var(--accent); }
+    .nav button:not(.active) { color: var(--text-sec); }
+
+    /* ---------- Game overlay ---------- */
+    .game-overlay {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      z-index: 200;
+      display: none;
+    }
+    .game-overlay.show { display: block; }
+    .game-frame {
+      width: 100%; height: 100%;
+      border: none;
+      display: block;
+    }
+    .game-close {
+      position: fixed;
+      top: 14px; right: 14px;
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: rgba(10, 22, 40, 0.85);
+      border: 1.5px solid var(--border);
+      color: var(--text);
+      font-size: 20px; font-weight: 800;
+      cursor: pointer;
+      z-index: 210;
+      display: flex; align-items: center; justify-content: center;
+      backdrop-filter: blur(4px);
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .game-close:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ---------- Toast ---------- */
+    .toast {
+      position: fixed;
+      bottom: calc(var(--nav-h) + 18px);
+      left: 50%; transform: translateX(-50%) translateY(20px);
+      background: var(--bg-card);
+      border: 1px solid var(--accent);
+      color: var(--text);
+      font-weight: 700; font-size: 14px;
+      padding: 12px 20px;
+      border-radius: 999px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 90;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 360px) {
+      .node-card { max-width: 150px; }
+      .stat .val { font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="loading"><div class="spinner"></div></div>
+
+  <!-- Header -->
+  <header class="header" style="display:none" id="header">
+    <button class="logout-btn" id="logoutBtn" title="Cerrar sesión">⏻</button>
+    <div class="pildora">Sistema Circulatorio — Píldora 01</div>
+    <h1>Componentes de la Sangre</h1>
+    <div class="sub" id="greeting">Cargando...</div>
+    <span class="progress-badge" id="progressBadge">0 / 20</span>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="ico">🔥</div>
+        <div class="val" id="statRacha">0</div>
+        <div class="lbl">Racha</div>
+      </div>
+      <div class="stat">
+        <div class="ico">⭐</div>
+        <div class="val" id="statPuntos">0</div>
+        <div class="lbl">Puntos</div>
+      </div>
+      <div class="stat">
+        <div class="ico">🃏</div>
+        <div class="val" id="statTarjetas">0 / 9</div>
+        <div class="lbl">Tarjetas</div>
+      </div>
+    </div>
+
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill"></div></div>
+    <div class="progress-pct" id="progressPct">0%</div>
+  </header>
+
+  <!-- Map -->
+  <main class="map" id="map" style="display:none"></main>
+
+  <!-- Detail sheet -->
+  <div class="overlay" id="overlay"></div>
+  <div class="sheet" id="sheet">
+    <div class="sheet-handle"></div>
+    <div class="s-tipo" id="sheetTipo"></div>
+    <h3 id="sheetTitle"></h3>
+    <p class="s-desc" id="sheetDesc"></p>
+    <div class="s-meta">
+      <div class="s-chip"><div class="c-lbl">⏱ Tiempo</div><div class="c-val" id="sheetTime"></div></div>
+      <div class="s-chip"><div class="c-lbl">🎁 Recompensa</div><div class="c-val" id="sheetReward"></div></div>
+    </div>
+    <button class="btn" id="sheetBtn"></button>
+  </div>
+
+  <!-- Game overlay (iframe a pantalla completa) -->
+  <div class="game-overlay" id="gameOverlay">
+    <button class="game-close" id="gameClose" title="Cerrar juego">✕</button>
+    <iframe class="game-frame" id="gameFrame" title="Juego"></iframe>
+  </div>
+
+  <!-- Bottom nav -->
+  <nav class="nav">
+    <button class="active" data-tab="mapa"><span class="nav-ico">🗺️</span>Mapa</button>
+    <button data-tab="tabla"><span class="nav-ico">🏆</span>Tabla</button>
+    <button data-tab="biblioteca"><span class="nav-ico">📚</span>Biblioteca</button>
+    <button data-tab="perfil"><span class="nav-ico">👤</span>Perfil</button>
+  </nav>
+
+  <div class="toast" id="toast"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getAuth, onAuthStateChanged, signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      getFirestore, doc, getDoc, updateDoc, serverTimestamp, arrayUnion
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyARclfJXsjDISiT2JRjzwkoUrmPpGqpho4",
+      authDomain: "inmersa-mvp.firebaseapp.com",
+      projectId: "inmersa-mvp",
+      storageBucket: "inmersa-mvp.firebasestorage.app",
+      messagingSenderId: "554325663285",
+      appId: "1:554325663285:web:332e863d1e39e49783db7c",
+      measurementId: "G-RQPE6SVTDP"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // ---------- Definición de los 20 pasos ----------
+    const ICONS = { Interactivo: "💬", Narrativa: "📖", Juego: "🎮", Emergencia: "🚑" };
+
+    const STEPS = [
+      { sec: "El campamento", tipo: "Interactivo", nombre: "Bienvenida al campamento", desc: "Registro, personalidad, eritrocitos bajos y la decisión sobre Thomas.", tiempo: "3-4 min", reward: "+50 pts" },
+      { sec: "El campamento", tipo: "Narrativa", nombre: "El guía presenta la competencia", desc: "Conoce las reglas, la tabla de puntos y se introduce el rompecabezas.", tiempo: "1 min", reward: "+20 pts" },
+      { sec: "El campamento", tipo: "Juego", nombre: "Rompecabezas compuesto", desc: "Arma visualmente los 4 componentes de la sangre.", tiempo: "3-5 min", reward: "+80 pts · 🃏 Tarjeta" },
+
+      { sec: "Conoce al enemigo", tipo: "Interactivo", nombre: "Conversación de equipo", desc: "Tu compañero pregunta y el guía advierte sobre las enfermedades.", tiempo: "1-2 min", reward: "+30 pts" },
+      { sec: "Conoce al enemigo", tipo: "Juego", nombre: "Snake sanguíneo", desc: "Come componentes y evita las enfermedades para crecer.", tiempo: "3-5 min", reward: "+90 pts" },
+      { sec: "Conoce al enemigo", tipo: "Narrativa", nombre: "Noche de cuentos", desc: "Fogata: la hemofilia como maldición, contada en un cómic ilustrado.", tiempo: "3-5 min", reward: "+30 pts · 🃏 Tarjeta" },
+
+      { sec: "Domina el vocabulario", tipo: "Juego", nombre: "Palabras sanguíneas", desc: "Pistas y letras sobre componentes y enfermedades.", tiempo: "3-5 min", reward: "+90 pts" },
+      { sec: "Domina el vocabulario", tipo: "Interactivo", nombre: "Anima a tu compañero", desc: "Tabla y diálogo con consecuencias según tu elección.", tiempo: "1-2 min", reward: "+30 pts" },
+      { sec: "Domina el vocabulario", tipo: "Juego", nombre: "Defensa Inmune", desc: "Shooter: enfermedades contra tus aliados del sistema inmune.", tiempo: "5-8 min", reward: "+120 pts · 🃏 Tarjeta" },
+      { sec: "Domina el vocabulario", tipo: "Emergencia", nombre: "Emergencia 1", desc: "Caso clínico: diagnostica como un verdadero doctor.", tiempo: "2-3 min", reward: "+100 pts" },
+
+      { sec: "Demuestra dominio", tipo: "Interactivo", nombre: "Charla de equipo", desc: "Comentan la defensa, repaso en la tabla y el guía introduce el ahorcado.", tiempo: "2 min", reward: "+30 pts" },
+      { sec: "Demuestra dominio", tipo: "Juego", nombre: "Ahorcado", desc: "Pon a prueba todo el vocabulario aprendido.", tiempo: "3-5 min", reward: "+90 pts · 🃏 Tarjeta" },
+      { sec: "Demuestra dominio", tipo: "Emergencia", nombre: "Emergencia 2", desc: "Un caso clínico más complejo para diagnosticar.", tiempo: "2-3 min", reward: "+110 pts" },
+      { sec: "Demuestra dominio", tipo: "Narrativa", nombre: "Motivación del guía", desc: "No es momento de descansar: viene el reto de memoria.", tiempo: "30 seg", reward: "+15 pts" },
+
+      { sec: "La batalla final", tipo: "Juego", nombre: "Memoria 3 niveles", desc: "Imagen+nombre, nombre+descripción e imagen+descripción.", tiempo: "5-8 min", reward: "+120 pts · 🃏 Tarjeta" },
+      { sec: "La batalla final", tipo: "Interactivo", nombre: "La recta final", desc: "Tabla, el tema de Thomas y preparación para el runner.", tiempo: "2 min", reward: "+30 pts" },
+      { sec: "La batalla final", tipo: "Juego", nombre: "Corredor Sanguíneo", desc: "El integrador final, todo bajo presión.", tiempo: "5-8 min", reward: "+150 pts · 🃏 Tarjeta" },
+      { sec: "La batalla final", tipo: "Interactivo", nombre: "Empate", desc: "Sorpresa: eligen entre snake o defensa para el desempate.", tiempo: "1 min", reward: "+20 pts" },
+      { sec: "La batalla final", tipo: "Juego", nombre: "Desempate", desc: "La batalla final con el juego que elegiste.", tiempo: "3-5 min", reward: "+130 pts · 🃏 Tarjeta" },
+      { sec: "La batalla final", tipo: "Narrativa", nombre: "Fogata de cierre", desc: "Celebración, el destino de Thomas y un cliffhanger.", tiempo: "1-2 min", reward: "+50 pts" }
+    ];
+
+    const TOTAL_TARJETAS = 9;
+
+    // Mapeo de pasos a archivos de juego.
+    const JUEGOS = {
+      3:  "juegos/rompecabezas_componentes.html",
+      5:  "juegos/snake_sanguineo.html",
+      7:  "juegos/palabras_sangre.html",
+      9:  "juegos/defensa_inmune.html",
+      12: "juegos/ahorcado_sangre.html",
+      15: "juegos/memoria_variado.html",
+      17: "juegos/runner_sangre.html"
+    };
+
+    // Pasos que desbloquean una tarjeta al completarse, con su id de tarjeta.
+    const TARJETA_POR_PASO = {
+      3: "tarjeta_03", 6: "tarjeta_06", 9: "tarjeta_09", 12: "tarjeta_12",
+      15: "tarjeta_15", 17: "tarjeta_17", 19: "tarjeta_19"
+    };
+
+    // Datos del estudiante cargados (se actualizan tras cada juego).
+    let currentData = null;
+
+    // ---------- DOM refs ----------
+    const $ = (id) => document.getElementById(id);
+    const toastEl = $("toast");
+    let toastTimer;
+    function toast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1800);
+    }
+
+    // ---------- Render ----------
+    function render(data) {
+      currentData = data;
+      const pasoActual = data.paso_actual || 1;
+      const nombre = data.nombre || "Estudiante";
+      const completados = Math.max(0, pasoActual - 1);
+
+      $("greeting").textContent = `¡Hola, ${nombre}! Sigue tu camino.`;
+      $("progressBadge").textContent = `${completados} / 20`;
+      $("statRacha").textContent = data.racha_dias ?? 0;
+      $("statPuntos").textContent = data.puntos_totales ?? 0;
+      const tarjetas = Array.isArray(data.tarjetas_desbloqueadas) ? data.tarjetas_desbloqueadas.length : 0;
+      $("statTarjetas").textContent = `${tarjetas} / ${TOTAL_TARJETAS}`;
+
+      const pct = Math.round((completados / 20) * 100);
+      $("progressPct").textContent = `${pct}%`;
+      requestAnimationFrame(() => { $("progressFill").style.width = pct + "%"; });
+
+      // Build map
+      const map = $("map");
+      map.innerHTML = "";
+      let lastSec = null;
+      STEPS.forEach((step, i) => {
+        const n = i + 1;
+        if (step.sec !== lastSec) {
+          lastSec = step.sec;
+          const lbl = document.createElement("div");
+          lbl.className = "section-label";
+          lbl.innerHTML = `<span>${step.sec}</span>`;
+          map.appendChild(lbl);
+          // wrap nodes in container for the central line
+          const nc = document.createElement("div");
+          nc.className = "nodes";
+          nc.dataset.sec = step.sec;
+          map.appendChild(nc);
+        }
+
+        let state = "locked";
+        if (n < pasoActual) state = "done";
+        else if (n === pasoActual) state = "active";
+
+        const node = document.createElement("div");
+        node.className = `node ${state} ${n % 2 === 1 ? "left" : "right"}`;
+        let circleIco = ICONS[step.tipo] || "•";
+        if (state === "done") circleIco = "✓";
+        if (state === "locked") circleIco = "🔒";
+
+        node.innerHTML = `
+          <div class="node-circle">${circleIco}</div>
+          <div class="node-card">
+            <div class="node-num">Paso ${n}</div>
+            <div class="tipo">${step.tipo}</div>
+            <div class="nombre">${step.nombre}</div>
+          </div>`;
+        node.addEventListener("click", () => openSheet(n, state));
+
+        // append to the latest .nodes container
+        map.querySelector(".nodes:last-of-type").appendChild(node);
+      });
+
+      $("loading").style.display = "none";
+      $("header").style.display = "block";
+      map.style.display = "block";
+
+      // Scroll to active node
+      setTimeout(() => {
+        const active = map.querySelector(".node.active");
+        if (active) active.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 400);
+    }
+
+    // ---------- Detail sheet ----------
+    const overlay = $("overlay");
+    const sheet = $("sheet");
+
+    function openSheet(n, state) {
+      const step = STEPS[n - 1];
+      $("sheetTipo").textContent = step.tipo;
+      $("sheetTitle").textContent = step.nombre;
+      $("sheetDesc").textContent = step.desc;
+      $("sheetTime").textContent = step.tiempo;
+      $("sheetReward").textContent = step.reward;
+
+      const btn = $("sheetBtn");
+      btn.className = "btn";
+      if (state === "active") {
+        btn.textContent = "▶ Jugar";
+        btn.classList.add("btn-play");
+        btn.disabled = false;
+        btn.onclick = () => {
+          closeSheet();
+          if (JUEGOS[n]) openGame(JUEGOS[n]);
+          else toast("Próximamente: este juego está en construcción.");
+        };
+      } else if (state === "done") {
+        btn.textContent = "↻ Repetir";
+        btn.classList.add("btn-repeat");
+        btn.disabled = false;
+        btn.onclick = () => {
+          closeSheet();
+          if (JUEGOS[n]) openGame(JUEGOS[n]);
+          else toast("Próximamente: podrás repetir este paso.");
+        };
+      } else {
+        btn.textContent = "🔒 Bloqueado";
+        btn.classList.add("btn-locked");
+        btn.disabled = true;
+        btn.onclick = null;
+      }
+
+      overlay.classList.add("show");
+      sheet.classList.add("show");
+    }
+    function closeSheet() {
+      overlay.classList.remove("show");
+      sheet.classList.remove("show");
+    }
+    overlay.addEventListener("click", closeSheet);
+
+    // ---------- Bottom nav ----------
+    document.querySelectorAll(".nav button").forEach(b => {
+      b.addEventListener("click", () => {
+        const tab = b.dataset.tab;
+        if (tab === "mapa") return;
+        const names = { tabla: "Tabla de clasificación", biblioteca: "Biblioteca de tarjetas", perfil: "Perfil" };
+        toast(`Próximamente: ${names[tab]}.`);
+      });
+    });
+
+    // ---------- Logout ----------
+    $("logoutBtn").addEventListener("click", async () => {
+      try { await signOut(auth); } catch (e) {}
+      window.location.href = "index.html";
+    });
+
+    // ---------- Game iframe overlay ----------
+    const gameOverlay = $("gameOverlay");
+    const gameFrame = $("gameFrame");
+
+    function openGame(src) {
+      gameFrame.src = src;
+      gameOverlay.classList.add("show");
+    }
+    function closeGame() {
+      gameOverlay.classList.remove("show");
+      gameFrame.src = "about:blank";
+    }
+    $("gameClose").addEventListener("click", closeGame);
+
+    // ---------- Escuchar resultado del juego y guardar en Firebase ----------
+    window.addEventListener("message", async (event) => {
+      const data = event.data;
+      if (!data || data.tipo !== "resultado_juego") return;
+      await procesarResultado(data);
+    });
+
+    async function procesarResultado(data) {
+      const user = auth.currentUser;
+      if (!user || !currentData) return;
+
+      const paso = Number(data.paso);
+      const puntos = Number(data.puntos) || 0;
+      const ref = doc(db, "estudiantes", user.uid);
+      const pasoActual = currentData.paso_actual || 1;
+      const prevPuntosPaso = (currentData.puntos_por_paso && currentData.puntos_por_paso[paso]) || 0;
+
+      const updates = { ultima_sesion: serverTimestamp() };
+      let avanzo = false;
+      let tarjetaNueva = false;
+
+      if (data.completado && paso === pasoActual) {
+        // Primera vez que se completa el paso activo: avanza y suma puntos.
+        updates.paso_actual = paso + 1;
+        updates.puntos_totales = (currentData.puntos_totales || 0) + puntos;
+        updates["puntos_por_paso." + paso] = puntos;
+        avanzo = true;
+
+        const tarjeta = TARJETA_POR_PASO[paso];
+        const yaTiene = Array.isArray(currentData.tarjetas_desbloqueadas) &&
+                        currentData.tarjetas_desbloqueadas.includes(tarjeta);
+        if (tarjeta && !yaTiene) {
+          updates.tarjetas_desbloqueadas = arrayUnion(tarjeta);
+          tarjetaNueva = true;
+        }
+      } else if (puntos > prevPuntosPaso) {
+        // Repetición: guarda solo el mejor puntaje del paso, no avanza ni re-suma.
+        updates["puntos_por_paso." + paso] = puntos;
+      }
+
+      try {
+        await updateDoc(ref, updates);
+        const snap = await getDoc(ref);
+        if (snap.exists()) render(snap.data());
+        closeGame();
+        if (avanzo) {
+          toast(tarjetaNueva ? `¡+${puntos} pts y nueva tarjeta! 🃏` : `¡+${puntos} pts! Nodo desbloqueado.`);
+        } else {
+          toast(`Juego completado: ${puntos} pts.`);
+        }
+      } catch (e) {
+        closeGame();
+        toast("No se pudo guardar tu progreso.");
+      }
+    }
+
+    // ---------- Session check ----------
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "index.html";
+        return;
+      }
+      try {
+        const snap = await getDoc(doc(db, "estudiantes", user.uid));
+        if (snap.exists()) {
+          render(snap.data());
+        } else {
+          // Usuario autenticado sin documento: valores por defecto.
+          render({ nombre: user.email?.split("@")[0], paso_actual: 1, puntos_totales: 0, racha_dias: 0, tarjetas_desbloqueadas: [] });
+        }
+      } catch (e) {
+        $("loading").style.display = "none";
+        toast("No se pudieron cargar tus datos.");
+        render({ nombre: user.email?.split("@")[0], paso_actual: 1, puntos_totales: 0, racha_dias: 0, tarjetas_desbloqueadas: [] });
+      }
+    });
+  </script>
+</body>
+</html>

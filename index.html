@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>INMERSA — Biología Humana</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0A1628;
+      --bg-card: #0F2236;
+      --bg-input: #142A41;
+      --accent: #00D4FF;
+      --accent-dim: rgba(0, 212, 255, 0.15);
+      --text: #FFFFFF;
+      --text-sec: #8899AA;
+      --error: #FF5C6C;
+      --success: #34D399;
+      --radius: 12px;
+      --border: rgba(136, 153, 170, 0.2);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      font-family: 'Nunito', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 32px 20px 48px;
+      background-image:
+        radial-gradient(circle at 50% 0%, rgba(0, 212, 255, 0.08), transparent 55%);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 440px;
+    }
+
+    /* ---------- Header / Logo ---------- */
+    .brand {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .brand h1 {
+      font-size: 38px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      color: var(--text);
+    }
+    .brand h1 span { color: var(--accent); }
+    .brand p {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    /* ---------- Card ---------- */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 24px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+    }
+
+    .card h2 {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .card .subtitle {
+      font-size: 14px;
+      color: var(--text-sec);
+      margin-bottom: 22px;
+    }
+
+    /* ---------- Form fields ---------- */
+    .field { margin-bottom: 16px; }
+    .field label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-sec);
+      margin-bottom: 7px;
+    }
+    .field input {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      font-size: 16px;
+      font-family: inherit;
+      font-weight: 600;
+      color: var(--text);
+      transition: border-color 0.18s, box-shadow 0.18s;
+    }
+    .field input::placeholder { color: #5A6B7D; font-weight: 600; }
+    .field input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+    .hint {
+      font-size: 12px;
+      color: var(--text-sec);
+      margin-top: 6px;
+    }
+
+    /* ---------- Personality cards ---------- */
+    .personality-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .p-card {
+      background: var(--bg-input);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 6px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s, transform 0.1s;
+      user-select: none;
+    }
+    .p-card:active { transform: scale(0.96); }
+    .p-card .emoji { font-size: 26px; line-height: 1; }
+    .p-card .name {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      margin-top: 6px;
+      color: var(--text-sec);
+    }
+    .p-card.selected {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+    .p-card.selected .name { color: var(--accent); }
+
+    /* ---------- Buttons / links ---------- */
+    .btn {
+      width: 100%;
+      background: var(--accent);
+      color: #04222E;
+      border: none;
+      border-radius: var(--radius);
+      padding: 15px;
+      font-size: 16px;
+      font-weight: 800;
+      font-family: inherit;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: filter 0.15s, transform 0.1s, opacity 0.15s;
+    }
+    .btn:hover { filter: brightness(1.08); }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .switch-line {
+      text-align: center;
+      font-size: 14px;
+      color: var(--text-sec);
+      margin-top: 20px;
+    }
+    .switch-line a {
+      color: var(--accent);
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .switch-line a:hover { text-decoration: underline; }
+
+    /* ---------- Messages ---------- */
+    .message {
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 18px;
+      display: none;
+    }
+    .message.show { display: block; }
+    .message.error {
+      background: rgba(255, 92, 108, 0.12);
+      border: 1px solid rgba(255, 92, 108, 0.4);
+      color: var(--error);
+    }
+    .message.success {
+      background: rgba(52, 211, 153, 0.12);
+      border: 1px solid rgba(52, 211, 153, 0.4);
+      color: var(--success);
+    }
+
+    .hidden { display: none !important; }
+
+    /* ---------- Welcome screen ---------- */
+    #welcomeScreen { text-align: center; }
+    #welcomeScreen .checkmark {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: var(--accent-dim);
+      border: 2px solid var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 38px;
+      margin: 0 auto 20px;
+    }
+    #welcomeScreen h2 { font-size: 22px; margin-bottom: 10px; }
+    #welcomeScreen p { color: var(--text-sec); font-size: 15px; }
+    .spinner {
+      width: 26px; height: 26px;
+      border: 3px solid var(--accent-dim);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      margin: 22px auto 0;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* spinner inside button */
+    .btn .btn-spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2.5px solid rgba(4,34,46,0.3);
+      border-top-color: #04222E;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+    }
+
+    @media (max-width: 380px) {
+      .personality-grid { gap: 8px; }
+      .p-card .emoji { font-size: 23px; }
+      .brand h1 { font-size: 32px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="brand">
+      <h1>INMER<span>SA</span></h1>
+      <p>Biología Humana</p>
+    </div>
+
+    <!-- ========== LOGIN ========== -->
+    <div class="card" id="loginScreen">
+      <h2>Inicia sesión</h2>
+      <p class="subtitle">Continúa tu aventura en el cuerpo humano.</p>
+
+      <div class="message error" id="loginError"></div>
+
+      <div class="field">
+        <label for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" placeholder="tu@correo.com" autocomplete="email" />
+      </div>
+      <div class="field">
+        <label for="loginPassword">Contraseña</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+
+      <button class="btn" id="loginBtn">Entrar</button>
+
+      <p class="switch-line">¿No tienes cuenta? <a id="goToRegister">Regístrate</a></p>
+    </div>
+
+    <!-- ========== REGISTRO ========== -->
+    <div class="card hidden" id="registerScreen">
+      <h2>Crea tu cuenta</h2>
+      <p class="subtitle">Diseña tu personaje y comienza la inmersión.</p>
+
+      <div class="message error" id="registerError"></div>
+
+      <div class="field">
+        <label for="regEmail">Email</label>
+        <input type="email" id="regEmail" placeholder="tu@correo.com" autocomplete="email" />
+      </div>
+      <div class="field">
+        <label for="regPassword">Contraseña</label>
+        <input type="password" id="regPassword" placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
+        <div class="hint">Debe tener al menos 6 caracteres.</div>
+      </div>
+      <div class="field">
+        <label for="regNombre">Nombre del personaje</label>
+        <input type="text" id="regNombre" placeholder="Ej: Dr. Nova" maxlength="24" autocomplete="off" />
+      </div>
+
+      <div class="field">
+        <label>Elige una personalidad</label>
+        <div class="personality-grid" id="personalityGrid">
+          <div class="p-card" data-value="Inteligente"><span class="emoji">🧠</span><span class="name">Inteligente</span></div>
+          <div class="p-card" data-value="Gracioso"><span class="emoji">😄</span><span class="name">Gracioso</span></div>
+          <div class="p-card" data-value="Bravo"><span class="emoji">😤</span><span class="name">Bravo</span></div>
+          <div class="p-card" data-value="Líder"><span class="emoji">👑</span><span class="name">Líder</span></div>
+          <div class="p-card" data-value="Tímido"><span class="emoji">😊</span><span class="name">Tímido</span></div>
+          <div class="p-card" data-value="Misterioso"><span class="emoji">🕵️</span><span class="name">Misterioso</span></div>
+        </div>
+      </div>
+
+      <button class="btn" id="registerBtn">Crear cuenta</button>
+
+      <p class="switch-line">¿Ya tienes cuenta? <a id="goToLogin">Inicia sesión</a></p>
+    </div>
+
+    <!-- ========== BIENVENIDA ========== -->
+    <div class="card hidden" id="welcomeScreen">
+      <div class="checkmark">✓</div>
+      <h2 id="welcomeText">¡Bienvenido!</h2>
+      <p>Redirigiendo al mapa...</p>
+      <div class="spinner"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      setDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    // ---------- Firebase config ----------
+    const firebaseConfig = {
+      apiKey: "AIzaSyARclfJXsjDISiT2JRjzwkoUrmPpGqpho4",
+      authDomain: "inmersa-mvp.firebaseapp.com",
+      projectId: "inmersa-mvp",
+      storageBucket: "inmersa-mvp.firebasestorage.app",
+      messagingSenderId: "554325663285",
+      appId: "1:554325663285:web:332e863d1e39e49783db7c",
+      measurementId: "G-RQPE6SVTDP"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // ---------- DOM refs ----------
+    const loginScreen = document.getElementById("loginScreen");
+    const registerScreen = document.getElementById("registerScreen");
+    const welcomeScreen = document.getElementById("welcomeScreen");
+
+    const loginError = document.getElementById("loginError");
+    const registerError = document.getElementById("registerError");
+
+    const loginBtn = document.getElementById("loginBtn");
+    const registerBtn = document.getElementById("registerBtn");
+
+    let selectedPersonality = null;
+
+    // ---------- Screen switching ----------
+    function show(screen) {
+      [loginScreen, registerScreen, welcomeScreen].forEach(s => s.classList.add("hidden"));
+      screen.classList.remove("hidden");
+    }
+
+    document.getElementById("goToRegister").addEventListener("click", () => {
+      clearErrors();
+      show(registerScreen);
+    });
+    document.getElementById("goToLogin").addEventListener("click", () => {
+      clearErrors();
+      show(loginScreen);
+    });
+
+    // ---------- Personality selection ----------
+    const grid = document.getElementById("personalityGrid");
+    grid.querySelectorAll(".p-card").forEach(card => {
+      card.addEventListener("click", () => {
+        grid.querySelectorAll(".p-card").forEach(c => c.classList.remove("selected"));
+        card.classList.add("selected");
+        selectedPersonality = card.dataset.value;
+      });
+    });
+
+    // ---------- Error helpers ----------
+    function showError(el, msg) {
+      el.textContent = msg;
+      el.classList.add("show");
+    }
+    function clearErrors() {
+      loginError.classList.remove("show");
+      registerError.classList.remove("show");
+    }
+
+    function mapAuthError(code) {
+      switch (code) {
+        case "auth/invalid-email":
+          return "El email no es válido.";
+        case "auth/missing-password":
+          return "Ingresa tu contraseña.";
+        case "auth/wrong-password":
+        case "auth/invalid-credential":
+          return "Email o contraseña incorrectos.";
+        case "auth/user-not-found":
+          return "No existe una cuenta con ese email.";
+        case "auth/email-already-in-use":
+          return "Ya existe una cuenta con ese email.";
+        case "auth/weak-password":
+          return "La contraseña debe tener al menos 6 caracteres.";
+        case "auth/too-many-requests":
+          return "Demasiados intentos. Inténtalo más tarde.";
+        case "auth/network-request-failed":
+          return "Error de conexión. Revisa tu internet.";
+        default:
+          return "Ocurrió un error. Inténtalo de nuevo.";
+      }
+    }
+
+    // ---------- Button loading state ----------
+    function setLoading(btn, loading, label) {
+      btn.disabled = loading;
+      btn.innerHTML = loading ? '<span class="btn-spinner"></span>' : label;
+    }
+
+    // ---------- Welcome ----------
+    function goToWelcome(nombre) {
+      document.getElementById("welcomeText").textContent = `Bienvenido, ${nombre}. Redirigiendo al mapa...`;
+      show(welcomeScreen);
+      // Redirige al mapa de progreso tras login/registro exitoso.
+      setTimeout(() => { window.location.href = "mapa.html"; }, 900);
+    }
+
+    // ---------- LOGIN ----------
+    loginBtn.addEventListener("click", async () => {
+      clearErrors();
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value;
+
+      if (!email || !password) {
+        showError(loginError, "Completa el email y la contraseña.");
+        return;
+      }
+
+      setLoading(loginBtn, true, "Entrar");
+      try {
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        // No se crea documento en login; solo se da la bienvenida.
+        const nombre = cred.user.displayName || email.split("@")[0];
+        goToWelcome(nombre);
+      } catch (err) {
+        showError(loginError, mapAuthError(err.code));
+        setLoading(loginBtn, false, "Entrar");
+      }
+    });
+
+    // ---------- REGISTRO ----------
+    registerBtn.addEventListener("click", async () => {
+      clearErrors();
+      const email = document.getElementById("regEmail").value.trim();
+      const password = document.getElementById("regPassword").value;
+      const nombre = document.getElementById("regNombre").value.trim();
+
+      // Validaciones de campos vacíos
+      if (!email || !password || !nombre) {
+        showError(registerError, "Completa todos los campos.");
+        return;
+      }
+      if (!selectedPersonality) {
+        showError(registerError, "Elige una personalidad.");
+        return;
+      }
+      if (password.length < 6) {
+        showError(registerError, "La contraseña debe tener al menos 6 caracteres.");
+        return;
+      }
+
+      setLoading(registerBtn, true, "Crear cuenta");
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        const uid = cred.user.uid;
+
+        // Crear documento del estudiante SOLO en el registro (primera vez)
+        await setDoc(doc(db, "estudiantes", uid), {
+          uid: uid,
+          email: email,
+          nombre: nombre,
+          personalidad: selectedPersonality,
+          decision_thomas: null,
+          paso_actual: 1,
+          puntos_totales: 0,
+          racha_dias: 0,
+          ultima_sesion: serverTimestamp(),
+          puntos_por_paso: {},
+          tarjetas_desbloqueadas: []
+        });
+
+        goToWelcome(nombre);
+      } catch (err) {
+        showError(registerError, mapAuthError(err.code));
+        setLoading(registerBtn, false, "Crear cuenta");
+      }
+    });
+
+    // ---------- Enter key submits ----------
+    document.getElementById("loginPassword").addEventListener("keydown", e => {
+      if (e.key === "Enter") loginBtn.click();
+    });
+    document.getElementById("regNombre").addEventListener("keydown", e => {
+      if (e.key === "Enter") registerBtn.click();
+    });
+  </script>
+</body>
+</html>

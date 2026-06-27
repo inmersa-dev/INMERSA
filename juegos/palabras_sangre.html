@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Palabras Sanguíneas — P01</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a1628;--card:#0f2040;--card2:#112244;--card3:#0d1e38;
+  --accent:#00d4ff;--teal:#00b4cc;--green:#22c55e;--yellow:#f59e0b;
+  --red:#ef4444;--text:#e2f0ff;--muted:#7a9cc0;--border:#1a3a5c;
+  --gold:#fbbf24;--radius:12px;--radius-s:8px;
+}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;
+  background-image:radial-gradient(ellipse at 15% 50%,rgba(0,180,204,.07) 0%,transparent 60%),
+                   radial-gradient(ellipse at 85% 20%,rgba(0,153,204,.05) 0%,transparent 50%);}
+
+/* WATERMARK */
+#wm{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+#wm img{position:absolute;opacity:.04;filter:blur(2px) grayscale(30%)}
+
+/* MUTE BUTTON */
+#btn-mute{position:fixed;top:12px;right:12px;z-index:9999;width:42px;height:42px;border-radius:50%;
+  border:2px solid var(--accent);background:rgba(10,22,40,.92);color:var(--accent);
+  font-size:1.1rem;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.6);
+  display:flex;align-items:center;justify-content:center;padding:0;transition:all .2s}
+#btn-mute:hover{background:rgba(0,212,255,.15)}
+
+/* TOP BAR */
+#topbar{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--card);border-bottom:2px solid var(--border)}
+.tb-title{font-size:1.1rem;font-weight:900;color:var(--accent);display:flex;align-items:center;gap:8px}
+.tb-mid{text-align:center}
+.tb-mid .lbl{font-size:.58rem;text-transform:uppercase;letter-spacing:2px;color:var(--muted)}
+.tb-mid .val{font-size:1rem;font-weight:800;color:var(--gold)}
+.tb-stats{display:flex;gap:18px;align-items:center}
+.sbox{text-align:center}
+.sbox .v{font-size:1.2rem;font-weight:900}
+.sbox .l{font-size:.55rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted)}
+.sbox.pts .v{color:var(--gold)}.sbox.ok .v{color:var(--green)}.sbox.err .v{color:var(--red)}
+
+/* LAYOUT */
+#layout{position:relative;z-index:5;display:grid;grid-template-columns:250px 1fr 280px;gap:14px;padding:14px 20px;max-width:1380px;margin:0 auto}
+
+/* PANEL */
+.panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px}
+.phdr{font-size:.58rem;text-transform:uppercase;letter-spacing:2px;color:var(--accent);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+
+/* LEFT */
+#col-left{display:flex;flex-direction:column;gap:10px}
+
+/* ECG */
+#ecg-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+#ecg-head span{font-size:.58rem;text-transform:uppercase;letter-spacing:2px;color:var(--accent)}
+#ecg-bpm{font-size:.8rem;font-weight:800;color:var(--green)}
+#ecg-canvas{width:100%;height:60px;display:block;border-radius:var(--radius-s);background:#040f1e;border:1px solid #0a2040}
+#ecg-status{font-size:.65rem;font-weight:700;text-align:center;margin-top:4px;color:var(--green)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+#ecg-dot{display:inline-block;width:7px;height:7px;background:var(--green);border-radius:50%;
+  box-shadow:0 0 6px var(--green);animation:blink 1s infinite;margin-right:4px;vertical-align:middle}
+
+/* HEALTH */
+.hrow{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.hlbl{font-size:.6rem;text-transform:uppercase;letter-spacing:2px;color:var(--accent)}
+#health-emoji{font-size:1.4rem;transition:filter .5s,opacity .5s}
+#health-emoji.weak{filter:saturate(.3) brightness(.8);opacity:.8}
+#health-emoji.crit{filter:saturate(0) brightness(.6);opacity:.6;animation:shakeEl .45s infinite}
+#health-pct{font-size:1rem;font-weight:900;color:var(--green);transition:color .5s}
+#hbw{background:#06111f;border-radius:6px;overflow:hidden;height:10px}
+#hbar{height:10px;width:100%;background:linear-gradient(90deg,var(--green),#16a34a);border-radius:6px;transition:width .5s,background .5s}
+
+/* ATTEMPTS HUD */
+#att-hud{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding:5px 10px;
+  background:rgba(0,180,204,.07);border:1px solid rgba(0,180,204,.2);border-radius:6px}
+.att-lbl{font-size:.56rem;font-weight:800;letter-spacing:2px;color:var(--teal);text-transform:uppercase}
+#att-val{font-size:1rem;font-weight:900;color:var(--teal);min-width:24px;text-align:right}
+
+/* TIMER */
+#timer-panel{text-align:center}
+#timer-disp{font-size:2.4rem;font-weight:900;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1}
+#timer-disp.warn{color:var(--yellow);animation:pulse 1s infinite}
+#timer-disp.dngr{color:var(--red);animation:pulse .5s infinite}
+#timer-lbl{font-size:.55rem;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-top:2px}
+#tbw{background:#06111f;border-radius:6px;overflow:hidden;height:6px;margin-top:6px}
+#tbar{height:6px;width:100%;background:linear-gradient(90deg,var(--teal),var(--accent));border-radius:6px;transition:width .1s linear,background .5s}
+
+/* REGISTRY */
+.rrow{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #0d1e35;font-size:.75rem}
+.rrow:last-child{border-bottom:none}
+.rk{color:var(--muted)}.rv{font-weight:800}
+
+/* CENTER */
+#col-center{display:flex;flex-direction:column;gap:12px}
+
+/* IMAGE */
+#img-panel{display:flex;align-items:center;justify-content:center;min-height:170px;position:relative;overflow:hidden;background:linear-gradient(135deg,#0a1e3a,#0d2545)}
+#word-img{max-height:140px;max-width:100%;object-fit:contain;filter:drop-shadow(0 0 20px rgba(0,212,255,.3));transition:opacity .4s,transform .4s}
+#img-cat{position:absolute;top:8px;left:12px;background:rgba(0,212,255,.15);border:1px solid rgba(0,212,255,.3);color:var(--accent);font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;padding:3px 8px;border-radius:20px}
+#img-num{position:absolute;top:8px;right:12px;font-size:.65rem;color:var(--muted)}
+
+/* WORD SLOTS */
+#word-slots{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;min-height:56px;align-items:center}
+.wslot{width:44px;height:52px;border-radius:var(--radius-s);display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:900;border:2px solid var(--border);background:var(--card3);color:transparent;transition:all .2s;cursor:pointer;position:relative}
+.wslot::after{content:'';position:absolute;bottom:4px;left:8px;right:8px;height:2px;background:var(--border);border-radius:2px}
+.wslot.filled{border-color:var(--accent);background:rgba(0,212,255,.12);color:var(--text)}
+.wslot.filled:hover{border-color:var(--red);background:rgba(239,68,68,.1)}
+.wslot.filled::after{background:var(--accent);opacity:.4}
+.wslot.correct{border-color:var(--green);background:rgba(34,197,94,.15);color:var(--green);animation:popIn .3s cubic-bezier(.34,1.56,.64,1)}
+.wslot.correct::after{background:var(--green);opacity:.4}
+.wslot.hint{border-color:var(--yellow);background:rgba(245,158,11,.15);color:var(--yellow)}
+.wslot.hint::after{background:var(--yellow);opacity:.4}
+
+/* LETTER TILES */
+#letters-grid{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.ltile{width:50px;height:54px;border-radius:var(--radius-s);display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:900;border:2px solid var(--border);background:var(--card2);color:var(--text);cursor:pointer;transition:all .15s;user-select:none}
+.ltile:hover:not(.used){border-color:var(--accent);background:rgba(0,212,255,.12);transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,212,255,.2)}
+.ltile.used{opacity:.22;cursor:default;border-color:#0d1e35}
+.ltile.wrong{border-color:var(--red);background:rgba(239,68,68,.15);animation:shake .4s ease}
+
+/* BUTTONS */
+#btn-row{display:flex;gap:8px}
+.btn{flex:1;padding:10px 8px;border:none;border-radius:var(--radius-s);font-family:'Nunito',sans-serif;font-size:.78rem;font-weight:800;cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:1px}
+.btn:active{transform:scale(.96)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+#btn-hint{background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.4);color:var(--yellow)}
+#btn-hint:hover:not(:disabled){background:rgba(245,158,11,.25)}
+#btn-clear{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.35);color:var(--red)}
+#btn-clear:hover:not(:disabled){background:rgba(239,68,68,.22)}
+#btn-next{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);color:var(--green);display:none}
+#btn-next:hover{background:rgba(34,197,94,.28)}
+
+/* RIGHT */
+#col-right{display:flex;flex-direction:column;gap:10px}
+.ditem{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid #0d1e35;font-size:.78rem}
+.ditem:last-child{border-bottom:none}
+.dico{font-size:1rem;flex-shrink:0;margin-top:1px}
+.dkey{font-size:.55rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted)}
+.dval{font-weight:700;margin-top:1px}
+#word-prog{display:flex;flex-wrap:wrap;gap:5px}
+.pdot{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:800;border:1px solid var(--border);background:var(--card3);color:var(--muted);transition:all .3s;cursor:default}
+.pdot.active{background:rgba(0,212,255,.15);border-color:var(--accent);color:var(--accent);animation:pulse 1.5s infinite}
+.pdot.done{background:rgba(34,197,94,.2);border-color:var(--green);color:var(--green)}
+.pdot.skip{background:rgba(239,68,68,.12);border-color:var(--red);color:var(--red)}
+#hint-log{display:flex;flex-direction:column;gap:4px}
+.hentry{font-size:.72rem;color:var(--yellow);background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:6px;padding:4px 8px}
+
+/* TOAST */
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);border-radius:30px;padding:9px 22px;font-size:.85rem;font-weight:700;border:1.5px solid;background:rgba(10,22,40,.92);backdrop-filter:blur(10px);transition:transform .4s cubic-bezier(.34,1.56,.64,1),opacity .4s;opacity:0;z-index:100;pointer-events:none;white-space:nowrap}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+#toast.g{border-color:var(--green);color:var(--green)}
+#toast.r{border-color:var(--red);color:var(--red)}
+#toast.y{border-color:var(--yellow);color:var(--yellow)}
+#toast.a{border-color:var(--accent);color:var(--accent)}
+
+/* SIMPLE FINAL OVERLAY */
+#overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s}
+#overlay.show{opacity:1;pointer-events:all}
+#obox{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:36px 40px;text-align:center;max-width:440px;width:90%;animation:slideUp .4s cubic-bezier(.34,1.56,.64,1)}
+#o-icon{font-size:3.5rem;margin-bottom:10px}
+#o-title{font-size:1.8rem;font-weight:900;margin-bottom:8px}
+#o-body{font-size:.9rem;color:var(--muted);margin-bottom:16px;line-height:1.7}
+#o-score{font-size:2rem;font-weight:900;color:var(--gold);margin:10px 0}
+#o-btn{background:linear-gradient(135deg,var(--teal),var(--accent));color:#000;font-family:'Nunito',sans-serif;font-size:.9rem;font-weight:900;text-transform:uppercase;letter-spacing:1px;border:none;border-radius:30px;padding:12px 32px;cursor:pointer;transition:all .15s}
+#o-btn:hover{filter:brightness(1.1);transform:scale(1.03)}
+
+/* MODULE VICTORY OVERLAY */
+#mv-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:210;
+  align-items:center;justify-content:center;animation:fadeIn .4s;overflow-y:auto}
+#mv-overlay.show{display:flex}
+#mv-box{background:linear-gradient(160deg,#061524,#0a1e34,#061524);
+  border:1px solid rgba(0,210,230,.35);border-radius:20px;padding:36px 32px 28px;
+  width:min(580px,94vw);box-shadow:0 0 60px rgba(0,180,204,.2),0 0 120px rgba(0,100,160,.15);
+  animation:slideUp .4s;text-align:center;margin:auto}
+#mv-badge{font-size:3.6rem;margin-bottom:10px;filter:drop-shadow(0 0 12px gold)}
+#mv-title{font-size:1.1rem;font-weight:900;letter-spacing:2px;color:var(--teal);text-transform:uppercase;line-height:1.4;margin-bottom:4px}
+#mv-subtitle{font-size:1.5rem;letter-spacing:4px;color:#fff}
+#mv-tagline{font-size:.85rem;color:rgba(0,210,230,.7);margin-bottom:22px}
+#mv-stats{display:flex;justify-content:center;gap:24px;margin-bottom:24px;
+  border-top:1px solid rgba(0,180,204,.15);border-bottom:1px solid rgba(0,180,204,.15);padding:16px 0}
+.mv-stat{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:80px}
+.mv-stat-lbl{font-size:.56rem;font-weight:800;letter-spacing:2px;color:rgba(0,210,230,.6);text-transform:uppercase}
+.mv-stat-val{font-size:1.7rem;font-weight:900;color:var(--teal)}
+#mv-list{display:flex;flex-direction:column;gap:7px;margin-bottom:20px;text-align:left;max-height:240px;overflow-y:auto}
+.mv-row{display:flex;align-items:center;gap:10px;background:rgba(0,180,204,.06);
+  border:1px solid rgba(0,180,204,.15);border-radius:10px;padding:9px 12px}
+.mv-row-icon{font-size:1.2rem;flex-shrink:0}
+.mv-row-name{font-weight:800;color:#fff;flex:1;letter-spacing:1px;font-size:.9rem}
+.mv-badge-ok{font-size:.72rem;font-weight:700;color:var(--green);white-space:nowrap}
+.mv-badge-cq.ok{font-size:.72rem;font-weight:700;color:var(--teal);white-space:nowrap}
+.mv-badge-cq.skip{font-size:.72rem;font-weight:700;color:var(--muted);white-space:nowrap}
+.mv-badge-miss{font-size:.72rem;font-weight:700;color:var(--red);white-space:nowrap}
+#mv-msg{font-size:.85rem;color:rgba(0,210,230,.75);margin-bottom:22px;font-style:italic}
+#mv-restart{padding:13px 36px;background:linear-gradient(135deg,var(--teal),var(--accent));
+  border:none;border-radius:var(--radius);color:#0a1828;font-family:'Nunito',sans-serif;
+  font-weight:900;font-size:1rem;cursor:pointer;transition:all .2s;letter-spacing:1px}
+#mv-restart:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,180,204,.45)}
+
+/* COMPREHENSION QUIZ OVERLAY */
+#cq-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:205;
+  align-items:center;justify-content:center;animation:fadeIn .3s}
+#cq-overlay.show{display:flex}
+#cq-box{background:linear-gradient(145deg,#0d1f2d,#0a1828);border:1px solid rgba(0,180,204,.3);
+  border-radius:18px;padding:32px 28px 24px;width:min(520px,92vw);
+  box-shadow:0 0 40px rgba(0,180,204,.15);animation:slideUp .35s;text-align:center}
+#cq-header{font-size:.75rem;font-weight:800;letter-spacing:3px;color:var(--teal);
+  text-transform:uppercase;margin-bottom:18px;border-bottom:1px solid rgba(0,180,204,.2);padding-bottom:10px}
+#cq-question{font-size:1.05rem;font-weight:700;color:var(--text);line-height:1.5;margin-bottom:22px}
+#cq-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.cq-btn{padding:11px 10px;border:none;border-radius:10px;
+  background:linear-gradient(135deg,var(--teal),var(--accent));
+  color:#0a1828;font-family:inherit;font-size:.9rem;font-weight:700;
+  cursor:pointer;transition:all .2s;line-height:1.3}
+.cq-btn:hover{transform:translateY(-2px);box-shadow:0 5px 14px rgba(0,180,204,.35)}
+.cq-btn.correct{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;transform:scale(1.04)}
+.cq-btn.wrong{background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff}
+.cq-btn:disabled{cursor:default;transform:none}
+#cq-skip{background:none;border:none;color:var(--teal);font-family:inherit;font-size:.85rem;
+  font-weight:600;cursor:pointer;opacity:.7;text-decoration:underline;padding:4px 8px}
+#cq-skip:hover{opacity:1}
+
+/* CONFETTI */
+#confetti{position:fixed;inset:0;z-index:90;pointer-events:none}
+
+/* INTRO */
+#intro{position:fixed;inset:0;z-index:150;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:20px}
+#intro h1{font-size:2.4rem;font-weight:900;background:linear-gradient(135deg,var(--teal),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+#intro p{font-size:.95rem;color:var(--muted);max-width:480px;line-height:1.7}
+#rules{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:500px;width:100%;margin:8px 0}
+.rcard{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;text-align:left;font-size:.78rem}
+.rcard .ri{font-size:1.2rem;margin-bottom:4px}
+.rcard strong{color:var(--accent);display:block;margin-bottom:2px;font-size:.78rem}
+#btn-play{background:linear-gradient(135deg,var(--teal),var(--accent));color:#000;font-family:'Nunito',sans-serif;font-size:1.1rem;font-weight:900;text-transform:uppercase;letter-spacing:2px;border:none;border-radius:30px;padding:14px 48px;cursor:pointer;transition:all .2s;box-shadow:0 4px 24px rgba(0,212,255,.35)}
+#btn-play:hover{transform:scale(1.05);box-shadow:0 6px 32px rgba(0,212,255,.5)}
+
+/* ANIMATIONS */
+@keyframes popIn{0%{transform:scale(.7)}70%{transform:scale(1.1)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+@keyframes shakeEl{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes flash-red{0%,100%{background:var(--card)}50%{background:rgba(239,68,68,.18)}}
+.panel-flash{animation:flash-red .4s}
+
+/* RESPONSIVE */
+@media(max-width:1100px){#layout{grid-template-columns:220px 1fr 250px}}
+@media(max-width:860px){
+  #layout{grid-template-columns:1fr;gap:10px;padding:10px}
+  #col-left{flex-direction:row;flex-wrap:wrap}
+  #col-left .panel{flex:1;min-width:160px}
+  #col-right{flex-direction:row;flex-wrap:wrap}
+  #col-right .panel{flex:1;min-width:180px}
+}
+@media(max-width:500px){
+  .ltile{width:42px;height:46px;font-size:1.2rem}
+  .wslot{width:36px;height:42px;font-size:1.2rem}
+  #intro h1{font-size:1.8rem}
+  #rules{grid-template-columns:1fr}
+  #cq-options{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- AUDIO -->
+<audio id="mus-ambient"   src="Audio/Musica/ahorcado_ambient.mp3" loop preload="auto"></audio>
+<audio id="sfx-ok"        src="Audio/SFX/letter_correct.mp3"      preload="auto"></audio>
+<audio id="sfx-wrong"     src="Audio/SFX/letter_wrong.mp3"        preload="auto"></audio>
+<audio id="sfx-word-win"  src="Audio/SFX/life_up.mp3"             preload="auto"></audio>
+<audio id="sfx-word-lose" src="Audio/SFX/game_over.mp3"           preload="auto"></audio>
+<audio id="sfx-alarm"     src="Audio/SFX/siren_loop.mp3"   loop   preload="auto"></audio>
+<audio id="sfx-quiz-ok"   src="Audio/SFX/quiz_correct.mp3"        preload="auto"></audio>
+<audio id="sfx-quiz-bad"  src="Audio/SFX/snake_rescate_incorrecto.mp3" preload="auto"></audio>
+<audio id="sfx-victory"   src="Audio/SFX/module_victory.mp3"      preload="auto"></audio>
+
+<button id="btn-mute">🔊</button>
+<canvas id="confetti"></canvas>
+<div id="toast"></div>
+
+<!-- WATERMARKS -->
+<div id="wm">
+  <img src="../Imagenes/eritrocito.png"  style="width:360px;top:3%;left:-4%;transform:rotate(-15deg)">
+  <img src="../Imagenes/leucocito.png"   style="width:260px;bottom:8%;right:-2%;transform:rotate(20deg)">
+  <img src="../Imagenes/plaqueta.png"    style="width:180px;top:50%;left:42%;transform:rotate(8deg)">
+</div>
+
+<!-- INTRO -->
+<div id="intro">
+  <div style="font-size:3rem">🩸</div>
+  <h1>Palabras Sanguíneas</h1>
+  <p>Descifra los componentes de la sangre. Selecciona las letras revueltas en el <strong>orden correcto</strong> para formar cada palabra antes de que el tiempo termine.</p>
+  <div id="rules">
+    <div class="rcard"><div class="ri">🔤</div><strong>Letras en orden</strong>Haz clic en las letras para armar la palabra de izquierda a derecha.</div>
+    <div class="rcard"><div class="ri">💡</div><strong>Pistas (−15 pts)</strong>Cada pista revela automáticamente la siguiente letra correcta.</div>
+    <div class="rcard"><div class="ri">⏱️</div><strong>60 segundos</strong>Tienes un minuto por palabra. Más rápido = más puntos.</div>
+    <div class="rcard"><div class="ri">🧠</div><strong>Quiz de comprensión</strong>Tras cada acierto, un quiz bonus de +50 pts.</div>
+  </div>
+  <button id="btn-play" onclick="startGame()">▶&nbsp; Comenzar</button>
+</div>
+
+<!-- MODULE VICTORY OVERLAY -->
+<div id="mv-overlay">
+  <div id="mv-box">
+    <div id="mv-badge">🏆</div>
+    <div id="mv-title">MÓDULO P01 — COMPONENTES SANGUÍNEOS<br><span id="mv-subtitle">COMPLETADO</span></div>
+    <div id="mv-tagline">Has dominado los 12 componentes del módulo.</div>
+    <div id="mv-stats">
+      <div class="mv-stat"><span class="mv-stat-lbl">PALABRAS</span><span class="mv-stat-val" id="mv-words">0/12</span></div>
+      <div class="mv-stat"><span class="mv-stat-lbl">COMPRENSIÓN</span><span class="mv-stat-val" id="mv-comp">0/12</span></div>
+      <div class="mv-stat"><span class="mv-stat-lbl">PUNTOS</span><span class="mv-stat-val" id="mv-pts">0</span></div>
+    </div>
+    <div id="mv-list"></div>
+    <div id="mv-msg"></div>
+    <button id="mv-restart" onclick="restartGame()">JUGAR DE NUEVO</button>
+  </div>
+</div>
+
+<!-- COMPREHENSION QUIZ -->
+<div id="cq-overlay">
+  <div id="cq-box">
+    <div id="cq-header">COMPRENSIÓN — <span id="cq-name"></span></div>
+    <div id="cq-question"></div>
+    <div id="cq-options"></div>
+    <button id="cq-skip" onclick="skipCQ()">Saltar pregunta</button>
+  </div>
+</div>
+
+<!-- SIMPLE FINAL OVERLAY (used when not all words correct) -->
+<div id="overlay">
+  <div id="obox">
+    <div id="o-icon">🎉</div>
+    <div id="o-title">¡Juego Completado!</div>
+    <div id="o-body">Has repasado todos los componentes sanguíneos</div>
+    <div id="o-score">0 pts</div>
+    <button id="o-btn" onclick="restartGame()">Jugar de nuevo</button>
+  </div>
+</div>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div class="tb-title"><span>🩸</span>Palabras Sanguíneas</div>
+  <div class="tb-mid">
+    <div class="lbl">Componente actual</div>
+    <div class="val" id="tb-comp">—</div>
+  </div>
+  <div class="tb-stats">
+    <div class="sbox pts"><div class="v" id="tb-pts">0</div><div class="l">Puntos</div></div>
+    <div class="sbox ok"><div class="v" id="tb-ok">0</div><div class="l">Correctas</div></div>
+    <div class="sbox err"><div class="v" id="tb-err">0</div><div class="l">Errores</div></div>
+  </div>
+</div>
+
+<!-- LAYOUT -->
+<div id="layout">
+
+  <!-- LEFT -->
+  <div id="col-left">
+    <div class="panel" id="ecg-panel">
+      <div id="ecg-head">
+        <span><span id="ecg-dot"></span>Monitor Vital</span>
+        <span id="ecg-bpm">72 BPM</span>
+      </div>
+      <canvas id="ecg-canvas" width="226" height="60"></canvas>
+      <div id="ecg-status">RITMO NORMAL</div>
+    </div>
+    <div class="panel" id="health-panel">
+      <div class="hrow"><span class="hlbl">Salud</span><span id="health-emoji">🧑‍⚕️</span></div>
+      <div class="hrow" style="margin-bottom:6px"><span id="health-pct">100%</span></div>
+      <div id="hbw"><div id="hbar"></div></div>
+      <div id="att-hud"><span class="att-lbl">Letras erróneas</span><span id="att-val">0</span></div>
+    </div>
+    <div class="panel" id="timer-panel">
+      <div id="timer-disp">60</div>
+      <div id="timer-lbl">segundos restantes</div>
+      <div id="tbw"><div id="tbar"></div></div>
+    </div>
+    <div class="panel">
+      <div class="phdr">Registro de partida</div>
+      <div class="rrow"><span class="rk">Palabras totales</span><span class="rv" id="r-total">—</span></div>
+      <div class="rrow"><span class="rk">Completadas</span><span class="rv" id="r-done" style="color:var(--green)">0</span></div>
+      <div class="rrow"><span class="rk">Pistas usadas</span><span class="rv" id="r-hints" style="color:var(--yellow)">0</span></div>
+      <div class="rrow"><span class="rk">Errores totales</span><span class="rv" id="r-errs" style="color:var(--red)">0</span></div>
+      <div class="rrow"><span class="rk">Tiempo promedio</span><span class="rv" id="r-avg">—</span></div>
+    </div>
+  </div>
+
+  <!-- CENTER -->
+  <div id="col-center">
+    <div class="panel" id="img-panel">
+      <div id="img-cat">Componente sanguíneo</div>
+      <div id="img-num">Palabra 1/12</div>
+      <img id="word-img" src="" alt="">
+    </div>
+    <div class="panel">
+      <div class="phdr">Forma la palabra — clic en letra rellena para borrar desde ahí</div>
+      <div id="word-slots"></div>
+    </div>
+    <div class="panel">
+      <div class="phdr">Letras disponibles — selecciona en el orden correcto</div>
+      <div id="letters-grid"></div>
+    </div>
+    <div class="panel">
+      <div id="btn-row">
+        <button class="btn" id="btn-hint"  onclick="useHint()">💡 Pista (−15 pts)</button>
+        <button class="btn" id="btn-clear" onclick="clearAll()">↩ Borrar todo</button>
+        <button class="btn" id="btn-next"  onclick="nextWord()">Siguiente →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div id="col-right">
+    <div class="panel">
+      <div class="phdr">Datos del componente</div>
+      <div id="data-list"></div>
+    </div>
+    <div class="panel">
+      <div class="phdr">Progreso general</div>
+      <div id="word-prog"></div>
+    </div>
+    <div class="panel">
+      <div class="phdr">💡 Pistas utilizadas</div>
+      <div id="hint-log"><span style="color:var(--muted);font-size:.75rem">Ninguna aún</span></div>
+    </div>
+  </div>
+
+</div><!-- /layout -->
+
+<script>
+/* ═══════════════════════════════════════
+   AUDIO SYSTEM
+═══════════════════════════════════════ */
+const AUDIO={unlocked:false,muted:false,currentMusic:null,vol:{music:.45,sfx:.6}};
+
+function unlockAudio(){
+  if(AUDIO.unlocked) return;
+  AUDIO.unlocked=true;
+  const d=document.createElement('audio');
+  d.src='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+  d.volume=0; d.play().catch(()=>{});
+  playMusic('mus-ambient');
+}
+function playSFX(id){
+  if(!AUDIO.unlocked||AUDIO.muted) return;
+  try{const e=document.getElementById(id);if(!e)return;e.volume=AUDIO.vol.sfx;e.currentTime=0;e.play().catch(()=>{});}catch(e){}
+}
+function playMusic(id){
+  if(AUDIO.currentMusic===id) return;
+  const prev=AUDIO.currentMusic?document.getElementById(AUDIO.currentMusic):null;
+  if(prev&&!prev.paused){
+    const fi=setInterval(()=>{if(prev.volume>.05)prev.volume=Math.max(0,prev.volume-.08);else{prev.pause();prev.volume=AUDIO.vol.music;clearInterval(fi);}},60);
+  }
+  AUDIO.currentMusic=id;
+  const next=document.getElementById(id); if(!next) return;
+  next.volume=Math.min(AUDIO.vol.music,.18); next.currentTime=0;   // arranca audible de inmediato
+  if(!AUDIO.muted){
+    next.play().catch(()=>{});
+    const fi=setInterval(()=>{if(next.volume<AUDIO.vol.music-.05)next.volume=Math.min(AUDIO.vol.music,next.volume+.12);else{next.volume=AUDIO.vol.music;clearInterval(fi);}},40);
+  }
+}
+function stopMusic(){
+  if(!AUDIO.currentMusic) return;
+  const el=document.getElementById(AUDIO.currentMusic);
+  if(!el||el.paused){AUDIO.currentMusic=null;return;}
+  const fi=setInterval(()=>{if(el.volume>.05)el.volume=Math.max(0,el.volume-.12);else{el.pause();el.volume=AUDIO.vol.music;AUDIO.currentMusic=null;clearInterval(fi);}},40);
+}
+function toggleMute(){
+  AUDIO.muted=!AUDIO.muted;
+  document.getElementById('btn-mute').textContent=AUDIO.muted?'🔇':'🔊';
+  document.querySelectorAll('audio').forEach(a=>a.muted=AUDIO.muted);
+  if(!AUDIO.muted&&AUDIO.currentMusic){const e=document.getElementById(AUDIO.currentMusic);if(e){e.volume=AUDIO.vol.music;e.play().catch(()=>{});}}
+}
+let _alarmOn=false;
+function playAlarm(){if(_alarmOn||AUDIO.muted)return;_alarmOn=true;const e=document.getElementById('sfx-alarm');if(!e)return;e.volume=AUDIO.vol.sfx*.35;e.currentTime=0;e.play().catch(()=>{});}
+function stopAlarm(){_alarmOn=false;const e=document.getElementById('sfx-alarm');if(!e)return;e.pause();e.currentTime=0;}
+
+['touchstart','click','keydown'].forEach(ev=>document.addEventListener(ev,unlockAudio,{once:true}));
+document.getElementById('btn-mute').addEventListener('click',e=>{e.stopPropagation();toggleMute();});
+
+/* ═══════════════════════════════════════
+   WORD BANK
+═══════════════════════════════════════ */
+const WORDS=[
+  {word:'ERITROCITO', img:'../Imagenes/eritrocito.png', cat:'Glóbulo Rojo 🔴',
+   data:[{i:'🔢',k:'Cantidad',v:'4.5–6 millones / μL'},{i:'⏳',k:'Vida útil',v:'~120 días'},{i:'📏',k:'Tamaño',v:'6–8 μm'},{i:'🎯',k:'Función',v:'Transporte de O₂'},{i:'🧬',k:'Núcleo',v:'Anucleado'}]},
+  {word:'LEUCOCITO',  img:'../Imagenes/leucocito.png',  cat:'Glóbulo Blanco ⚪',
+   data:[{i:'🔢',k:'Cantidad',v:'4,500–11,000 / μL'},{i:'⏳',k:'Vida útil',v:'Horas a años'},{i:'📏',k:'Tamaño',v:'7–20 μm'},{i:'🎯',k:'Función',v:'Defensa inmune'},{i:'🧬',k:'Tipos',v:'5: N, L, M, E, B'}]},
+  {word:'PLAQUETA',   img:'../Imagenes/plaqueta.png',   cat:'Trombocito 🟡',
+   data:[{i:'🔢',k:'Cantidad',v:'150,000–400,000 / μL'},{i:'⏳',k:'Vida útil',v:'~10 días'},{i:'📏',k:'Tamaño',v:'2–3 μm'},{i:'🎯',k:'Función',v:'Coagulación'},{i:'🧬',k:'Origen',v:'Fragmento megacariocito'}]},
+  {word:'PLASMA',     img:'../Imagenes/plasma.png',     cat:'Fracción líquida 🟨',
+   data:[{i:'🔢',k:'Del volumen',v:'~55% de la sangre'},{i:'💧',k:'Composición',v:'90% agua'},{i:'🎯',k:'Función',v:'Transporte nutrientes'},{i:'🧪',k:'Color',v:'Amarillo pálido'},{i:'🌡️',k:'pH',v:'7.35–7.45'}]},
+  {word:'HEMOGLOBINA',img:'../Imagenes/hemoglobina.png',cat:'Proteína eritrocitaria 🔴',
+   data:[{i:'🔢',k:'Concentración',v:'12–17 g/dL'},{i:'⚙️',k:'Estructura',v:'4 cadenas + grupo hemo'},{i:'🎯',k:'Función',v:'Transportar O₂'},{i:'⚗️',k:'Contiene',v:'Hierro Fe²⁺'},{i:'🎨',k:'Color rojo',v:'Oxihemoglobina'}]},
+  {word:'TROMBOCITO', img:'../Imagenes/plaqueta.png',   cat:'Sinónimo de plaqueta 🟡',
+   data:[{i:'📖',k:'Otro nombre',v:'Plaqueta'},{i:'🔢',k:'Cantidad',v:'150,000–400,000 / μL'},{i:'🎯',k:'Función',v:'Hemostasia'},{i:'⏳',k:'Vida útil',v:'7–10 días'},{i:'🧬',k:'Etimología',v:'Trombo = coágulo'}]},
+  {word:'NEUTROFILO', img:'../Imagenes/leuco.png',      cat:'Leucocito granulócito ⚪',
+   data:[{i:'🔢',k:'% leucocitos',v:'60–70%'},{i:'⏳',k:'Vida útil',v:'6–12 h en sangre'},{i:'🎯',k:'Función',v:'1ª defensa bacteriana'},{i:'⚙️',k:'Mecanismo',v:'Fagocitosis'},{i:'🧬',k:'Núcleo',v:'Multilobulado 2–5 lóbulos'}]},
+  {word:'LINFOCITO',  img:'../Imagenes/leucocito.png',  cat:'Leucocito agranulócito ⚪',
+   data:[{i:'🔢',k:'% leucocitos',v:'20–40%'},{i:'⏳',k:'Vida útil',v:'Días a décadas'},{i:'🎯',k:'Función',v:'Inmunidad específica'},{i:'⚙️',k:'Tipos',v:'T, B y NK'},{i:'🧬',k:'Produce',v:'Anticuerpos (tipo B)'}]},
+  {word:'HEMATOCRITO',img:'../Imagenes/eritrocito2.png',cat:'Índice hematológico 📊',
+   data:[{i:'📊',k:'Definición',v:'% eritrocitos en sangre'},{i:'🔢',k:'Hombres',v:'40–54%'},{i:'🔢',k:'Mujeres',v:'37–47%'},{i:'🎯',k:'Uso clínico',v:'Diagnóstico anemia'},{i:'🧪',k:'Medición',v:'Centrifugado sanguíneo'}]},
+  {word:'FIBRINOGENO',img:'../Imagenes/plasma.png',     cat:'Proteína del plasma 🟨',
+   data:[{i:'🧬',k:'Tipo',v:'Glicoproteína'},{i:'🔢',k:'Concentración',v:'200–400 mg/dL'},{i:'🎯',k:'Función',v:'Precursor de fibrina'},{i:'⚙️',k:'En coagulación',v:'Trombina→fibrina'},{i:'🏭',k:'Síntesis',v:'Hígado'}]},
+  {word:'ALBUMINA',   img:'../Imagenes/plasma.png',     cat:'Proteína plasmática 🟨',
+   data:[{i:'🔢',k:'Concentración',v:'3.5–5 g/dL'},{i:'📊',k:'Del total proteico',v:'~60% del plasma'},{i:'🎯',k:'Función',v:'Presión osmótica'},{i:'⚙️',k:'Transporta',v:'Lípidos y hormonas'},{i:'🏭',k:'Síntesis',v:'Hígado (~20 días)'}]},
+  {word:'MONOCITO',   img:'../Imagenes/leuco.png',      cat:'Leucocito agranulócito ⚪',
+   data:[{i:'🔢',k:'% leucocitos',v:'2–8%'},{i:'📏',k:'Tamaño',v:'12–20 μm (el mayor)'},{i:'🎯',k:'Función',v:'Fagocitosis'},{i:'⚙️',k:'Diferencia en',v:'Macrófago en tejidos'},{i:'🧬',k:'Núcleo',v:'Forma de riñón'}]},
+];
+
+/* ═══════════════════════════════════════
+   COMPREHENSION QUESTIONS
+═══════════════════════════════════════ */
+const CQ={
+  ERITROCITO:[
+    {q:'¿Cuál es la vida media de un eritrocito sano?',opts:['8-11 días','24 horas','~120 días','30 días'],a:2},
+    {q:'¿Qué característica tiene el eritrocito respecto al núcleo?',opts:['Tiene 2 núcleos','Tiene núcleo multilobulado','Es anucleado','Tiene núcleo en forma de riñón'],a:2},
+    {q:'¿Cuántos eritrocitos hay aproximadamente por μL?',opts:['150,000–400,000','4,500–11,000','4.5–6 millones','200–400'],a:2},
+    {q:'¿Cuál es la función principal del eritrocito?',opts:['Producir anticuerpos','Transportar oxígeno','Coagular la sangre','Fagocitar bacterias'],a:1},
+  ],
+  LEUCOCITO:[
+    {q:'¿Cuál es el nombre común del leucocito?',opts:['Glóbulo rojo','Plaqueta','Glóbulo blanco','Trombocito'],a:2},
+    {q:'¿Cuántos tipos de leucocitos existen?',opts:['2','3','5','8'],a:2},
+    {q:'¿Cuál es la función principal del leucocito?',opts:['Transportar O₂','Coagular','Defensa inmune','Dar color a la sangre'],a:2},
+    {q:'¿Cuántos leucocitos hay por μL en condiciones normales?',opts:['4.5–6 millones','4,500–11,000','150,000–400,000','100–500'],a:1},
+  ],
+  PLAQUETA:[
+    {q:'¿Cuál es el otro nombre científico de la plaqueta?',opts:['Eritrocito','Leucocito','Trombocito','Monocito'],a:2},
+    {q:'¿Cuál es la función principal de la plaqueta?',opts:['Transportar O₂','Defensa inmune','Coagulación sanguínea','Síntesis de proteínas'],a:2},
+    {q:'¿Cuánto vive una plaqueta aproximadamente?',opts:['~120 días','~10 días','~24 horas','~1 año'],a:1},
+    {q:'¿De qué célula se originan las plaquetas?',opts:['Eritroblasto','Linfoblasto','Megacariocito','Monoblasto'],a:2},
+  ],
+  PLASMA:[
+    {q:'¿Qué porcentaje del volumen sanguíneo representa el plasma?',opts:['~25%','~45%','~55%','~75%'],a:2},
+    {q:'¿De qué está compuesto principalmente el plasma?',opts:['90% proteínas','90% agua','90% glucosa','90% lípidos'],a:1},
+    {q:'¿Cuál es el pH del plasma sanguíneo?',opts:['6.8–7.0','7.35–7.45','7.8–8.0','5.5–6.5'],a:1},
+    {q:'¿Qué color tiene el plasma?',opts:['Rojo intenso','Azulado','Amarillo pálido','Incoloro'],a:2},
+  ],
+  HEMOGLOBINA:[
+    {q:'¿Qué mineral contiene el grupo hemo de la hemoglobina?',opts:['Calcio','Zinc','Hierro','Magnesio'],a:2},
+    {q:'¿Cuántas cadenas tiene la hemoglobina?',opts:['2','4','6','8'],a:1},
+    {q:'¿Qué concentración normal de hemoglobina hay en sangre?',opts:['3.5–5 g/dL','12–17 g/dL','200–400 mg/dL','0.5–1 g/dL'],a:1},
+    {q:'¿Cómo se llama la hemoglobina unida al oxígeno?',opts:['Carboxihemoglobina','Desoxihemoglobina','Oxihemoglobina','Metahemoglobina'],a:2},
+  ],
+  TROMBOCITO:[
+    {q:'Trombocito es sinónimo de...',opts:['Eritrocito','Leucocito','Plaqueta','Monocito'],a:2},
+    {q:'¿Qué proceso regula el trombocito?',opts:['Respiración celular','Hemostasia y coagulación','Síntesis de anticuerpos','Transporte de CO₂'],a:1},
+    {q:'¿Qué significa "trombo" en la etimología?',opts:['Célula','Coágulo','Sangre','Defensa'],a:1},
+  ],
+  NEUTROFILO:[
+    {q:'¿Qué porcentaje de los leucocitos representan los neutrófilos?',opts:['2–8%','20–40%','60–70%','5–10%'],a:2},
+    {q:'¿Cuál es el mecanismo principal del neutrófilo?',opts:['Producción de anticuerpos','Fagocitosis','Síntesis de hemoglobina','Liberación de histamina'],a:1},
+    {q:'¿Cuántos lóbulos tiene el núcleo del neutrófilo?',opts:['1','2–5','6–9','Núcleo redondo'],a:1},
+    {q:'¿Cuánto vive un neutrófilo en sangre?',opts:['120 días','6–12 horas','10 días','Varios años'],a:1},
+  ],
+  LINFOCITO:[
+    {q:'¿Qué tipo de inmunidad dirige el linfocito?',opts:['Innata e inespecífica','Específica o adaptativa','Mecánica','Inflamatoria'],a:1},
+    {q:'¿Qué produce el linfocito B?',opts:['Hemoglobina','Plaquetas','Anticuerpos','Fibrinógeno'],a:2},
+    {q:'¿Qué porcentaje de leucocitos son linfocitos?',opts:['60–70%','2–8%','20–40%','5–10%'],a:2},
+    {q:'¿Cuáles son los 3 tipos de linfocitos?',opts:['N, E, B','T, B y NK','M, L, B','A, B, C'],a:1},
+  ],
+  HEMATOCRITO:[
+    {q:'¿Qué mide el hematocrito?',opts:['Cantidad de plaquetas','Concentración de hemoglobina','% de eritrocitos en sangre','pH de la sangre'],a:2},
+    {q:'¿Cuál es el hematocrito normal en hombres?',opts:['37–47%','40–54%','55–65%','25–35%'],a:1},
+    {q:'¿Cómo se mide el hematocrito?',opts:['Recuento manual','Centrifugado de sangre total','Análisis de orina','Biopsia'],a:1},
+    {q:'¿Para qué se usa el hematocrito clínicamente?',opts:['Detectar infecciones','Diagnosticar anemia o policitemia','Medir glucosa','Evaluar función renal'],a:1},
+  ],
+  FIBRINOGENO:[
+    {q:'¿En qué se convierte el fibrinógeno durante la coagulación?',opts:['Trombina','Fibrina','Protrombina','Albúmina'],a:1},
+    {q:'¿Qué enzima convierte el fibrinógeno en fibrina?',opts:['Lipasa','Amilasa','Trombina','Pepsina'],a:2},
+    {q:'¿Dónde se sintetiza el fibrinógeno?',opts:['Riñón','Páncreas','Hígado','Médula ósea'],a:2},
+    {q:'¿Cuál es la concentración normal de fibrinógeno?',opts:['3.5–5 g/dL','12–17 g/dL','200–400 mg/dL','4.5–6 millones/μL'],a:2},
+  ],
+  ALBUMINA:[
+    {q:'¿Qué porcentaje de las proteínas plasmáticas representa la albúmina?',opts:['~20%','~40%','~60%','~80%'],a:2},
+    {q:'¿Cuál es la función principal de la albúmina?',opts:['Transporte de O₂','Presión osmótica coloidal','Coagulación','Defensa inmune'],a:1},
+    {q:'¿Dónde se sintetiza la albúmina?',opts:['Riñón','Bazo','Hígado','Pulmón'],a:2},
+    {q:'¿Qué transporta la albúmina?',opts:['Solo glucosa','Solo O₂','Lípidos, hormonas y medicamentos','Solo CO₂'],a:2},
+  ],
+  MONOCITO:[
+    {q:'¿En qué célula se convierte el monocito al salir a los tejidos?',opts:['Neutrófilo','Linfocito','Macrófago','Eosinófilo'],a:2},
+    {q:'¿Cuál es el leucocito de mayor tamaño?',opts:['Neutrófilo','Linfocito','Eosinófilo','Monocito'],a:3},
+    {q:'¿Qué porcentaje de leucocitos son monocitos?',opts:['60–70%','20–40%','2–8%','40–50%'],a:2},
+    {q:'¿Qué forma tiene el núcleo del monocito?',opts:['Multilobulado','Esférico','En forma de riñón o herradura','Bilobulado'],a:2},
+  ],
+};
+
+/* ═══════════════════════════════════════
+   STATE
+═══════════════════════════════════════ */
+const S={
+  words:[],idx:0,cur:null,
+  scrambled:[],selected:[],
+  hintWord:0,totalHints:0,totalErrors:0,
+  score:0,correct:0,
+  health:100, errorsThisWord:0,
+  timerSec:60,timerInt:null,
+  wordTimes:[],t0:0,
+  active:false,hintsLog:[],
+  sessionStats:{}, /* word -> {won, cq} */
+};
+
+/* ═══════════════════════════════════════
+   ECG
+═══════════════════════════════════════ */
+const ECG={
+  lv:0,buf:[],phase:0,raf:null,
+  flashT:0,flashRGB:[0,0,0],
+  states:[
+    {bpm:72, amp:1.0,noise:.03,col:'#22c55e',txt:'RITMO NORMAL'},
+    {bpm:82, amp:.95,noise:.06,col:'#4ade80',txt:'LEVE ESTRÉS'},
+    {bpm:95, amp:.85,noise:.10,col:'#f59e0b',txt:'TAQUICARDIA LEVE'},
+    {bpm:108,amp:.75,noise:.16,col:'#fb923c',txt:'TAQUICARDIA'},
+    {bpm:122,amp:.60,noise:.22,col:'#f97316',txt:'ARRITMIA LEVE'},
+    {bpm:142,amp:.45,noise:.30,col:'#ef4444',txt:'ARRITMIA GRAVE'},
+    {bpm:162,amp:.28,noise:.45,col:'#dc2626',txt:'⚠ PARO INMINENTE'},
+  ],
+};
+const CYCLE=(()=>{
+  const N=200,c=[];
+  for(let i=0;i<N;i++){
+    const t=i/N; let v=0;
+    v+=.15*Math.exp(-((t-.10)**2)/(2*.007**2));
+    v-=.05*Math.exp(-((t-.20)**2)/(2*.003**2));
+    v+=1.0*Math.exp(-((t-.22)**2)/(2*.002**2));
+    v-=.30*Math.exp(-((t-.24)**2)/(2*.003**2));
+    v+=.35*Math.exp(-((t-.38)**2)/(2*.012**2));
+    c.push(v);
+  }
+  return c;
+})();
+
+function ecgFlash(r,g,b){ECG.flashT=1;ECG.flashRGB=[r,g,b];}
+
+function runECG(){
+  const cv=document.getElementById('ecg-canvas');
+  const cx=cv.getContext('2d');
+  cv.width=cv.offsetWidth||226; cv.height=60;
+  ECG.buf=new Array(cv.width).fill(cv.height/2); ECG.phase=0;
+  if(ECG.raf) cancelAnimationFrame(ECG.raf);
+  function draw(){
+    const st=ECG.states[ECG.lv];
+    const W=cv.width,H=cv.height,mid=H/2;
+    cx.fillStyle='#040f1e'; cx.fillRect(0,0,W,H);
+
+    /* grid lines */
+    cx.strokeStyle='rgba(0,130,60,.12)'; cx.lineWidth=.5;
+    for(let x=0;x<W;x+=20){cx.beginPath();cx.moveTo(x,0);cx.lineTo(x,H);cx.stroke();}
+    for(let y=0;y<H;y+=10){cx.beginPath();cx.moveTo(0,y);cx.lineTo(W,y);cx.stroke();}
+
+    /* new sample */
+    const isFlat=(ECG.lv===6);
+    const sample=isFlat
+      ? mid+(Math.random()-.5)*st.noise*H*.3
+      : CYCLE[ECG.phase]*st.amp*(H*.38)+(Math.random()-.5)*st.noise*H*.3;
+    ECG.buf.push(isFlat?0:sample); if(ECG.buf.length>W) ECG.buf.shift();
+
+    /* waveform */
+    cx.beginPath(); cx.strokeStyle=st.col; cx.lineWidth=1.8;
+    cx.shadowBlur=6; cx.shadowColor=st.col;
+    for(let x=0;x<W;x++){const y=mid-ECG.buf[x];x===0?cx.moveTo(x,y):cx.lineTo(x,y);}
+    cx.stroke(); cx.shadowBlur=0;
+
+    /* edge glow */
+    const grd=cx.createLinearGradient(W-24,0,W,0);
+    grd.addColorStop(0,'transparent');grd.addColorStop(1,'rgba(255,255,255,.05)');
+    cx.fillStyle=grd; cx.fillRect(W-24,0,24,H);
+
+    /* scan dot */
+    const sx=Math.floor(ECG.phase/CYCLE.length*W);
+    cx.beginPath();cx.arc(sx,mid-(ECG.buf[sx]||0),3,0,Math.PI*2);cx.fillStyle=st.col;cx.fill();
+
+    /* flash overlay */
+    if(ECG.flashT>0){
+      cx.fillStyle=`rgba(${ECG.flashRGB[0]},${ECG.flashRGB[1]},${ECG.flashRGB[2]},${(ECG.flashT*.35).toFixed(2)})`;
+      cx.fillRect(0,0,W,H); ECG.flashT=Math.max(0,ECG.flashT-.07);
+    }
+
+    /* asystole text */
+    if(ECG.lv===6){
+      cx.fillStyle='#ff1a1a'; cx.font='bold 11px monospace'; cx.textAlign='center';
+      cx.shadowColor='#ff1a1a'; cx.shadowBlur=8;
+      cx.fillText('── ASISTOLIA ──',W/2,H*.4);
+      cx.font='9px monospace'; cx.fillStyle='#ff5555'; cx.shadowBlur=0;
+      cx.fillText('SEÑAL CARDÍACA PERDIDA',W/2,H*.68);
+      cx.textAlign='left';
+    }
+
+    ECG.phase=(ECG.phase+Math.round(st.bpm/60*3))%CYCLE.length;
+    document.getElementById('ecg-bpm').textContent=st.bpm+' BPM';
+    document.getElementById('ecg-bpm').style.color=st.col;
+    document.getElementById('ecg-status').textContent=st.txt;
+    document.getElementById('ecg-status').style.color=st.col;
+    const dot=document.getElementById('ecg-dot');
+    dot.style.background=st.col; dot.style.boxShadow=`0 0 6px ${st.col}`;
+
+    ECG.raf=requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+/* ═══════════════════════════════════════
+   INIT
+═══════════════════════════════════════ */
+function startGame(){
+  document.getElementById('intro').style.display='none';
+  Object.assign(S,{
+    words:shuffle([...WORDS]),idx:0,score:0,correct:0,
+    totalErrors:0,totalHints:0,health:100,errorsThisWord:0,
+    hintsLog:[],wordTimes:[],active:true,sessionStats:{},
+  });
+  WORDS.forEach(w=>S.sessionStats[w.word]={won:false,cq:null});
+  ECG.lv=0; stopAlarm();
+  updateTop(); buildDots();
+  document.getElementById('r-total').textContent=S.words.length;
+  runECG(); loadWord();
+}
+function restartGame(){
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('mv-overlay').classList.remove('show');
+  clearInterval(S.timerInt); stopAlarm(); stopMusic();
+  startGame();
+}
+
+/* ═══════════════════════════════════════
+   LOAD WORD
+═══════════════════════════════════════ */
+function loadWord(){
+  const w=S.words[S.idx];
+  S.cur=w; S.selected=[]; S.hintWord=0; S.errorsThisWord=0; S.t0=Date.now();
+  let items=w.word.split('').map((l,i)=>({l,id:i,used:false}));
+  items=diffShuffle(items,w.word);
+  S.scrambled=items;
+  stopAlarm();
+
+  document.getElementById('tb-comp').textContent=w.cat;
+  document.getElementById('img-num').textContent=`Palabra ${S.idx+1}/${S.words.length}`;
+  document.getElementById('img-cat').textContent=w.cat;
+
+  const img=document.getElementById('word-img');
+  img.style.opacity=0; img.src=w.img;
+  img.onload=()=>img.style.opacity=1;
+  img.onerror=()=>img.style.opacity=.25;
+
+  document.getElementById('data-list').innerHTML=w.data.map(d=>
+    `<div class="ditem"><div class="dico">${d.i}</div><div><div class="dkey">${d.k}</div><div class="dval">${d.v}</div></div></div>`
+  ).join('');
+
+  renderSlots(); renderTiles(); activeDot(S.idx);
+  updateAttHud();
+  startTimer();
+  document.getElementById('btn-hint').disabled=false;
+  document.getElementById('btn-clear').disabled=false;
+  document.getElementById('btn-next').style.display='none';
+  /* reset patient */
+  const em=document.getElementById('health-emoji');
+  em.className=''; em.textContent='🧑‍⚕️';
+}
+
+/* ═══════════════════════════════════════
+   RENDER
+═══════════════════════════════════════ */
+function renderSlots(){
+  const wlen=S.cur.word.length;
+  const sz=wlen>=10?34:wlen>=8?39:44;
+  const fs=wlen>=10?'1.15rem':wlen>=8?'1.3rem':'1.5rem';
+  const c=document.getElementById('word-slots'); c.innerHTML='';
+  for(let i=0;i<wlen;i++){
+    const d=document.createElement('div');
+    d.className='wslot'; d.id=`s${i}`;
+    d.style.cssText=`width:${sz}px;height:${sz+14}px;font-size:${fs}`;
+    d.addEventListener('click',()=>removeFrom(i));
+    c.appendChild(d);
+  }
+}
+function renderTiles(){
+  const g=document.getElementById('letters-grid'); g.innerHTML='';
+  S.scrambled.forEach(item=>{
+    const d=document.createElement('div');
+    d.className='ltile'; d.id=`t${item.id}`; d.textContent=item.l;
+    d.addEventListener('click',()=>pickLetter(item.id));
+    g.appendChild(d);
+  });
+}
+
+/* ═══════════════════════════════════════
+   PICK LETTER
+═══════════════════════════════════════ */
+function pickLetter(tid){
+  if(!S.active) return;
+  const item=S.scrambled.find(x=>x.id===tid);
+  if(!item||item.used) return;
+  const pos=S.selected.length;
+  if(pos>=S.cur.word.length) return;
+  if(item.l!==S.cur.word[pos]){
+    document.getElementById(`t${tid}`).classList.add('wrong');
+    setTimeout(()=>document.getElementById(`t${tid}`)?.classList.remove('wrong'),420);
+    registerError(); playSFX('sfx-wrong');
+    toast('Letra incorrecta','r'); return;
+  }
+  item.used=true; S.selected.push({l:item.l,tid});
+  document.getElementById(`t${tid}`).classList.add('used');
+  fillSlot(pos,item.l,false);
+  playSFX('sfx-ok');
+  ecgFlash(0,180,80);
+  if(S.selected.length===S.cur.word.length) wordDone();
+}
+
+function fillSlot(pos,letter,isHint){
+  const el=document.getElementById(`s${pos}`); if(!el) return;
+  el.textContent=letter;
+  el.classList.remove('filled','hint','correct');
+  el.classList.add(isHint?'hint':'filled');
+  el.style.animation='popIn .3s cubic-bezier(.34,1.56,.64,1)';
+  setTimeout(()=>el.style.animation='',300);
+}
+
+function removeFrom(pos){
+  if(!S.active) return;
+  if(pos>=S.selected.length) return;
+  const removed=S.selected.splice(pos);
+  removed.forEach(({tid})=>{
+    const item=S.scrambled.find(x=>x.id===tid);
+    if(item) item.used=false;
+    document.getElementById(`t${tid}`)?.classList.remove('used');
+  });
+  for(let i=pos;i<S.cur.word.length;i++){
+    const el=document.getElementById(`s${i}`);
+    if(el){el.textContent='';el.classList.remove('filled','hint','correct');}
+  }
+}
+function clearAll(){if(!S.active) return; removeFrom(0);}
+
+/* ═══════════════════════════════════════
+   HINT
+═══════════════════════════════════════ */
+function useHint(){
+  if(!S.active) return;
+  const pos=S.selected.length;
+  if(pos>=S.cur.word.length) return;
+  const letter=S.cur.word[pos];
+  const tile=S.scrambled.find(x=>x.l===letter&&!x.used);
+  if(!tile) return;
+  tile.used=true; S.selected.push({l:tile.l,tid:tile.id});
+  S.hintWord++; S.totalHints++;
+  S.score=Math.max(0,S.score-15);
+  document.getElementById(`t${tile.id}`).classList.add('used');
+  fillSlot(pos,letter,true);
+  S.hintsLog.push(`"${S.cur.word}" pos.${pos+1}: "${letter}"`);
+  refreshHintLog();
+  document.getElementById('r-hints').textContent=S.totalHints;
+  updateTop();
+  toast(`Pista pos.${pos+1} = "${letter}" (−15 pts)`,'y');
+  if(S.selected.length===S.cur.word.length) wordDone();
+}
+
+/* ═══════════════════════════════════════
+   WORD DONE
+═══════════════════════════════════════ */
+function wordDone(){
+  stopTimer(); S.active=false; stopAlarm();
+  const elapsed=Math.round((Date.now()-S.t0)/1000);
+  S.wordTimes.push(elapsed);
+  const earned=Math.max(10,100-Math.floor(elapsed/2)-S.hintWord*15);
+  S.score+=earned; S.correct++;
+  S.sessionStats[S.cur.word].won=true;
+  for(let i=0;i<S.cur.word.length;i++){
+    const el=document.getElementById(`s${i}`);
+    if(el){el.classList.remove('filled','hint');el.classList.add('correct');}
+  }
+  doneDot(S.idx,'done');
+  document.getElementById('r-done').textContent=S.correct;
+  const avg=Math.round(S.wordTimes.reduce((a,b)=>a+b,0)/S.wordTimes.length);
+  document.getElementById('r-avg').textContent=avg+'s';
+  updateTop();
+  playSFX('sfx-word-win');
+  ecgFlash(0,220,100);
+  toast(`¡Correcto! +${earned} pts 🎉`,'g');
+  /* show quiz after short delay */
+  setTimeout(()=>showCQ(),1200);
+}
+
+/* ═══════════════════════════════════════
+   ERROR
+═══════════════════════════════════════ */
+function registerError(){
+  S.totalErrors++; S.errorsThisWord++;
+  S.health=Math.max(0,S.health-10);
+  document.getElementById('tb-err').textContent=S.totalErrors;
+  document.getElementById('r-errs').textContent=S.totalErrors;
+  updateHealth(); updateAttHud();
+  ECG.lv=Math.min(6,Math.floor((100-S.health)/15));
+  ecgFlash(200,20,20);
+  /* flash panel */
+  const panel=document.getElementById('ecg-panel');
+  panel.classList.remove('panel-flash'); void panel.offsetWidth; panel.classList.add('panel-flash');
+  setTimeout(()=>panel.classList.remove('panel-flash'),400);
+  if(S.errorsThisWord>=4) playAlarm();
+}
+
+/* ═══════════════════════════════════════
+   NEXT WORD
+═══════════════════════════════════════ */
+function nextWord(){
+  S.idx++;
+  if(S.idx>=S.words.length){endGame();return;}
+  document.getElementById('btn-next').style.display='none';
+  S.active=true; loadWord();
+}
+
+/* ═══════════════════════════════════════
+   TIMER
+═══════════════════════════════════════ */
+function startTimer(){
+  clearInterval(S.timerInt); S.timerSec=60; tickTimer();
+  S.timerInt=setInterval(()=>{S.timerSec--;tickTimer();if(S.timerSec<=0){clearInterval(S.timerInt);timeOut();}},1000);
+}
+function stopTimer(){clearInterval(S.timerInt);}
+function tickTimer(){
+  const el=document.getElementById('timer-disp'),bar=document.getElementById('tbar');
+  const pct=(S.timerSec/60)*100;
+  el.textContent=S.timerSec;
+  el.className=S.timerSec<=10?'dngr':S.timerSec<=20?'warn':'';
+  bar.style.width=pct+'%';
+  bar.style.background=S.timerSec<=10?'linear-gradient(90deg,var(--red),#f87171)'
+    :S.timerSec<=20?'linear-gradient(90deg,var(--yellow),#fbbf24)'
+    :'linear-gradient(90deg,var(--teal),var(--accent))';
+  if(S.timerSec===15) playAlarm();
+}
+function timeOut(){
+  if(!S.active) return;
+  S.active=false; stopAlarm();
+  playSFX('sfx-word-lose');
+  toast(`⏰ ¡Tiempo! Era "${S.cur.word}"`,'r');
+  doneDot(S.idx,'skip');
+  for(let i=0;i<S.cur.word.length;i++){
+    const el=document.getElementById(`s${i}`);
+    if(el){el.textContent=S.cur.word[i];el.classList.add('hint');}
+  }
+  registerError();
+  setTimeout(()=>{
+    if(S.idx+1>=S.words.length) endGame();
+    else document.getElementById('btn-next').style.display='inline-block';
+  },2600);
+}
+
+/* ═══════════════════════════════════════
+   HEALTH + ATT HUD
+═══════════════════════════════════════ */
+function updateHealth(){
+  const h=S.health;
+  const bar=document.getElementById('hbar'),pct=document.getElementById('health-pct');
+  const em=document.getElementById('health-emoji');
+  bar.style.width=h+'%'; pct.textContent=h+'%';
+  if(h>60){
+    bar.style.background='linear-gradient(90deg,var(--green),#16a34a)';
+    pct.style.color='var(--green)'; em.className=''; em.textContent='🧑‍⚕️';
+  } else if(h>30){
+    bar.style.background='linear-gradient(90deg,var(--yellow),#d97706)';
+    pct.style.color='var(--yellow)'; em.className='weak'; em.textContent='😟';
+  } else {
+    bar.style.background='linear-gradient(90deg,var(--red),#dc2626)';
+    pct.style.color='var(--red)'; em.className='crit'; em.textContent='😰';
+  }
+}
+function updateAttHud(){
+  const val=document.getElementById('att-val');
+  val.textContent=S.errorsThisWord;
+  val.style.color=S.errorsThisWord>=4?'var(--red)':S.errorsThisWord>=2?'var(--yellow)':'var(--teal)';
+}
+
+/* ═══════════════════════════════════════
+   COMPREHENSION QUIZ
+═══════════════════════════════════════ */
+function showCQ(){
+  const bank=CQ[S.cur.word];
+  if(!bank){advanceFromCQ();return;}
+  const item=bank[Math.floor(Math.random()*bank.length)];
+  const idx=[0,1,2,3].slice(0,item.opts.length);
+  shuffle(idx);
+  const correctNew=idx.indexOf(item.a);
+
+  document.getElementById('cq-name').textContent=S.cur.word;
+  document.getElementById('cq-question').textContent=item.q;
+  const cont=document.getElementById('cq-options'); cont.innerHTML='';
+  idx.forEach((origIdx,pos)=>{
+    const btn=document.createElement('button');
+    btn.className='cq-btn'; btn.textContent=item.opts[origIdx];
+    btn.onclick=()=>answerCQ(pos,correctNew,cont);
+    cont.appendChild(btn);
+  });
+  document.getElementById('cq-overlay').classList.add('show');
+}
+function answerCQ(chosen,correct,cont){
+  cont.querySelectorAll('.cq-btn').forEach(b=>b.disabled=true);
+  document.getElementById('cq-skip').disabled=true;
+  const word=S.cur.word;
+  if(chosen===correct){
+    cont.children[chosen].classList.add('correct');
+    S.sessionStats[word].cq=true;
+    S.score+=50; updateTop();
+    playSFX('sfx-quiz-ok');
+    toast('⭐ +50 pts bonus comprensión','g');
+    setTimeout(closeCQ,900);
+  } else {
+    cont.children[chosen].classList.add('wrong');
+    cont.children[correct].classList.add('correct');
+    S.sessionStats[word].cq=false;
+    playSFX('sfx-quiz-bad');
+    setTimeout(closeCQ,1600);
+  }
+}
+function skipCQ(){S.sessionStats[S.cur.word].cq=null;closeCQ();}
+function closeCQ(){document.getElementById('cq-overlay').classList.remove('show');advanceFromCQ();}
+function advanceFromCQ(){
+  if(S.idx+1>=S.words.length){endGame();}
+  else{document.getElementById('btn-next').style.display='inline-block';}
+}
+
+/* ═══════════════════════════════════════
+   END GAME
+═══════════════════════════════════════ */
+function endGame(){
+  stopTimer(); stopAlarm();
+  if(ECG.raf) cancelAnimationFrame(ECG.raf);
+  const allWon=Object.values(S.sessionStats).every(x=>x.won);
+  if(allWon){showModuleVictory();}else{showSimpleFinal();}
+}
+
+function showModuleVictory(){
+  const compOk=Object.values(S.sessionStats).filter(x=>x.cq===true).length;
+  const medal=compOk===S.words.length?'🏆':'🥈';
+  document.getElementById('mv-badge').textContent=medal;
+  document.getElementById('mv-words').textContent=`${S.correct}/${S.words.length}`;
+  document.getElementById('mv-comp').textContent=`${compOk}/${S.words.length}`;
+  document.getElementById('mv-pts').textContent=S.score;
+  const list=document.getElementById('mv-list'); list.innerHTML='';
+  S.words.forEach(w=>{
+    const st=S.sessionStats[w.word]||{won:false,cq:null};
+    const cqBadge=st.cq===true?'<span class="mv-badge-cq ok">✓ Comprensión</span>'
+      :st.cq===false?'<span class="mv-badge-cq skip">✗ Comprensión</span>'
+      :'<span class="mv-badge-cq skip">◯ Saltada</span>';
+    const row=document.createElement('div');
+    row.className='mv-row';
+    row.innerHTML=`<span class="mv-row-icon">${w.cat.split(' ').pop()}</span>
+      <span class="mv-row-name">${w.word}</span>
+      <span class="mv-badge-ok">✓ Adivinada</span>${cqBadge}`;
+    list.appendChild(row);
+  });
+  document.getElementById('mv-msg').textContent=compOk===S.words.length
+    ?'Dominio total. Estás listo para el siguiente módulo.'
+    :'Excelente. Repasa las comprensiones marcadas para dominio completo.';
+  document.getElementById('mv-overlay').classList.add('show');
+  launchConfetti(); stopMusic(); playSFX('sfx-victory');
+}
+
+function showSimpleFinal(){
+  const pct=Math.round((S.correct/S.words.length)*100);
+  const medal=pct>=70?'🥈':'🩺';
+  document.getElementById('o-icon').textContent=medal;
+  document.getElementById('o-title').textContent='¡Juego Completado!';
+  document.getElementById('o-body').innerHTML=
+    `Palabras correctas: <b>${S.correct}/${S.words.length}</b><br>
+     Pistas: <b>${S.totalHints}</b> · Errores: <b>${S.totalErrors}</b><br>
+     Precisión: <b>${pct}%</b>`;
+  document.getElementById('o-score').textContent=S.score+' pts';
+  document.getElementById('overlay').classList.add('show');
+  if(pct>=50) launchConfetti();
+  if (window.parent !== window) {
+    window.parent.postMessage({
+      tipo: 'resultado_juego',
+      paso: 7,
+      puntos: S.score,
+      completado: true,
+      tiempo_segundos: 0
+    }, '*');
+  }
+}
+
+/* ═══════════════════════════════════════
+   PROGRESS DOTS
+═══════════════════════════════════════ */
+function buildDots(){
+  const c=document.getElementById('word-prog'); c.innerHTML='';
+  S.words.forEach((_,i)=>{
+    const d=document.createElement('div');
+    d.className='pdot'; d.id=`pd${i}`; d.textContent=i+1; d.title=S.words[i].word;
+    c.appendChild(d);
+  });
+}
+function activeDot(i){document.querySelectorAll('.pdot').forEach(d=>d.classList.remove('active'));document.getElementById(`pd${i}`)?.classList.add('active');}
+function doneDot(i,state){
+  const d=document.getElementById(`pd${i}`); if(!d) return;
+  d.classList.remove('active');
+  d.classList.add(state==='done'?'done':'skip');
+  d.textContent=state==='done'?'✓':'✗';
+}
+
+/* ═══════════════════════════════════════
+   MISC UI
+═══════════════════════════════════════ */
+function refreshHintLog(){
+  const el=document.getElementById('hint-log');
+  el.innerHTML=S.hintsLog.length
+    ?S.hintsLog.slice(-5).map(h=>`<div class="hentry">💡 ${h}</div>`).join('')
+    :'<span style="color:var(--muted);font-size:.75rem">Ninguna aún</span>';
+}
+function updateTop(){
+  document.getElementById('tb-pts').textContent=S.score;
+  document.getElementById('tb-ok').textContent=S.correct;
+  document.getElementById('tb-err').textContent=S.totalErrors;
+}
+let _tt=null;
+function toast(msg,type='a'){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className=`show ${type}`;
+  clearTimeout(_tt); _tt=setTimeout(()=>el.className='',2600);
+}
+
+/* ═══════════════════════════════════════
+   CONFETTI
+═══════════════════════════════════════ */
+let _cRaf=null;
+function launchConfetti(){
+  const cv=document.getElementById('confetti'),cx=cv.getContext('2d');
+  cv.width=innerWidth; cv.height=innerHeight;
+  const cols=['#00d4ff','#22c55e','#f59e0b','#fbbf24','#ef4444','#00b4cc'];
+  const ps=Array.from({length:140},()=>({
+    x:Math.random()*cv.width,y:Math.random()*cv.height-cv.height,
+    vx:(Math.random()-.5)*3,vy:Math.random()*3+1.5,
+    rot:Math.random()*360,rs:(Math.random()-.5)*6,
+    w:Math.random()*8+4,h:Math.random()*14+6,
+    c:cols[Math.floor(Math.random()*cols.length)],
+  }));
+  let f=0;
+  (function draw(){
+    cx.clearRect(0,0,cv.width,cv.height);
+    ps.forEach(p=>{
+      cx.save();cx.translate(p.x,p.y);cx.rotate(p.rot*Math.PI/180);
+      cx.fillStyle=p.c;cx.globalAlpha=.88;cx.fillRect(-p.w/2,-p.h/2,p.w,p.h);cx.restore();
+      p.x+=p.vx;p.y+=p.vy;p.rot+=p.rs;
+      if(p.y>cv.height){p.y=-p.h;p.x=Math.random()*cv.width;}
+    });
+    if(++f<280) _cRaf=requestAnimationFrame(draw);
+    else cx.clearRect(0,0,cv.width,cv.height);
+  })();
+}
+
+/* ═══════════════════════════════════════
+   UTILS
+═══════════════════════════════════════ */
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function diffShuffle(items,orig){let n=0;do{shuffle(items);n++;}while(items.map(x=>x.l).join('')===orig&&n<20);return items;}
+
+/* unlock audio on first interaction */
+(function tryAutoplay(){
+  const el=document.getElementById('mus-ambient');if(!el)return;
+  el.volume=AUDIO.vol.music;
+  el.play().then(()=>{AUDIO.unlocked=true;AUDIO.currentMusic='mus-ambient';}).catch(()=>{});
+})();
+</script>
+</body>
+</html>
