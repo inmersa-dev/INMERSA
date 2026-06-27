@@ -556,27 +556,41 @@
     let currentData = null;
 
     // ═══════════════════════════════════════════════════════════════
-    //  MODO PRUEBA (TEMPORAL) — activar con  mapa.html?test=true
+    //  MODO PRUEBA (TEMPORAL) — 3 estados vía botón flotante o URL:
+    //    (sin param)      → normal
+    //    ?test=true       → desbloquea todo, NO guarda en Firebase
+    //    ?test=save       → desbloquea todo y SÍ guarda (cualquier juego avanza)
     //  Para quitarlo: borrar este bloque y los demás marcados "MODO PRUEBA".
     // ═══════════════════════════════════════════════════════════════
-    const TEST_MODE = new URLSearchParams(location.search).get("test") === "true";
+    const TEST_PARAM = new URLSearchParams(location.search).get("test");
+    const TEST_MODE = TEST_PARAM === "true" || TEST_PARAM === "save"; // desbloquea nodos
+    const TEST_SAVE = TEST_PARAM === "save";                          // además guarda
     (function injectTestToggle() {
+      // Estado actual → etiqueta, color y siguiente estado al hacer clic.
+      let label, title, accent, bg, op, next;
+      if (!TEST_MODE) {
+        label = "🧪"; title = "Activar modo prueba"; next = "true";
+        accent = "rgba(136,153,170,0.3)"; bg = "rgba(13,31,56,0.85)"; op = "0.55";
+      } else if (!TEST_SAVE) {
+        label = "🧪 PRUEBA (no guarda)"; title = "Cambiar a prueba + guarda"; next = "save";
+        accent = "#ffb020"; bg = "rgba(255,176,32,0.15)"; op = "1";
+      } else {
+        label = "💾 PRUEBA + GUARDA"; title = "Salir del modo prueba"; next = "";
+        accent = "#ff5c6c"; bg = "rgba(255,92,108,0.18)"; op = "1";
+      }
       const b = document.createElement("button");
       b.id = "testToggle";
-      b.textContent = TEST_MODE ? "🧪 MODO PRUEBA" : "🧪";
-      b.title = TEST_MODE ? "Salir del modo prueba" : "Activar modo prueba";
+      b.textContent = label;
+      b.title = title;
       b.style.cssText =
         "position:fixed;left:12px;bottom:78px;z-index:80;font-family:inherit;" +
         "font-weight:800;font-size:12px;cursor:pointer;border-radius:999px;" +
         "padding:" + (TEST_MODE ? "8px 14px" : "9px 11px") + ";" +
-        "border:1.5px solid " + (TEST_MODE ? "#ffb020" : "rgba(136,153,170,0.3)") + ";" +
-        "background:" + (TEST_MODE ? "rgba(255,176,32,0.15)" : "rgba(13,31,56,0.85)") + ";" +
-        "color:" + (TEST_MODE ? "#ffb020" : "#8899AA") + ";" +
-        "opacity:" + (TEST_MODE ? "1" : "0.55") + ";";
+        "border:1.5px solid " + accent + ";background:" + bg + ";color:" + accent + ";opacity:" + op + ";";
       b.onclick = () => {
         const url = new URL(location.href);
-        if (TEST_MODE) url.searchParams.delete("test");
-        else url.searchParams.set("test", "true");
+        if (next) url.searchParams.set("test", next);
+        else url.searchParams.delete("test");
         location.href = url.toString();
       };
       document.body.appendChild(b);
@@ -764,8 +778,9 @@
     });
 
     async function procesarResultado(data) {
-      // MODO PRUEBA: no se guarda nada en Firebase, solo se muestra el puntaje.
-      if (TEST_MODE) {
+      // MODO PRUEBA sin guardar (?test=true): no escribe en Firebase.
+      // En prueba+guarda (?test=save) NO entra aquí y sí persiste.
+      if (TEST_MODE && !TEST_SAVE) {
         closeGame();
         toast(`Modo prueba — juego terminado: ${Number(data.puntos) || 0} pts (no se guarda).`);
         return;
@@ -784,9 +799,15 @@
       let avanzo = false;
       let tarjetaNueva = false;
 
-      if (data.completado && paso === pasoActual) {
-        // Primera vez que se completa el paso activo: avanza y suma puntos.
-        updates.paso_actual = paso + 1;
+      // Flujo normal: solo avanza el paso activo.
+      // MODO PRUEBA+GUARDA: cualquier juego de un paso >= al actual cuenta como completado
+      // (necesario porque los pasos de narrativa/interactivo aún no existen para avanzar).
+      const completaActivo = data.completado && paso === pasoActual;
+      const completaPrueba = TEST_SAVE && data.completado && paso >= pasoActual;
+
+      if (completaActivo || completaPrueba) {
+        // Completa el paso: avanza y suma puntos.
+        updates.paso_actual = Math.max(pasoActual, paso + 1);
         updates.puntos_totales = (currentData.puntos_totales || 0) + puntos;
         updates["puntos_por_paso." + paso] = puntos;
         avanzo = true;
