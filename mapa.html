@@ -258,6 +258,10 @@
     .node.locked .node-card { opacity: 0.5; }
     .node.locked .node-card .tipo { color: var(--text-sec); }
 
+    /* MODO PRUEBA: nodos desbloqueados (temporal) */
+    .node.test .node-circle { border-color: #3a5a7a; color: var(--accent); }
+    .node.test .node-card { opacity: 0.95; }
+
     @keyframes pulse {
       0%, 100% { box-shadow: 0 0 0 0 rgba(0,212,255,0.5); }
       50% { box-shadow: 0 0 0 10px rgba(0,212,255,0); }
@@ -551,6 +555,33 @@
     // Datos del estudiante cargados (se actualizan tras cada juego).
     let currentData = null;
 
+    // ═══════════════════════════════════════════════════════════════
+    //  MODO PRUEBA (TEMPORAL) — activar con  mapa.html?test=true
+    //  Para quitarlo: borrar este bloque y los demás marcados "MODO PRUEBA".
+    // ═══════════════════════════════════════════════════════════════
+    const TEST_MODE = new URLSearchParams(location.search).get("test") === "true";
+    (function injectTestToggle() {
+      const b = document.createElement("button");
+      b.id = "testToggle";
+      b.textContent = TEST_MODE ? "🧪 MODO PRUEBA" : "🧪";
+      b.title = TEST_MODE ? "Salir del modo prueba" : "Activar modo prueba";
+      b.style.cssText =
+        "position:fixed;left:12px;bottom:78px;z-index:80;font-family:inherit;" +
+        "font-weight:800;font-size:12px;cursor:pointer;border-radius:999px;" +
+        "padding:" + (TEST_MODE ? "8px 14px" : "9px 11px") + ";" +
+        "border:1.5px solid " + (TEST_MODE ? "#ffb020" : "rgba(136,153,170,0.3)") + ";" +
+        "background:" + (TEST_MODE ? "rgba(255,176,32,0.15)" : "rgba(13,31,56,0.85)") + ";" +
+        "color:" + (TEST_MODE ? "#ffb020" : "#8899AA") + ";" +
+        "opacity:" + (TEST_MODE ? "1" : "0.55") + ";";
+      b.onclick = () => {
+        const url = new URL(location.href);
+        if (TEST_MODE) url.searchParams.delete("test");
+        else url.searchParams.set("test", "true");
+        location.href = url.toString();
+      };
+      document.body.appendChild(b);
+    })();
+
     // ---------- DOM refs ----------
     const $ = (id) => document.getElementById(id);
     const toastEl = $("toast");
@@ -602,6 +633,7 @@
         let state = "locked";
         if (n < pasoActual) state = "done";
         else if (n === pasoActual) state = "active";
+        if (TEST_MODE && state === "locked") state = "test"; // MODO PRUEBA: desbloqueo visual
 
         const node = document.createElement("div");
         node.className = `node ${state} ${n % 2 === 1 ? "left" : "right"}`;
@@ -647,7 +679,20 @@
 
       const btn = $("sheetBtn");
       btn.className = "btn";
-      if (state === "active") {
+      if (TEST_MODE) {
+        // MODO PRUEBA: todo juego es jugable; lo demás está "en construcción".
+        if (JUEGOS[n]) {
+          btn.textContent = "▶ Jugar (prueba)";
+          btn.classList.add("btn-play");
+          btn.disabled = false;
+          btn.onclick = () => { closeSheet(); openGame(JUEGOS[n]); };
+        } else {
+          btn.textContent = "🚧 Pantalla en construcción";
+          btn.classList.add("btn-locked");
+          btn.disabled = true;
+          btn.onclick = null;
+        }
+      } else if (state === "active") {
         btn.textContent = "▶ Jugar";
         btn.classList.add("btn-play");
         btn.disabled = false;
@@ -719,6 +764,13 @@
     });
 
     async function procesarResultado(data) {
+      // MODO PRUEBA: no se guarda nada en Firebase, solo se muestra el puntaje.
+      if (TEST_MODE) {
+        closeGame();
+        toast(`Modo prueba — juego terminado: ${Number(data.puntos) || 0} pts (no se guarda).`);
+        return;
+      }
+
       const user = auth.currentUser;
       if (!user || !currentData) return;
 
