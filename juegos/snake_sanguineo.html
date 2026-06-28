@@ -529,6 +529,7 @@ const AUDIO_SRCS = {
   correcto:   'Audio/SFX/snake_rescate_correcto.mp3',
   incorrecto: 'Audio/SFX/snake_rescate_incorrecto.mp3',
   gameover:   'Audio/SFX/snake_game_over.mp3',
+  victoria:   'Audio/SFX/module_victory.mp3',
 };
 const AUDIO = {};
 // Leer estado de mute desde localStorage (persiste entre sesiones)
@@ -1627,7 +1628,7 @@ function headGameOver(src){
     sina(`¡${lbl} impactó tu cabeza! Golpe directo y fatal. Muévete antes de que llegue.`,100);
     globo(`¡La ${lbl} llegó a tu cabeza! ¡Eso es un KO, bróder!`,300);
   }
-  gameOver();
+  gameOver('rescate');
 }
 
 // ── Cuerpo toca enfermedad o rayo → corte proporcional ──
@@ -1681,13 +1682,13 @@ function checkDone(){
 // ═══════════════════════════════════════════════════
 // GAME OVER
 // ═══════════════════════════════════════════════════
-function gameOver(){
+function gameOver(sfxKey){
   clearInterval(tickTmr);clearInterval(disTmr);clearInterval(spawnTmr);
   phase='gameover';
   stopMusic();
   setTimeout(()=>{
     document.getElementById('ov-gameover').classList.add('show');
-    playAudio('gameover'); // sincronizado con la aparición del overlay
+    playAudio(sfxKey || 'gameover'); // sincronizado con la aparición del overlay
   },600);
   if (window.parent !== window) {
     window.parent.postMessage({
@@ -1712,6 +1713,7 @@ function victory(){
   document.getElementById('v-pts').textContent=score+' pts';
   document.getElementById('ov-vic').classList.add('show');
   confetti();
+  playAudio('victoria');
   if (window.parent !== window) {
     window.parent.postMessage({
       tipo: 'resultado_juego',

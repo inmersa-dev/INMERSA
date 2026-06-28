@@ -19,7 +19,7 @@ canvas{display:block}
 <audio id="sfx-lane"           src="Audio/SFX/lane_change.mp3"               preload="auto"></audio>
 <audio id="sfx-shield"         src="Audio/SFX/shield_activate.mp3"           preload="auto"></audio>
 <audio id="sfx-question"       src="Audio/SFX/question_appear.mp3"           preload="auto"></audio>
-<audio id="sfx-life-up"        src="Audio/SFX/life_up.mp3"                   preload="auto"></audio>
+<audio id="sfx-life-up"        src="Audio/SFX/vida_extra.mp3"                preload="auto"></audio>
 <audio id="sfx-victory"        src="Audio/SFX/module_victory.mp3"            preload="auto"></audio>
 <audio id="sfx-pickup"         src="Audio/SFX/pickup_treatment.mp3"          preload="auto"></audio>
 <audio id="sfx-siren-short"    src="Audio/SFX/siren_short.mp3"               preload="auto"></audio>
@@ -27,7 +27,8 @@ canvas{display:block}
 
 <audio id="sfx-capsule"        src="Audio/SFX/pickup_good.mp3"               preload="auto"></audio>
 <audio id="sfx-hit"            src="Audio/SFX/snake_game_over.mp3"           preload="auto"></audio>
-<audio id="sfx-quiz-ok"        src="Audio/SFX/quiz_correct.mp3"              preload="auto"></audio>
+<audio id="sfx-lose"           src="Audio/SFX/snake_rescate_aparece.mp3"     preload="auto"></audio>
+<audio id="sfx-quiz-ok"        src="Audio/SFX/snake_rescate_correcto.mp3"    preload="auto"></audio>
 <audio id="sfx-quiz-bad"       src="Audio/SFX/snake_rescate_incorrecto.mp3"  preload="auto"></audio>
 <audio id="sfx-boss-appear"    src="Audio/SFX/boss_appear.mp3"               preload="auto"></audio>
 <audio id="sfx-boss-hit"       src="Audio/SFX/snake_corte_cuerpo.mp3"        preload="auto"></audio>
@@ -215,7 +216,7 @@ var _ALL_AUDIO_IDS=[
   'mus-pasillo','mus-jefe','mus-quiz',
   'sfx-lane','sfx-shield','sfx-question','sfx-life-up','sfx-victory',
   'sfx-pickup','sfx-siren-short','sfx-siren-loop',
-  'sfx-capsule','sfx-hit','sfx-quiz-ok','sfx-quiz-bad',
+  'sfx-capsule','sfx-hit','sfx-lose','sfx-quiz-ok','sfx-quiz-bad',
   'sfx-boss-appear','sfx-boss-hit','sfx-boss-death'
 ];
 
@@ -1257,7 +1258,7 @@ function loseLife(){
   lives--;
   player.hitTimer=0.5;
   sndHit();
-  if(lives<=0){state='gameover';stopAllMusic();stopSirenLoop();playSFX('sfx-hit');}
+  if(lives<=0){state='gameover';stopAllMusic();stopSirenLoop();playSFX('sfx-lose');}
 }
 
 function changeLane(dir){

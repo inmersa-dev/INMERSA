@@ -1208,7 +1208,7 @@ function showFinalWin(){
   var baseScore = PUZZLES.length * TOTAL * 10;
   document.getElementById('win-score').textContent    = (baseScore + totalBonusPoints)+' pts';
   winOverlay.classList.add('show');
-  playWin();
+  try { var _winSfx = new Audio('Audio/SFX/module_victory.mp3'); _winSfx.volume = 0.8; _winSfx.play().catch(function(){}); } catch(e){}
   startConfetti();
 
   var finalScore = baseScore + totalBonusPoints;
