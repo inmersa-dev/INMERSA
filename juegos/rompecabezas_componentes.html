@@ -356,6 +356,10 @@ html,body{
 <div id="ghost"></div>
 <div id="toast"></div>
 
+<!-- Música ambiente (igual que Palabras) + botón de mute -->
+<audio id="mus-ambient" src="Audio/Musica/ahorcado_ambient.mp3" loop preload="auto"></audio>
+<button id="mute-btn" onclick="toggleMute()" title="Silenciar / activar audio" aria-label="Silenciar audio" style="position:fixed;bottom:18px;right:18px;z-index:200;width:46px;height:46px;border-radius:50%;background:var(--card);border:1px solid var(--border);color:var(--accent);font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(0,0,0,.5)">🔊</button>
+
 <!-- ── Topbar ── -->
 <div id="topbar">
   <div id="title-block">
@@ -719,8 +723,19 @@ function getAC(){
   if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   return audioCtx;
 }
-function playSnap(){ try{var a=new Audio('Audio/SFX/acierto.mp3');a.volume=0.55;a.play().catch(function(){});}catch(e){} }
-function playError(){ try{var a=new Audio('Audio/SFX/error.mp3');a.volume=0.8;a.play().catch(function(){});}catch(e){} }
+
+/* Música ambiente + mute (igual que los demás juegos) */
+var audioMuted=false;
+function startAmbient(){ if(audioMuted) return; var m=document.getElementById('mus-ambient'); if(m){ m.volume=0.3; m.play().catch(function(){}); } }
+document.addEventListener('pointerdown', startAmbient, {once:true});
+function toggleMute(){
+  audioMuted=!audioMuted;
+  var m=document.getElementById('mus-ambient');
+  if(m){ if(audioMuted){ m.pause(); } else { m.volume=0.3; m.play().catch(function(){}); } }
+  var b=document.getElementById('mute-btn'); if(b) b.textContent=audioMuted?'🔇':'🔊';
+}
+function playSnap(){ if(audioMuted)return; try{var a=new Audio('Audio/SFX/acierto.mp3');a.volume=0.55;a.play().catch(function(){});}catch(e){} }
+function playError(){ if(audioMuted)return; try{var a=new Audio('Audio/SFX/error.mp3');a.volume=0.8;a.play().catch(function(){});}catch(e){} }
 function playWin(){
   var ac=getAC();
   [523,659,784,1047,1319].forEach(function(freq,i){
@@ -734,9 +749,9 @@ function playWin(){
     osc.start(t); osc.stop(t+0.55);
   });
 }
-function playBonusCorrect(){ try{var a=new Audio('Audio/SFX/acierto.mp3');a.volume=0.8;a.play().catch(function(){});}catch(e){} }
-function playBonusWrong(){ try{var a=new Audio('Audio/SFX/error.mp3');a.volume=0.8;a.play().catch(function(){});}catch(e){} }
-function playCelebration(){ try{var a=new Audio('Audio/SFX/life_up.mp3');a.volume=0.7;a.play().catch(function(){});}catch(e){} }
+function playBonusCorrect(){ if(audioMuted)return; try{var a=new Audio('Audio/SFX/acierto.mp3');a.volume=0.8;a.play().catch(function(){});}catch(e){} }
+function playBonusWrong(){ if(audioMuted)return; try{var a=new Audio('Audio/SFX/error.mp3');a.volume=0.8;a.play().catch(function(){});}catch(e){} }
+function playCelebration(){ if(audioMuted)return; try{var a=new Audio('Audio/SFX/life_up.mp3');a.volume=0.7;a.play().catch(function(){});}catch(e){} }
 
 /* ─────────────────────────────────────────────
    TOAST
@@ -1154,7 +1169,8 @@ function showFinalWin(){
   var baseScore = PUZZLES.length * TOTAL * 10;
   document.getElementById('win-score').textContent    = (baseScore + totalBonusPoints)+' pts';
   winOverlay.classList.add('show');
-  try { var _winSfx = new Audio('Audio/SFX/victoria.mp3'); _winSfx.volume = 0.8; _winSfx.play().catch(function(){}); } catch(e){}
+  try { var _mus=document.getElementById('mus-ambient'); if(_mus) _mus.pause(); } catch(e){}
+  if(!audioMuted){ try { var _winSfx = new Audio('Audio/SFX/victoria.mp3'); _winSfx.volume = 0.8; _winSfx.play().catch(function(){}); } catch(e){} }
   startConfetti();
 
   var finalScore = baseScore + totalBonusPoints;
