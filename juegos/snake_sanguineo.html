@@ -135,7 +135,6 @@ body{background:#0e0103;color:#e2f0ff;font-family:'Nunito',sans-serif;min-height
     <div class="tb-stat"><span class="lbl">Puntos</span><span class="val val-score" id="h-score">0</span></div>
     <div class="tb-stat"><span class="lbl">Poder inmune</span><span class="val val-ammo" id="h-immune">—</span></div>
     <div class="tb-stat"><span class="lbl">Oportunidades</span><span class="val" id="h-chances" style="color:#a78bfa">🧠🧠</span></div>
-    <div class="tb-stat"><span class="lbl">Vidas</span><span class="val val-lives" id="h-lives">❤️❤️❤️</span></div>
   </div>
 </div>
 
@@ -153,18 +152,11 @@ body{background:#0e0103;color:#e2f0ff;font-family:'Nunito',sans-serif;min-height
   <div class="panel">
     <div class="panel-hdr">Monitor Cardíaco</div>
     <canvas id="ecg-cv" width="210" height="68"></canvas>
-    <div class="hp-wrap">
-      <div class="hp-label"><span>Salud del Huésped</span><span id="hp-pct">100%</span></div>
-      <div class="hp-bg"><div class="hp-fill" id="hp-bar" style="width:100%;background:var(--green)"></div></div>
-    </div>
-    <div class="patient-row" id="pat-em">🧑‍⚕️</div>
-    <div class="patient-st" id="pat-st">Paciente estable</div>
   </div>
   <div class="panel">
     <div class="panel-hdr">Registro de Partida</div>
     <div class="stat-row"><span class="sk">Engullidos</span><span class="sv" id="s-eng">0</span></div>
     <div class="stat-row"><span class="sk">Destruidos</span><span class="sv" id="s-kil">0</span></div>
-    <div class="stat-row"><span class="sk">Vidas perdidas</span><span class="sv" id="s-los">0</span></div>
     <div class="stat-row"><span class="sk">Inmunidades</span><span class="sv" id="s-sht">0</span></div>
     <div class="stat-row"><span class="sk">Longitud</span><span class="sv" id="s-len">4</span></div>
   </div>
@@ -1366,7 +1358,7 @@ function tick(){
   // wall
   if(nh.col<0||nh.col>=COLS||nh.row<0||nh.row>=ROWS){showQuestion();return;}
   // self
-  if(snake.some(s=>s.col===nh.col&&s.row===nh.row)){damage('self');return;}
+  if(snake.some(s=>s.col===nh.col&&s.row===nh.row)){flashFrames=35;sina('¡Te mordiste la cola! En modo clásico, eso es fatal.',100);globo('¡Te comiste tu propia cola, bróder! ¡Game over!',300);gameOver();return;}
   const hitIdx=items.findIndex(it=>it.col===nh.col&&it.row===nh.row);
   snake.unshift(nh);
   if(hitIdx!==-1){
@@ -1752,23 +1744,12 @@ function updateHUD(){
   document.getElementById('h-score').textContent=score;
   const ch=document.getElementById('h-chances');
   if(ch) ch.textContent='🧠'.repeat(Math.max(0,wallChances))+'💀'.repeat(Math.max(0,2-wallChances));
-  document.getElementById('h-lives').textContent='❤️'.repeat(Math.max(0,lives))+'🖤'.repeat(Math.max(0,3-lives));
   document.getElementById('s-eng').textContent=stats.eng;
   document.getElementById('s-kil').textContent=stats.kil;
-  document.getElementById('s-los').textContent=stats.los;
   document.getElementById('s-sht').textContent=stats.sht;
   if(snake) document.getElementById('s-len').textContent=snake.length;
 }
-function updateHPUI(){
-  const hp=Math.max(0,Math.round((lives/3)*100));
-  document.getElementById('hp-bar').style.width=hp+'%';
-  document.getElementById('hp-bar').style.background=hp>60?'var(--green)':hp>30?'var(--yellow)':'var(--red)';
-  document.getElementById('hp-pct').textContent=hp+'%';
-  const em=document.getElementById('pat-em'),st=document.getElementById('pat-st');
-  if(hp>60){em.textContent='🧑‍⚕️';st.textContent='Paciente estable';}
-  else if(hp>30){em.textContent='😟';st.textContent='Paciente en riesgo';}
-  else{em.textContent='😰';st.textContent='Estado crítico';}
-}
+function updateHPUI(){ /* sistema de vidas removido — modo clásico (muerte instantánea) */ }
 function updateLvLabel(){
   document.getElementById('lv-lbl').textContent='MODO LIBRE';
 }
