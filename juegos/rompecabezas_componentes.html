@@ -719,29 +719,8 @@ function getAC(){
   if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   return audioCtx;
 }
-function playSnap(){
-  var ac = getAC();
-  [600,900,1200].forEach(function(freq,i){
-    var osc=ac.createOscillator(), gain=ac.createGain();
-    osc.connect(gain); gain.connect(ac.destination);
-    osc.frequency.value=freq; osc.type='sine';
-    var t=ac.currentTime+i*0.06;
-    gain.gain.setValueAtTime(0,t);
-    gain.gain.linearRampToValueAtTime(0.18,t+0.02);
-    gain.gain.exponentialRampToValueAtTime(0.001,t+0.22);
-    osc.start(t); osc.stop(t+0.22);
-  });
-}
-function playError(){
-  var ac=getAC(), osc=ac.createOscillator(), gain=ac.createGain();
-  osc.connect(gain); gain.connect(ac.destination);
-  osc.type='sawtooth';
-  osc.frequency.setValueAtTime(260,ac.currentTime);
-  osc.frequency.linearRampToValueAtTime(120,ac.currentTime+0.22);
-  gain.gain.setValueAtTime(0.14,ac.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.28);
-  osc.start(); osc.stop(ac.currentTime+0.28);
-}
+function playSnap(){ try{var a=new Audio('Audio/SFX/acierto.mp3');a.volume=0.55;a.play().catch(function(){});}catch(e){} }
+function playError(){ try{var a=new Audio('Audio/SFX/error.mp3');a.volume=0.8;a.play().catch(function(){});}catch(e){} }
 function playWin(){
   var ac=getAC();
   [523,659,784,1047,1319].forEach(function(freq,i){
@@ -755,42 +734,9 @@ function playWin(){
     osc.start(t); osc.stop(t+0.55);
   });
 }
-function playBonusCorrect(){
-  var ac=getAC();
-  [880,1108].forEach(function(freq,i){
-    var osc=ac.createOscillator(), gain=ac.createGain();
-    osc.connect(gain); gain.connect(ac.destination);
-    osc.frequency.value=freq; osc.type='sine';
-    var t=ac.currentTime+i*0.1;
-    gain.gain.setValueAtTime(0,t);
-    gain.gain.linearRampToValueAtTime(0.14,t+0.03);
-    gain.gain.exponentialRampToValueAtTime(0.001,t+0.35);
-    osc.start(t); osc.stop(t+0.35);
-  });
-}
-function playBonusWrong(){
-  var ac=getAC(), osc=ac.createOscillator(), gain=ac.createGain();
-  osc.connect(gain); gain.connect(ac.destination);
-  osc.type='triangle';
-  osc.frequency.setValueAtTime(200,ac.currentTime);
-  osc.frequency.linearRampToValueAtTime(100,ac.currentTime+0.3);
-  gain.gain.setValueAtTime(0.12,ac.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.35);
-  osc.start(); osc.stop(ac.currentTime+0.35);
-}
-function playCelebration(){
-  var ac=getAC();
-  [523,659,784,880,1047,1319].forEach(function(freq,i){
-    var osc=ac.createOscillator(), gain=ac.createGain();
-    osc.connect(gain); gain.connect(ac.destination);
-    osc.frequency.value=freq; osc.type='sine';
-    var t=ac.currentTime+i*0.09;
-    gain.gain.setValueAtTime(0,t);
-    gain.gain.linearRampToValueAtTime(0.2,t+0.03);
-    gain.gain.exponentialRampToValueAtTime(0.001,t+0.5);
-    osc.start(t); osc.stop(t+0.5);
-  });
-}
+function playBonusCorrect(){ try{var a=new Audio('Audio/SFX/acierto.mp3');a.volume=0.8;a.play().catch(function(){});}catch(e){} }
+function playBonusWrong(){ try{var a=new Audio('Audio/SFX/error.mp3');a.volume=0.8;a.play().catch(function(){});}catch(e){} }
+function playCelebration(){ try{var a=new Audio('Audio/SFX/life_up.mp3');a.volume=0.7;a.play().catch(function(){});}catch(e){} }
 
 /* ─────────────────────────────────────────────
    TOAST
