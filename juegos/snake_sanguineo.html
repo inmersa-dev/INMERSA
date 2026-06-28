@@ -1358,7 +1358,7 @@ function tick(){
   // wall
   if(nh.col<0||nh.col>=COLS||nh.row<0||nh.row>=ROWS){showQuestion();return;}
   // self
-  if(snake.some(s=>s.col===nh.col&&s.row===nh.row)){flashFrames=35;sina('¡Te mordiste la cola! En modo clásico, eso es fatal.',100);globo('¡Te comiste tu propia cola, bróder! ¡Game over!',300);gameOver();return;}
+  if(snake.some(s=>s.col===nh.col&&s.row===nh.row)){flashFrames=35;sina('¡Te mordiste la cola! En modo clásico, eso es fatal.',100);globo('¡Te comiste tu propia cola, bróder! ¡Game over!',300);gameOver('rescate');return;}
   const hitIdx=items.findIndex(it=>it.col===nh.col&&it.row===nh.row);
   snake.unshift(nh);
   if(hitIdx!==-1){
