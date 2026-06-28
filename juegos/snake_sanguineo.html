@@ -134,7 +134,6 @@ body{background:#0e0103;color:#e2f0ff;font-family:'Nunito',sans-serif;min-height
   <div class="tb-stats">
     <div class="tb-stat"><span class="lbl">Puntos</span><span class="val val-score" id="h-score">0</span></div>
     <div class="tb-stat"><span class="lbl">Poder inmune</span><span class="val val-ammo" id="h-immune">—</span></div>
-    <div class="tb-stat"><span class="lbl">Oportunidades</span><span class="val" id="h-chances" style="color:#a78bfa">🧠🧠</span></div>
   </div>
 </div>
 
@@ -227,10 +226,10 @@ body{background:#0e0103;color:#e2f0ff;font-family:'Nunito',sans-serif;min-height
 <!-- OVERLAY: PREGUNTA -->
 <div class="overlay" id="ov-q">
   <div class="ov-box">
-    <div style="font-size:2.2rem;margin-bottom:6px">⚠️</div>
-    <div class="ov-t" style="color:var(--yellow)">¡CHOQUE CON LA PARED!</div>
-    <div class="ov-st">Responde correctamente para continuar sin perder el avance.<br>Si fallas, <strong style="color:var(--red)">empiezas desde cero.</strong></div>
-    <div style="background:var(--card2);border-radius:12px;padding:16px;margin-bottom:12px;text-align:left">
+    <div id="q-ico" style="font-size:2.2rem;margin-bottom:6px">⚠️</div>
+    <div class="ov-t" id="q-title" style="color:var(--yellow)">¡PERDISTE!</div>
+    <div class="ov-st" id="q-sub">Responde bien para <strong style="color:var(--green)">sobrevivir (−100 pts)</strong>.<br>Si fallas, <strong style="color:var(--red)">es Game Over.</strong></div>
+    <div id="q-block" style="background:var(--card2);border-radius:12px;padding:16px;margin-bottom:12px;text-align:left">
       <div id="q-text" style="font-size:.95rem;font-weight:800;margin-bottom:14px;color:var(--text);line-height:1.4"></div>
       <div id="q-opts" style="display:flex;flex-direction:column;gap:8px"></div>
     </div>
@@ -338,13 +337,30 @@ const QUESTIONS=[
 let activeQ=null;
 let escapeDir=null;
 
-function showQuestion(){
+function showQuestion(reason){
+  if(phase!=='playing'||isHitInvul()) return;
   phase='question';
   clearInterval(tickTmr);clearInterval(disTmr);clearInterval(spawnTmr);
   rays.length=0;waveActive=false; // limpiar rayos/onda al pausar
-  playAudio('rescate');flashFrames=18;
-  // invertir dirección para que al reanudar no vuelva a chocar
-  escapeDir={dx:-dir.dx,dy:-dir.dy};
+  playAudio('rescate');flashFrames=35; // sonido de choque (pared)
+  // Mensaje según la causa de la pérdida
+  var ico='⚠️',title='¡PERDISTE!',msg='Un error te costó el avance.';
+  if(reason==='pared'){ico='⚠️';title='¡CHOQUE CON LA PARED!';msg='Chocaste contra la pared.';}
+  else if(reason==='cola'){ico='🌀';title='¡TE MORDISTE LA COLA!';msg='Te comiste tu propia cola.';}
+  else if(reason==='ray'){ico='⚡';title='¡RAYO A LA CABEZA!';msg='Un rayo te impactó en la cabeza.';}
+  else{ico='🦠';var lbl=(INFO[reason]&&INFO[reason].lbl)||'Una enfermedad';title='¡'+lbl.toUpperCase()+' EN LA CABEZA!';msg=lbl+' impactó tu cabeza.';}
+  document.getElementById('q-ico').textContent=ico;
+  document.getElementById('q-title').textContent=title;
+  document.getElementById('q-block').style.display='none'; // pregunta oculta 2s para asimilar
+  document.getElementById('q-fb').textContent='';
+  document.getElementById('ov-q').classList.add('show');
+  sina(msg+' Analiza qué pasó... tu pregunta de rescate llega en 2 segundos.',100);
+  globo('¡Concéntrate, bróder! Si respondes bien, sobrevives (−100 pts).',300);
+  setTimeout(revealQuestion,2000);
+}
+
+function revealQuestion(){
+  if(phase!=='question') return;
   const q=QUESTIONS[Math.floor(Math.random()*QUESTIONS.length)];
   activeQ=q;
   document.getElementById('q-text').textContent=q.q;
@@ -358,78 +374,69 @@ function showQuestion(){
   });
   document.getElementById('q-fb').textContent='';
   document.getElementById('q-fb').style.color='';
-  document.getElementById('ov-q').classList.add('show');
-  sina('Demuestra lo que has aprendido. Esta es tu oportunidad de seguir sin perder el avance.');
-  globo('¡Piénsalo bien, bróder! Si fallas empezamos de cero... ¡Tú puedes!');
+  document.getElementById('q-block').style.display='';
 }
 
 function answerQ(idx,btn){
   if(!activeQ) return;
-  const correct=idx===activeQ.ans;
+  const q=activeQ; activeQ=null;
+  const correct=idx===q.ans;
   document.querySelectorAll('.q-opt').forEach((b,i)=>{
     b.disabled=true;
-    if(i===activeQ.ans) b.classList.add('correct');
+    if(i===q.ans) b.classList.add('correct');
     else if(b===btn&&!correct) b.classList.add('wrong');
   });
   const fb=document.getElementById('q-fb');
   if(correct){
     playAudio('correcto');
+    score=Math.max(0,score-100); // costo del rescate; la longitud NO cambia
     fb.style.color='var(--green)';
-    fb.textContent='✓ ¡Correcto! Continúas sin perder el avance.';
-    sina('¡Excelente respuesta! Eso demuestra que estás aprendiendo de verdad.',100);
-    globo('¡WEPA! ¡Sabía que podías, bróder! ¡Sigue así!',300);
+    fb.textContent='✓ ¡Correcto! Sobrevives (−100 pts) y mantienes tu longitud.';
+    sina('¡Excelente! Tu conocimiento te rescató. −100 pts, pero sigues vivo.',100);
+    globo('¡WEPA! ¡El saber te salvó, bróder! ¡Sigue así!',300);
+    updateHUD();updateObjUI();
     setTimeout(()=>{
       document.getElementById('ov-q').classList.remove('show');
-      // Reubicar serpiente al centro, conservando avance
-      const cx=Math.floor(COLS/2),cy=Math.floor(ROWS/2);
-      snake=[{col:cx+1,row:cy},{col:cx,row:cy},{col:cx-1,row:cy}];
-      dir={dx:1,dy:0};nextDir={dx:1,dy:0};escapeDir=null;
-      // Cuenta regresiva 3-2-1 antes de reanudar
-      startCountdown(()=>{
-        phase='playing';
-        tickTmr=setInterval(tick,GAME_CFG.spd);
-        disTmr=setInterval(moveDis,Math.round(GAME_CFG.spd*2.6));
-        spawnTmr=setInterval(autoSpawn,2300);
-      });
-    },1800);
+      rescueResume();
+    },1600);
   }else{
-    playAudio('incorrecto'); // suena inmediatamente al hacer click
-    wallChances--;
+    playAudio('incorrecto');
     fb.style.color='var(--red)';
-    fb.textContent=`✗ Incorrecto. La respuesta era: "${activeQ.opts[activeQ.ans]}"`;
-    updateHUD();
-    if(wallChances>0){
-      // aún tiene oportunidad — continúa en el centro con advertencia
-      sina(`Respuesta incorrecta, pero tienes ${wallChances} oportunidad${wallChances>1?'es':''} más. ¡Repasa los componentes!`,100);
-      globo(wallChances===1?'¡Última oportunidad, bróder! La próxima que falles reiniciamos todo.':'¡Cuidado! Ya gastaste una oportunidad. ¡No falles la próxima!',300);
-      setTimeout(()=>{
-        document.getElementById('ov-q').classList.remove('show');
-        const cx=Math.floor(COLS/2),cy=Math.floor(ROWS/2);
-        snake=[{col:cx+1,row:cy},{col:cx,row:cy},{col:cx-1,row:cy}];
-        dir={dx:1,dy:0};nextDir={dx:1,dy:0};escapeDir=null;
-        // Cuenta regresiva 3-2-1 antes de reanudar
-        startCountdown(()=>{
-          phase='playing';
-          tickTmr=setInterval(tick,GAME_CFG.spd);
-          disTmr=setInterval(moveDis,Math.round(GAME_CFG.spd*2.6));
-          spawnTmr=setInterval(autoSpawn,2300);
-        });
-      },2200);
-    }else{
-      // sin oportunidades → reinicio completo
-      sina('Sin más oportunidades. Recuerda: eritrocito transporta O₂, leucocito defiende, plaqueta coagula, plasma nutre.',100);
-      globo('¡Se acabaron las chances, bróder! Pero esta vez sí lo vamos a lograr. ¡Arriba!',300);
-      setTimeout(()=>{
-        stopMusic();
-        playAudio('gameover'); // suena al transicionar fuera de la pregunta
-        document.getElementById('ov-q').classList.remove('show');
-        lives=3;score=0;immuneEnd=0;wallChances=2;
-        stats={eng:0,kil:0,los:0,sht:0};
-        updateHUD();updateHPUI();
-        setTimeout(()=>initGame(),1500); // da tiempo al game_over de sonar
-      },2600);
-    }
+    fb.textContent=`✗ Incorrecto. La respuesta era: "${q.opts[q.ans]}"`;
+    sina('Esta vez no. Repasa: eritrocito O₂, leucocito defiende, plaqueta coagula, plasma nutre.',100);
+    globo('¡Ufff, fallaste bróder! Es Game Over... ¡a la próxima lo logras!',300);
+    setTimeout(()=>{
+      document.getElementById('ov-q').classList.remove('show');
+      gameOver(); // game over real (suena dano)
+    },1900);
   }
+}
+
+// Reanuda conservando longitud y posición; elige una dirección segura
+function rescueResume(){
+  const h=snake[0],neck=snake[1];
+  const opts=[dir,{dx:0,dy:1},{dx:0,dy:-1},{dx:1,dy:0},{dx:-1,dy:0}];
+  let ch=null;
+  for(const o of opts){
+    const nc=h.col+o.dx,nr=h.row+o.dy;
+    if(nc<0||nc>=COLS||nr<0||nr>=ROWS) continue;
+    if(snake.some(s=>s.col===nc&&s.row===nr)) continue;
+    if(neck&&nc===neck.col&&nr===neck.row) continue;
+    ch=o;break;
+  }
+  if(!ch){ // atrapado (muy raro): reposiciona corto al centro
+    const cx=Math.floor(COLS/2),cy=Math.floor(ROWS/2);
+    snake=[{col:cx+1,row:cy},{col:cx,row:cy},{col:cx-1,row:cy}];
+    ch={dx:1,dy:0};
+  }
+  dir={dx:ch.dx,dy:ch.dy};nextDir={dx:ch.dx,dy:ch.dy};escapeDir=null;
+  hitInvulEnd=Date.now()+1800; // gracia post-rescate
+  startCountdown(()=>{
+    phase='playing';
+    tickTmr=setInterval(tick,GAME_CFG.spd);
+    disTmr=setInterval(moveDis,Math.round(GAME_CFG.spd*2.6));
+    spawnTmr=setInterval(autoSpawn,2300);
+  });
 }
 
 // ═══════════════════════════════════════════════════
@@ -1356,9 +1363,9 @@ function tick(){
   const head=snake[0];
   const nh={col:head.col+dir.dx,row:head.row+dir.dy};
   // wall
-  if(nh.col<0||nh.col>=COLS||nh.row<0||nh.row>=ROWS){showQuestion();return;}
+  if(nh.col<0||nh.col>=COLS||nh.row<0||nh.row>=ROWS){showQuestion('pared');return;}
   // self
-  if(snake.some(s=>s.col===nh.col&&s.row===nh.row)){flashFrames=35;sina('¡Te mordiste la cola! En modo clásico, eso es fatal.',100);globo('¡Te comiste tu propia cola, bróder! ¡Game over!',300);gameOver('rescate');return;}
+  if(snake.some(s=>s.col===nh.col&&s.row===nh.row)){showQuestion('cola');return;}
   const hitIdx=items.findIndex(it=>it.col===nh.col&&it.row===nh.row);
   snake.unshift(nh);
   if(hitIdx!==-1){
@@ -1607,21 +1614,8 @@ function damage(reason){
   phase='paused';setTimeout(()=>{if(phase==='paused')phase='playing';},900);
 }
 
-// ── Cabeza toca enfermedad o rayo → game over inmediato ──
-function headGameOver(src){
-  if(phase!=='playing'||isHitInvul()) return;
-  flashFrames=35;
-  clearInterval(tickTmr);clearInterval(disTmr);clearInterval(spawnTmr);
-  if(src==='ray'){
-    sina('¡Rayo directo a la cabeza! Golpe fatal sin posibilidad de sobrevivir.',100);
-    globo('¡Te fulminaron en la cabeza, bróder! ¡Esquiva los rayos amarillos!',300);
-  }else{
-    const lbl=INFO[src]?.lbl||'Enfermedad';
-    sina(`¡${lbl} impactó tu cabeza! Golpe directo y fatal. Muévete antes de que llegue.`,100);
-    globo(`¡La ${lbl} llegó a tu cabeza! ¡Eso es un KO, bróder!`,300);
-  }
-  gameOver('rescate');
-}
+// ── Cabeza toca enfermedad o rayo → activa el rescate (pregunta) ──
+function headGameOver(src){ showQuestion(src); }
 
 // ── Cuerpo toca enfermedad o rayo → corte proporcional ──
 function cutSnake(hitIdx,src){
