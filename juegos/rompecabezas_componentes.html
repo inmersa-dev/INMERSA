@@ -636,6 +636,7 @@ var startTime=null, timerInterval=null, elapsedSecs=0;
 var currentPuzzleIdx=0;
 var totalAttempts=0, totalElapsedSecs=0, totalBonusPoints=0;
 var endBonusPool=[], endBonusIdx=0, bonusCountdown=null;
+var baseScore=0, postMessageSent=false;
 
 /* ─────────────────────────────────────────────
    DOM
@@ -1149,9 +1150,9 @@ btnContinue.addEventListener('click',function(){
     showBonusQuestion(endBonusIdx);
   } else {
     bonusOverlay.classList.remove('show');
-    document.getElementById('win-score').textContent =
-      (PUZZLES.length * TOTAL * 10 + totalBonusPoints)+' pts';
+    document.getElementById('win-score').textContent = (baseScore + totalBonusPoints)+' pts';
     document.getElementById('btn-win-bonus').style.display='none';
+    sendPostMessage(baseScore + totalBonusPoints);
   }
 });
 
@@ -1189,26 +1190,30 @@ function loadPuzzleAndBuild(idx, cb){
   img.src=PUZZLES[idx].img;
 }
 
+function sendPostMessage(puntos){
+  if(postMessageSent) return;
+  postMessageSent=true;
+  if(window.parent !== window){
+    window.parent.postMessage({
+      tipo: 'resultado_juego',
+      paso: 3,
+      puntos: puntos,
+      completado: true,
+      tiempo_segundos: totalElapsedSecs
+    }, '*');
+  }
+}
+
 function showFinalWin(){
   document.getElementById('win-time').textContent     = fmtTime(totalElapsedSecs);
   document.getElementById('win-attempts').textContent = totalAttempts;
-  var baseScore = PUZZLES.length * TOTAL * 10;
+  baseScore = PUZZLES.length * TOTAL * 10;
   document.getElementById('win-score').textContent    = baseScore+' pts';
   document.getElementById('btn-win-bonus').style.display='inline-block';
   winOverlay.classList.add('show');
   try { var _mus=document.getElementById('mus-ambient'); if(_mus) _mus.pause(); } catch(e){}
   if(!audioMuted){ try { var _winSfx = new Audio('Audio/SFX/victoria.mp3'); _winSfx.volume = 0.8; _winSfx.play().catch(function(){}); } catch(e){} }
   startConfetti();
-
-  if (window.parent !== window) {
-    window.parent.postMessage({
-      tipo: 'resultado_juego',
-      paso: 3,
-      puntos: baseScore,
-      completado: true,
-      tiempo_segundos: totalElapsedSecs
-    }, '*');
-  }
 }
 
 document.getElementById('btn-win-bonus').addEventListener('click',function(){
@@ -1260,6 +1265,7 @@ function reset(){
   startTime=null; elapsedSecs=0;
   totalAttempts=0; totalElapsedSecs=0; totalBonusPoints=0;
   currentPuzzleIdx=0; endBonusPool=[]; endBonusIdx=0;
+  baseScore=0; postMessageSent=false;
   stopTimer(); stopBonusTimer();
   timerDisplay.textContent='00:00';
   statTime.textContent='00:00';
@@ -1276,7 +1282,10 @@ function reset(){
 }
 
 document.getElementById('btn-reset').addEventListener('click',reset);
-document.getElementById('btn-win-reset').addEventListener('click',reset);
+document.getElementById('btn-win-reset').addEventListener('click',function(){
+  sendPostMessage(baseScore + totalBonusPoints);
+  reset();
+});
 
 /* ── DEV SHORTCUTS (borrar antes de producción) ── */
 document.addEventListener('keydown', function(e){
