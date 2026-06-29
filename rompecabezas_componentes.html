@@ -356,6 +356,10 @@ html,body{
 <div id="ghost"></div>
 <div id="toast"></div>
 
+<!-- Música ambiente (igual que Palabras) + botón de mute -->
+<audio id="mus-ambient" src="Audio/Musica/ahorcado_ambient.mp3" loop preload="auto"></audio>
+<button id="mute-btn" onclick="toggleMute()" title="Silenciar / activar audio" aria-label="Silenciar audio" style="position:fixed;bottom:18px;right:18px;z-index:200;width:46px;height:46px;border-radius:50%;background:var(--card);border:1px solid var(--border);color:var(--accent);font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(0,0,0,.5)">🔊</button>
+
 <!-- ── Topbar ── -->
 <div id="topbar">
   <div id="title-block">
@@ -455,7 +459,7 @@ html,body{
     <div class="info-box-title" id="info-overlay-title"></div>
     <div class="info-box-sub" id="info-overlay-sub"></div>
     <div id="info-overlay-content"></div>
-    <button id="btn-info-continue">Ver pregunta →</button>
+    <button id="btn-info-continue">Continuar →</button>
   </div>
 </div>
 
@@ -463,8 +467,16 @@ html,body{
 <div id="bonus-overlay">
   <div class="bonus-box">
     <div class="bonus-icon">⭐</div>
-    <div class="bonus-badge" id="bonus-badge">Pregunta 1 de 3 · +50 pts</div>
+    <div class="bonus-badge" id="bonus-badge">Pregunta 1 de 3 · +50 pts extra</div>
     <h2 id="bonus-question"></h2>
+    <div id="bonus-timer-wrap" style="margin:0 auto 14px;width:54px;height:54px;position:relative">
+      <svg viewBox="0 0 54 54" style="position:absolute;inset:0;transform:rotate(-90deg)">
+        <circle cx="27" cy="27" r="23" fill="none" stroke="rgba(0,212,255,.15)" stroke-width="4"/>
+        <circle id="bonus-timer-ring" cx="27" cy="27" r="23" fill="none" stroke="var(--accent)" stroke-width="4"
+          stroke-dasharray="144.5" stroke-dashoffset="0" style="transition:stroke-dashoffset .9s linear,stroke .3s"/>
+      </svg>
+      <span id="bonus-timer-num" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:900;color:var(--accent)">7</span>
+    </div>
     <div class="options" id="bonus-options"></div>
     <div id="bonus-feedback"></div>
     <button id="btn-bonus-continue">Continuar →</button>
@@ -491,6 +503,7 @@ html,body{
         <span class="lbl">Puntuación</span>
       </div>
     </div>
+    <button id="btn-win-bonus" style="display:none;background:rgba(0,212,255,.1);border:2px solid var(--accent);color:var(--accent);border-radius:30px;padding:12px 30px;font-size:.9rem;font-weight:900;font-family:'Nunito',sans-serif;cursor:pointer;margin-top:6px;transition:background .18s,transform .15s">⭐ Responder preguntas extra</button>
     <button id="btn-win-reset">🔄 Jugar de nuevo</button>
   </div>
 </div>
@@ -620,10 +633,9 @@ document.documentElement.style.setProperty('--ph', PH+'px');
 ───────────────────────────────────────────── */
 var placed=0, attempts=0;
 var startTime=null, timerInterval=null, elapsedSecs=0;
-var bonusPoints=0;
-var currentPuzzleIdx=0, currentQuestionIdx=0;
-var lastAnswerWasCorrect=false;
+var currentPuzzleIdx=0;
 var totalAttempts=0, totalElapsedSecs=0, totalBonusPoints=0;
+var endBonusPool=[], endBonusIdx=0, bonusCountdown=null;
 
 /* ─────────────────────────────────────────────
    DOM
@@ -719,29 +731,19 @@ function getAC(){
   if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   return audioCtx;
 }
-function playSnap(){
-  var ac = getAC();
-  [600,900,1200].forEach(function(freq,i){
-    var osc=ac.createOscillator(), gain=ac.createGain();
-    osc.connect(gain); gain.connect(ac.destination);
-    osc.frequency.value=freq; osc.type='sine';
-    var t=ac.currentTime+i*0.06;
-    gain.gain.setValueAtTime(0,t);
-    gain.gain.linearRampToValueAtTime(0.18,t+0.02);
-    gain.gain.exponentialRampToValueAtTime(0.001,t+0.22);
-    osc.start(t); osc.stop(t+0.22);
-  });
+
+/* Música ambiente + mute (igual que los demás juegos) */
+var audioMuted=false;
+function startAmbient(){ if(audioMuted) return; var m=document.getElementById('mus-ambient'); if(m){ m.volume=0.3; m.play().catch(function(){}); } }
+document.addEventListener('pointerdown', startAmbient, {once:true});
+function toggleMute(){
+  audioMuted=!audioMuted;
+  var m=document.getElementById('mus-ambient');
+  if(m){ if(audioMuted){ m.pause(); } else { m.volume=0.3; m.play().catch(function(){}); } }
+  var b=document.getElementById('mute-btn'); if(b) b.textContent=audioMuted?'🔇':'🔊';
 }
-function playError(){
-  var ac=getAC(), osc=ac.createOscillator(), gain=ac.createGain();
-  osc.connect(gain); gain.connect(ac.destination);
-  osc.type='sawtooth';
-  osc.frequency.setValueAtTime(260,ac.currentTime);
-  osc.frequency.linearRampToValueAtTime(120,ac.currentTime+0.22);
-  gain.gain.setValueAtTime(0.14,ac.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.28);
-  osc.start(); osc.stop(ac.currentTime+0.28);
-}
+function playSnap(){ if(audioMuted)return; try{var a=new Audio('Audio/SFX/acierto.mp3');a.volume=0.55;a.play().catch(function(){});}catch(e){} }
+function playError(){ if(audioMuted)return; try{var a=new Audio('Audio/SFX/error.mp3');a.volume=0.8;a.play().catch(function(){});}catch(e){} }
 function playWin(){
   var ac=getAC();
   [523,659,784,1047,1319].forEach(function(freq,i){
@@ -755,42 +757,9 @@ function playWin(){
     osc.start(t); osc.stop(t+0.55);
   });
 }
-function playBonusCorrect(){
-  var ac=getAC();
-  [880,1108].forEach(function(freq,i){
-    var osc=ac.createOscillator(), gain=ac.createGain();
-    osc.connect(gain); gain.connect(ac.destination);
-    osc.frequency.value=freq; osc.type='sine';
-    var t=ac.currentTime+i*0.1;
-    gain.gain.setValueAtTime(0,t);
-    gain.gain.linearRampToValueAtTime(0.14,t+0.03);
-    gain.gain.exponentialRampToValueAtTime(0.001,t+0.35);
-    osc.start(t); osc.stop(t+0.35);
-  });
-}
-function playBonusWrong(){
-  var ac=getAC(), osc=ac.createOscillator(), gain=ac.createGain();
-  osc.connect(gain); gain.connect(ac.destination);
-  osc.type='triangle';
-  osc.frequency.setValueAtTime(200,ac.currentTime);
-  osc.frequency.linearRampToValueAtTime(100,ac.currentTime+0.3);
-  gain.gain.setValueAtTime(0.12,ac.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.35);
-  osc.start(); osc.stop(ac.currentTime+0.35);
-}
-function playCelebration(){
-  var ac=getAC();
-  [523,659,784,880,1047,1319].forEach(function(freq,i){
-    var osc=ac.createOscillator(), gain=ac.createGain();
-    osc.connect(gain); gain.connect(ac.destination);
-    osc.frequency.value=freq; osc.type='sine';
-    var t=ac.currentTime+i*0.09;
-    gain.gain.setValueAtTime(0,t);
-    gain.gain.linearRampToValueAtTime(0.2,t+0.03);
-    gain.gain.exponentialRampToValueAtTime(0.001,t+0.5);
-    osc.start(t); osc.stop(t+0.5);
-  });
-}
+function playBonusCorrect(){ if(audioMuted)return; try{var a=new Audio('Audio/SFX/acierto.mp3');a.volume=0.8;a.play().catch(function(){});}catch(e){} }
+function playBonusWrong(){ if(audioMuted)return; try{var a=new Audio('Audio/SFX/error.mp3');a.volume=0.8;a.play().catch(function(){});}catch(e){} }
+function playCelebration(){ if(audioMuted)return; try{var a=new Audio('Audio/SFX/life_up.mp3');a.volume=0.7;a.play().catch(function(){});}catch(e){} }
 
 /* ─────────────────────────────────────────────
    TOAST
@@ -875,10 +844,55 @@ function renderPuzzle(idx){
 
 }
 
+function stopBonusTimer(){
+  clearInterval(bonusCountdown);
+  bonusCountdown=null;
+}
+
+function startBonusTimer(onExpire){
+  var secs=7;
+  var ring=document.getElementById('bonus-timer-ring');
+  var num=document.getElementById('bonus-timer-num');
+  var full=144.5;
+  ring.style.stroke='var(--accent)';
+  ring.style.strokeDashoffset='0';
+  num.textContent=secs;
+  bonusCountdown=setInterval(function(){
+    secs--;
+    num.textContent=secs;
+    ring.style.strokeDashoffset=String(full*(1-secs/7));
+    if(secs<=2) ring.style.stroke='var(--red)';
+    if(secs<=0){
+      stopBonusTimer();
+      onExpire();
+    }
+  },1000);
+}
+
+function revealBonusAnswer(q, answered){
+  stopBonusTimer();
+  bonusOptions.querySelectorAll('.opt-btn').forEach(function(b){ b.disabled=true; });
+  bonusOptions.querySelector('.opt-btn[data-key="'+q.correct+'"]').classList.add('correct');
+  if(answered && answered.dataset.key===q.correct){
+    totalBonusPoints+=50;
+    bonusFeedback.textContent='⭐ ¡Correcto! +50 puntos extra';
+    bonusFeedback.className='success';
+    playBonusCorrect();
+  } else {
+    if(answered) answered.classList.add('wrong');
+    bonusFeedback.textContent='✗ Incorrecto — respuesta correcta marcada en verde.';
+    bonusFeedback.className='fail';
+    playBonusWrong();
+  }
+  bonusFeedback.style.display='block';
+  var isLast=(endBonusIdx===endBonusPool.length-1);
+  btnContinue.textContent=isLast?'Ver puntaje final →':'Siguiente pregunta →';
+  btnContinue.style.display='inline-block';
+}
+
 function showBonusQuestion(qIdx){
-  var q=PUZZLES[currentPuzzleIdx].bonus[qIdx];
-  var total=PUZZLES[currentPuzzleIdx].bonus.length;
-  bonusBadge.textContent='Pregunta '+(qIdx+1)+' de '+total+' · +50 pts';
+  var q=endBonusPool[qIdx];
+  bonusBadge.textContent='Pregunta '+(qIdx+1)+' de '+endBonusPool.length+' · +50 pts extra';
   bonusQuestion.textContent=q.q;
   bonusOptions.innerHTML=q.opts.map(function(o){
     return '<button class="opt-btn" data-key="'+o.key+'">'+o.key+')&nbsp; '+o.text+'</button>';
@@ -887,35 +901,27 @@ function showBonusQuestion(qIdx){
   bonusFeedback.textContent='';
   bonusFeedback.style.display='none';
   btnContinue.style.display='none';
+
+  startBonusTimer(function(){ revealBonusAnswer(q, null); });
+
   bonusOptions.querySelectorAll('.opt-btn').forEach(function(btn){
     btn.addEventListener('click',function(){
-      bonusOptions.querySelectorAll('.opt-btn').forEach(function(b){ b.disabled=true; });
-      var correct=q.correct;
-      lastAnswerWasCorrect=(btn.dataset.key===correct);
-      if(lastAnswerWasCorrect){
-        btn.classList.add('correct');
-        bonusPoints+=50;
-        bonusFeedback.textContent='⭐ ¡Correcto! +50 puntos';
-        bonusFeedback.className='success';
-        playBonusCorrect();
-        var isLast=(qIdx===total-1);
-        if(isLast){
-          btnContinue.textContent=(currentPuzzleIdx<PUZZLES.length-1)?'Siguiente imagen →':'Ver resultados →';
-        } else {
-          btnContinue.textContent='Siguiente pregunta →';
-        }
-      } else {
-        btn.classList.add('wrong');
-        bonusOptions.querySelector('.opt-btn[data-key="'+correct+'"]').classList.add('correct');
-        bonusFeedback.textContent='✗ Incorrecto. Debes repetir el rompecabezas.';
-        bonusFeedback.className='fail';
-        playBonusWrong();
-        btnContinue.textContent='↺ Reintentar imagen';
-      }
-      bonusFeedback.style.display='block';
-      btnContinue.style.display='inline-block';
+      revealBonusAnswer(q, btn);
     });
   });
+}
+
+function startEndBonus(){
+  var all=[];
+  PUZZLES.forEach(function(p){ p.bonus.forEach(function(b){ all.push(b); }); });
+  for(var i=all.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var tmp=all[i]; all[i]=all[j]; all[j]=tmp;
+  }
+  endBonusPool=all.slice(0,3);
+  endBonusIdx=0;
+  showBonusQuestion(0);
+  bonusOverlay.classList.add('show');
 }
 
 /* ─────────────────────────────────────────────
@@ -1128,45 +1134,26 @@ function showInfoOverlay(){
 
 document.getElementById('btn-info-continue').addEventListener('click',function(){
   infoOverlay.classList.remove('show');
-  bonusPoints=0;
-  currentQuestionIdx=0;
-  lastAnswerWasCorrect=false;
-  showBonusQuestion(0);
-  bonusOverlay.classList.add('show');
+  if(currentPuzzleIdx < PUZZLES.length-1){
+    currentPuzzleIdx++;
+    nextPuzzle();
+  } else {
+    showFinalWin();
+  }
 });
 
 btnContinue.addEventListener('click',function(){
-  if(!lastAnswerWasCorrect){
-    bonusOverlay.classList.remove('show');
-    retryPuzzle();
-    return;
-  }
-  var total=PUZZLES[currentPuzzleIdx].bonus.length;
-  if(currentQuestionIdx < total-1){
-    currentQuestionIdx++;
-    showBonusQuestion(currentQuestionIdx);
+  stopBonusTimer();
+  if(endBonusIdx < endBonusPool.length-1){
+    endBonusIdx++;
+    showBonusQuestion(endBonusIdx);
   } else {
     bonusOverlay.classList.remove('show');
-    totalBonusPoints+=bonusPoints;
-    if(currentPuzzleIdx < PUZZLES.length-1){
-      currentPuzzleIdx++;
-      nextPuzzle();
-    } else {
-      showFinalWin();
-    }
+    document.getElementById('win-score').textContent =
+      (PUZZLES.length * TOTAL * 10 + totalBonusPoints)+' pts';
+    document.getElementById('btn-win-bonus').style.display='none';
   }
 });
-
-function retryPuzzle(){
-  placed=0; attempts=0;
-  startTime=null; elapsedSecs=0;
-  timerDisplay.textContent='00:00';
-  statTime.textContent='00:00';
-  updateUI();
-  buildBoard();
-  buildPool();
-  showToast('↺ Repite el rompecabezas: '+PUZZLES[currentPuzzleIdx].title,'yellow',2500);
-}
 
 function nextPuzzle(){
   placed=0; attempts=0;
@@ -1206,11 +1193,27 @@ function showFinalWin(){
   document.getElementById('win-time').textContent     = fmtTime(totalElapsedSecs);
   document.getElementById('win-attempts').textContent = totalAttempts;
   var baseScore = PUZZLES.length * TOTAL * 10;
-  document.getElementById('win-score').textContent    = (baseScore + totalBonusPoints)+' pts';
+  document.getElementById('win-score').textContent    = baseScore+' pts';
+  document.getElementById('btn-win-bonus').style.display='inline-block';
   winOverlay.classList.add('show');
-  playWin();
+  try { var _mus=document.getElementById('mus-ambient'); if(_mus) _mus.pause(); } catch(e){}
+  if(!audioMuted){ try { var _winSfx = new Audio('Audio/SFX/victoria.mp3'); _winSfx.volume = 0.8; _winSfx.play().catch(function(){}); } catch(e){} }
   startConfetti();
+
+  if (window.parent !== window) {
+    window.parent.postMessage({
+      tipo: 'resultado_juego',
+      paso: 3,
+      puntos: baseScore,
+      completado: true,
+      tiempo_segundos: totalElapsedSecs
+    }, '*');
+  }
 }
+
+document.getElementById('btn-win-bonus').addEventListener('click',function(){
+  startEndBonus();
+});
 
 /* ─────────────────────────────────────────────
    CONFETTI
@@ -1255,14 +1258,15 @@ function startConfetti(){
 function reset(){
   placed=0; attempts=0;
   startTime=null; elapsedSecs=0;
-  bonusPoints=0; totalAttempts=0; totalElapsedSecs=0; totalBonusPoints=0;
-  currentPuzzleIdx=0; currentQuestionIdx=0; lastAnswerWasCorrect=false;
-  stopTimer();
+  totalAttempts=0; totalElapsedSecs=0; totalBonusPoints=0;
+  currentPuzzleIdx=0; endBonusPool=[]; endBonusIdx=0;
+  stopTimer(); stopBonusTimer();
   timerDisplay.textContent='00:00';
   statTime.textContent='00:00';
   winOverlay.classList.remove('show');
   bonusOverlay.classList.remove('show');
   infoOverlay.classList.remove('show');
+  document.getElementById('btn-win-bonus').style.display='none';
   ghostEl.style.display='none';
   confCanvas.style.display='none';
   dragPiece=null; dragId=null;
@@ -1273,6 +1277,30 @@ function reset(){
 
 document.getElementById('btn-reset').addEventListener('click',reset);
 document.getElementById('btn-win-reset').addEventListener('click',reset);
+
+/* ── DEV SHORTCUTS (borrar antes de producción) ── */
+document.addEventListener('keydown', function(e){
+  var n = parseInt(e.key);
+  if(n < 1 || n > 5) return;
+  if(currentPuzzleIdx !== n-1) return;
+  beginTimer();
+  for(var id=0; id<TOTAL-1; id++){
+    var piece = poolEl.querySelector('.piece[data-id="'+id+'"]');
+    if(!piece) continue;
+    var slot = boardEl.querySelector('.slot[data-index="'+id+'"]');
+    if(!slot || slot.classList.contains('filled')) continue;
+    slot.innerHTML='';
+    slot.classList.add('filled');
+    piece.classList.add('locked');
+    piece.style.opacity='1';
+    slot.appendChild(piece);
+    placed++;
+    attempts++;
+    totalAttempts++;
+  }
+  updateUI();
+  showToast('⚡ DEV: 19 piezas colocadas','yellow',1800);
+});
 
 window.addEventListener('resize',function(){
   confCanvas.width=window.innerWidth;
