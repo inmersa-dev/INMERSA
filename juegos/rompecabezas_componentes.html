@@ -1278,6 +1278,30 @@ function reset(){
 document.getElementById('btn-reset').addEventListener('click',reset);
 document.getElementById('btn-win-reset').addEventListener('click',reset);
 
+/* ── DEV SHORTCUTS (borrar antes de producción) ── */
+document.addEventListener('keydown', function(e){
+  var n = parseInt(e.key);
+  if(n < 1 || n > 5) return;
+  if(currentPuzzleIdx !== n-1) return;
+  beginTimer();
+  for(var id=0; id<TOTAL-1; id++){
+    var piece = poolEl.querySelector('.piece[data-id="'+id+'"]');
+    if(!piece) continue;
+    var slot = boardEl.querySelector('.slot[data-index="'+id+'"]');
+    if(!slot || slot.classList.contains('filled')) continue;
+    slot.innerHTML='';
+    slot.classList.add('filled');
+    piece.classList.add('locked');
+    piece.style.opacity='1';
+    slot.appendChild(piece);
+    placed++;
+    attempts++;
+    totalAttempts++;
+  }
+  updateUI();
+  showToast('⚡ DEV: 19 piezas colocadas','yellow',1800);
+});
+
 window.addEventListener('resize',function(){
   confCanvas.width=window.innerWidth;
   confCanvas.height=window.innerHeight;
