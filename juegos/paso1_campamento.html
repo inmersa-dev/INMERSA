@@ -143,18 +143,18 @@
       background:var(--bubble-bg);
       border:2.5px solid var(--bubble-bd);
       border-radius:18px;
-      padding:9px 13px 7px;
-      width:230px;
-      max-width:82vw;
+      padding:13px 18px 11px;
+      width:270px;
+      max-width:85vw;
       box-shadow:3px 4px 0 rgba(0,0,0,.3);
       position:relative;
     }
     .speech-bubble.show { display:block; }
 
     .bubble-speaker {
-      font-size:10px; font-weight:900;
+      font-size:12px; font-weight:900;
       letter-spacing:.09em; text-transform:uppercase;
-      margin-bottom:4px;
+      margin-bottom:5px;
     }
     .globo-bubble  .bubble-speaker { color:var(--c-globo); }
     .sina-bubble   .bubble-speaker { color:var(--c-sina); }
@@ -162,9 +162,9 @@
     .player-bubble .bubble-speaker { color:var(--c-player); }
 
     .bubble-text {
-      font-size:13px; font-weight:700;
+      font-size:15px; font-weight:700;
       color:#111827; line-height:1.55;
-      min-height:32px;
+      min-height:36px;
     }
     .bubble-tap {
       display:none;
@@ -233,25 +233,25 @@
 
     /* SINA — sprite sheet, 3 poses */
     .sina-sprite {
-      width:90px; height:158px;
+      width:130px; height:200px;
       background-image:url('../Imagenes/char_sina.webp');
       background-size:300% auto;
-      background-position:0% 38%;
+      background-position:0% 50%;
       mix-blend-mode:multiply;
       overflow:hidden;
-      clip-path:inset(8% 0 9% 0);
+      clip-path:inset(0 0 6% 0);
     }
-    .sina-sprite[data-pose="happy"]     { background-position:50% 38%; }
-    .sina-sprite[data-pose="explaining"]{ background-position:100% 38%; }
+    .sina-sprite[data-pose="happy"]     { background-position:50% 50%; }
+    .sina-sprite[data-pose="explaining"]{ background-position:100% 50%; }
+    #char-sina .sprite-area { height:200px; }
 
-    /* THOMAS — single PNG, white bg removed with multiply */
+    /* THOMAS — single PNG */
     .thomas-sprite {
-      width:88px; height:155px;
+      width:110px; height:185px;
       background-image:url('../Imagenes/char_thomas.png');
       background-size:contain;
       background-position:center bottom;
       background-repeat:no-repeat;
-      mix-blend-mode:multiply;
     }
 
     /* ── Player slot (centered, no sprite) ─────────────────────── */
@@ -709,7 +709,7 @@ function buildScript() {
     { moment:0, speaker:'NARRADOR', chars:[], speaking:'', bg:'bg-campamento',
       text:'*El sol aún no ha salido. Llegas al Campamento Vital con tu mochila al hombro.*' },
     { moment:0, speaker:'GLOBO', chars:['globo'], speaking:'GLOBO', bg:'bg-campamento', pose:'neutral',
-      text:'¡Eh! ¡Por fin llegas! Soy GLOBO, tu guía aquí en el campamento. Y tú… ¿cómo te llamas?' },
+      text:'¡Eh! ¡Por fin llegas! Soy GLOBO, ¡el guía favorito de todos en este campamento! Y tú… ¿cómo te llamas?' },
     { moment:0, speaker:'GLOBO', chars:['globo'], speaking:'GLOBO', bg:'bg-campamento', pose:'confused',
       text:'…anda, dime tu nombre.', action:'input_name' },
     { moment:0, speaker:'GLOBO', chars:['globo'], speaking:'GLOBO', bg:'bg-campamento', pose:'happy',
@@ -743,9 +743,9 @@ function buildScript() {
     // ── Momento 3: Resultado Thomas ────────────────────────────
     { moment:3, speaker:'SINA', chars:['sina','thomas'], speaking:'SINA', bg:'bg-resultado', pose:'neutral',
       text:'Thomas, tu resultado llegó.' },
-    { moment:3, speaker:'SINA', chars:['sina','thomas'], speaking:'SINA', bg:'bg-resultado', pose:'explaining',
-      text:'Tienes 3.2 millones de eritrocitos por μL. Lo normal es 4.5 a 6 millones.',
-      action:'info', infoText:'⚠️ Eritrocitos: 3.2 M/μL (ref: 4.5–6 M/μL). Nivel bajo → posible ANEMIA. La sangre no transporta suficiente O₂: fatiga, palidez, falta de aire.' },
+    { moment:3, speaker:'SINA', chars:['sina','thomas'], speaking:'SINA', bg:'bg-resultado', pose:'confused',
+      text:'Thomas… tus eritrocitos están muy por debajo de lo normal. Esto es muy serio.',
+      action:'info', infoText:'⚠️ ERITROCITOS MUY BAJOS → posible ANEMIA. La sangre no puede transportar suficiente oxígeno: fatiga, palidez, falta de aire.' },
     { moment:3, speaker:'THOMAS', chars:['sina','thomas'], speaking:'THOMAS', bg:'bg-resultado',
       text:'Yo… ya lo sabía. Por eso me canso tanto. Pero no quería faltar al campamento.' },
     { moment:3, speaker:'SINA', chars:['sina','thomas'], speaking:'SINA', bg:'bg-resultado', pose:'happy',
@@ -755,11 +755,11 @@ function buildScript() {
     { moment:4, speaker:'NARRADOR', chars:[], speaking:'', bg:'bg-equipo',
       text:'*Llega el momento de formar los equipos. GLOBO lee los nombres en voz alta.*' },
     { moment:4, speaker:'GLOBO', chars:['globo','thomas'], speaking:'GLOBO', bg:'bg-equipo', pose:'neutral',
-      text:()=>`Equipo uno: ${p()}, Valentina, Mateo… y Thomas.` },
+      text:()=>`Equipo uno: ${p()}, Valentina y Mateo.` },
     { moment:4, speaker:'NARRADOR', chars:['globo','thomas'], speaking:'', bg:'bg-equipo',
-      text:'*Nadie se mueve hacia Thomas. Él mira el suelo.*' },
+      text:'*Thomas no ha sido llamado. Espera en silencio mirando el suelo. Nadie lo busca.*' },
     { moment:4, speaker:'GLOBO', chars:['globo','thomas'], speaking:'GLOBO', bg:'bg-equipo', pose:'confused',
-      text:()=>`${p()}, Thomas está en tu equipo. ¿Qué haces?`, action:'choice_thomas' },
+      text:()=>`${p()}, aún hay un lugar en tu equipo. Thomas está solo. ¿Qué haces?`, action:'choice_thomas' },
 
     // ── Momento 5: Ramificación ─────────────────────────────────
     { moment:5, speaker:'', chars:[], speaking:'', bg:'bg-equipo', text:'', action:'branch_thomas' },
