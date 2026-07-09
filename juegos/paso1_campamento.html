@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>INMERSA — Bienvenida al Campamento</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:      #0A1628;
+      --bg-card: #0F2236;
+      --accent:  #00D4FF;
+      --teal:    #00C9A7;
+      --red:     #C0392B;
+      --yellow:  #F5C518;
+      --text:    #FFFFFF;
+      --text-sec:#8899AA;
+      --border:  rgba(136,153,170,0.2);
+      --radius:  14px;
+
+      --c-globo:  #E74C3C;
+      --c-sina:   #00C9A7;
+      --c-thomas: #A0AEC0;
+      --c-narrator: #F5C518;
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    html, body {
+      width:100%; height:100%;
+      background: var(--bg);
+      font-family: 'Nunito', system-ui, sans-serif;
+      color: var(--text);
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    /* ── Loading ── */
+    #loading {
+      position:fixed; inset:0; z-index:999;
+      display:flex; align-items:center; justify-content:center;
+      background: var(--bg);
+      flex-direction:column; gap:16px;
+    }
+    .spin {
+      width:36px; height:36px;
+      border:3px solid rgba(0,212,255,0.15);
+      border-top-color: var(--accent);
+      border-radius:50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    #loading p { color:var(--text-sec); font-size:14px; }
+
+    /* ── Scene wrapper ── */
+    #scene {
+      position:fixed; inset:0;
+      display:flex; flex-direction:column;
+      background: var(--bg);
+      background-image: radial-gradient(circle at 50% 0%, rgba(0,212,255,0.06), transparent 60%);
+    }
+
+    /* ── Scene background ── */
+    #scene-bg {
+      position:absolute; inset:0; z-index:0;
+      transition: opacity 0.5s;
+    }
+    .bg-campamento { background: linear-gradient(180deg, #0d2b1e 0%, #0A1628 60%); }
+    .bg-fila       { background: linear-gradient(180deg, #1a1a2e 0%, #0A1628 60%); }
+    .bg-tienda     { background: linear-gradient(180deg, #1a0a2e 0%, #0A1628 60%); }
+    .bg-resultado  { background: linear-gradient(180deg, #0d1a2e 0%, #0A1628 60%); }
+    .bg-equipo     { background: linear-gradient(180deg, #0a2020 0%, #0A1628 60%); }
+    .bg-decision   { background: linear-gradient(180deg, #2e0a0a 0%, #0A1628 60%); }
+
+    /* ── Stars decoration ── */
+    .stars {
+      position:absolute; inset:0; overflow:hidden; pointer-events:none;
+    }
+    .star {
+      position:absolute;
+      background:white; border-radius:50%;
+      animation: twinkle 3s ease-in-out infinite alternate;
+    }
+    @keyframes twinkle { from { opacity:0.2; } to { opacity:0.9; } }
+
+    /* ── Characters area ── */
+    #chars-area {
+      position:absolute;
+      bottom:220px; left:0; right:0;
+      display:flex; align-items:flex-end; justify-content:center;
+      gap:24px; padding:0 24px;
+      z-index:1;
+    }
+    .char-slot {
+      display:flex; flex-direction:column; align-items:center; gap:8px;
+      opacity:0;
+      transform: translateY(20px);
+      transition: opacity 0.4s, transform 0.4s;
+    }
+    .char-slot.visible { opacity:1; transform:translateY(0); }
+    .char-slot.speaking { filter: brightness(1.15); }
+    .char-slot:not(.speaking) { filter: brightness(0.5); }
+
+    .char-avatar {
+      width:80px; height:80px;
+      border-radius:50%;
+      border:3px solid transparent;
+      display:flex; align-items:center; justify-content:center;
+      font-size:36px;
+      position:relative;
+      background: var(--bg-card);
+    }
+    .char-avatar.globo  { border-color: var(--c-globo);  background: rgba(231,76,60,0.15); }
+    .char-avatar.sina   { border-color: var(--c-sina);   background: rgba(0,201,167,0.15); }
+    .char-avatar.thomas { border-color: var(--c-thomas); background: rgba(160,174,192,0.15); }
+
+    .char-name-tag {
+      font-size:11px; font-weight:800;
+      letter-spacing:0.05em;
+      padding:2px 8px;
+      border-radius:20px;
+      background: var(--bg-card);
+    }
+    .char-name-tag.globo  { color:var(--c-globo);  border:1px solid var(--c-globo); }
+    .char-name-tag.sina   { color:var(--c-sina);   border:1px solid var(--c-sina); }
+    .char-name-tag.thomas { color:var(--c-thomas); border:1px solid var(--c-thomas); }
+
+    /* ── Dialogue box ── */
+    #dialogue-box {
+      position:absolute;
+      bottom:0; left:0; right:0;
+      z-index:2;
+      padding:12px 16px 28px;
+      background: linear-gradient(0deg, rgba(10,22,40,0.98) 60%, rgba(10,22,40,0.7) 100%);
+      min-height:200px;
+      display:flex; flex-direction:column; gap:8px;
+    }
+    #speaker-name {
+      font-size:13px; font-weight:800;
+      letter-spacing:0.08em;
+      text-transform:uppercase;
+      min-height:18px;
+    }
+    #dialogue-text {
+      font-size:15px; line-height:1.6; font-weight:600;
+      min-height:72px;
+      flex:1;
+    }
+    #tap-hint {
+      align-self:flex-end;
+      font-size:12px; color:var(--text-sec);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
+
+    /* ── Input form ── */
+    #input-form {
+      display:none;
+      flex-direction:column; gap:12px;
+      padding:12px 0 4px;
+    }
+    #input-form input {
+      background: rgba(255,255,255,0.06);
+      border:2px solid var(--border);
+      border-radius:10px;
+      color:var(--text);
+      font-family:'Nunito',sans-serif;
+      font-size:16px; font-weight:700;
+      padding:12px 16px;
+      outline:none;
+      transition: border-color 0.2s;
+    }
+    #input-form input:focus { border-color:var(--accent); }
+    #input-form input::placeholder { color:var(--text-sec); font-weight:400; }
+    #input-form .confirm-btn {
+      background: var(--accent);
+      color:#000; font-family:'Nunito',sans-serif;
+      font-size:15px; font-weight:800;
+      padding:12px; border:none; border-radius:10px;
+      cursor:pointer;
+      transition: opacity 0.2s;
+    }
+    #input-form .confirm-btn:disabled { opacity:0.4; }
+
+    /* ── Choices ── */
+    #choices {
+      display:none;
+      flex-direction:column; gap:8px;
+      padding:8px 0 4px;
+      max-height:240px;
+      overflow-y:auto;
+    }
+    .choice-btn {
+      background: rgba(255,255,255,0.05);
+      border:1.5px solid var(--border);
+      border-radius:10px;
+      color:var(--text); font-family:'Nunito',sans-serif;
+      font-size:14px; font-weight:700;
+      padding:12px 16px;
+      text-align:left; cursor:pointer;
+      transition: background 0.2s, border-color 0.2s;
+      display:flex; align-items:center; gap:10px;
+    }
+    .choice-btn:hover, .choice-btn:active {
+      background: rgba(0,212,255,0.1);
+      border-color: var(--accent);
+    }
+    .choice-btn.thomas-yes {
+      border-color:var(--teal);
+      color:var(--teal);
+    }
+    .choice-btn.thomas-yes:hover { background:rgba(0,201,167,0.12); }
+    .choice-btn.thomas-no {
+      border-color:var(--c-globo);
+      color:#ff8080;
+    }
+    .choice-btn.thomas-no:hover { background:rgba(231,76,60,0.12); }
+
+    /* ── Info card (educational) ── */
+    #info-card {
+      display:none;
+      background: rgba(0,212,255,0.06);
+      border:1.5px solid rgba(0,212,255,0.25);
+      border-radius:12px;
+      padding:12px 14px;
+      margin-top:4px;
+      font-size:13px; line-height:1.6;
+    }
+    #info-card .info-title {
+      font-size:11px; font-weight:800;
+      letter-spacing:0.08em; text-transform:uppercase;
+      color:var(--accent); margin-bottom:6px;
+    }
+    #info-card .info-body { color:#cce8ff; font-weight:600; }
+
+    /* ── Result overlay ── */
+    #result-overlay {
+      position:fixed; inset:0; z-index:50;
+      background:rgba(10,22,40,0.95);
+      display:none;
+      flex-direction:column;
+      align-items:center; justify-content:center;
+      gap:20px; padding:32px;
+      text-align:center;
+    }
+    #result-overlay.show { display:flex; }
+    #result-overlay .big-icon { font-size:64px; }
+    #result-overlay h2 { font-size:24px; font-weight:900; }
+    #result-overlay p  { font-size:15px; color:var(--text-sec); line-height:1.6; }
+    #result-overlay .finish-btn {
+      margin-top:8px;
+      background: var(--accent); color:#000;
+      font-family:'Nunito',sans-serif; font-size:16px; font-weight:800;
+      padding:14px 36px; border:none; border-radius:12px;
+      cursor:pointer;
+    }
+
+    /* ── Toast ── */
+    #toast {
+      position:fixed; top:20px; left:50%; transform:translateX(-50%);
+      background:var(--bg-card); border:1px solid var(--accent);
+      color:var(--text); font-size:14px; font-weight:700;
+      padding:10px 20px; border-radius:10px;
+      z-index:100; opacity:0;
+      transition: opacity 0.3s;
+      pointer-events:none; white-space:nowrap;
+    }
+    #toast.show { opacity:1; }
+
+    /* ── ECG heartbeat decoration ── */
+    #ecg-line {
+      position:absolute; bottom:210px; left:0; right:0;
+      height:30px; z-index:1; pointer-events:none; opacity:0.12;
+    }
+
+    /* ── Progress dots ── */
+    #progress-dots {
+      position:absolute; top:16px; left:50%; transform:translateX(-50%);
+      display:flex; gap:6px; z-index:3;
+    }
+    .pdot {
+      width:8px; height:8px; border-radius:50%;
+      background: var(--border);
+      transition: background 0.3s, transform 0.3s;
+    }
+    .pdot.done { background:var(--teal); }
+    .pdot.active { background:var(--accent); transform:scale(1.3); }
+  </style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loading">
+  <div class="spin"></div>
+  <p>Cargando el campamento…</p>
+</div>
+
+<!-- Progress dots -->
+<div id="progress-dots">
+  <div class="pdot" id="pd0"></div>
+  <div class="pdot" id="pd1"></div>
+  <div class="pdot" id="pd2"></div>
+  <div class="pdot" id="pd3"></div>
+  <div class="pdot" id="pd4"></div>
+  <div class="pdot" id="pd5"></div>
+</div>
+
+<!-- Scene -->
+<div id="scene">
+  <div id="scene-bg" class="bg-campamento">
+    <div class="stars" id="stars-layer"></div>
+  </div>
+
+  <!-- ECG decoration -->
+  <svg id="ecg-line" viewBox="0 0 400 30" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <polyline points="0,15 60,15 70,5 80,25 90,10 100,15 160,15 170,5 180,25 190,10 200,15 260,15 270,5 280,25 290,10 300,15 400,15"
+      fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+  </svg>
+
+  <!-- Characters -->
+  <div id="chars-area">
+    <div class="char-slot" id="char-globo">
+      <div class="char-avatar globo">🔴</div>
+      <div class="char-name-tag globo">GLOBO</div>
+    </div>
+    <div class="char-slot" id="char-sina">
+      <div class="char-avatar sina">🩺</div>
+      <div class="char-name-tag sina">SINA</div>
+    </div>
+    <div class="char-slot" id="char-thomas">
+      <div class="char-avatar thomas">👦</div>
+      <div class="char-name-tag thomas">THOMAS</div>
+    </div>
+  </div>
+
+  <!-- Dialogue box -->
+  <div id="dialogue-box">
+    <div id="speaker-name"></div>
+    <div id="dialogue-text"></div>
+
+    <!-- Name input -->
+    <div id="input-form">
+      <input type="text" id="name-input" placeholder="Escribe tu nombre…" maxlength="20" autocomplete="off" />
+      <button class="confirm-btn" id="confirm-name" disabled>Confirmar ✓</button>
+    </div>
+
+    <!-- Info card (educational) -->
+    <div id="info-card">
+      <div class="info-title">💡 Dato científico</div>
+      <div class="info-body" id="info-body-text"></div>
+    </div>
+
+    <!-- Choices -->
+    <div id="choices" id="choices-container"></div>
+
+    <div id="tap-hint">Toca para continuar ▶</div>
+  </div>
+</div>
+
+<!-- Result overlay -->
+<div id="result-overlay">
+  <div class="big-icon">🏕️</div>
+  <h2 id="result-title">¡Bienvenido al campamento!</h2>
+  <p id="result-desc">Tu aventura en INMERSA ha comenzado.</p>
+  <button class="finish-btn" id="finish-btn">Continuar →</button>
+</div>
+
+<!-- Toast -->
+<div id="toast" id="toast-el"></div>
+
+<script type="module">
+import { initializeApp }       from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, updateDoc, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// ── Firebase ──────────────────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey:            "AIzaSyARclfJXsjDISiT2JRjzwkoUrmPpGqpho4",
+  authDomain:        "inmersa-mvp.firebaseapp.com",
+  projectId:         "inmersa-mvp",
+  storageBucket:     "inmersa-mvp.firebasestorage.app",
+  messagingSenderId: "554325663285",
+  appId:             "1:554325663285:web:332e863d1e39e49783db7c",
+  measurementId:     "G-RQPE6SVTDP"
+};
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+let uid    = null;
+
+// ── State ─────────────────────────────────────────────────────────────────
+const S = {
+  moment: 0,        // 0-based moment index
+  lineIdx: 0,       // line within current moment
+  playerName: "",
+  personalidad: "",
+  greetingThomas: "",
+  decisionThomas: "",  // "aceptar" | "rechazar"
+  typing: false,
+  awaitingInput: false,
+  awaitingChoice: false,
+  typeTimeout: null,
+};
+
+// ── DOM refs ──────────────────────────────────────────────────────────────
+const $bg       = document.getElementById("scene-bg");
+const $chars    = {
+  globo:  document.getElementById("char-globo"),
+  sina:   document.getElementById("char-sina"),
+  thomas: document.getElementById("char-thomas"),
+};
+const $speaker  = document.getElementById("speaker-name");
+const $text     = document.getElementById("dialogue-text");
+const $tapHint  = document.getElementById("tap-hint");
+const $inputForm = document.getElementById("input-form");
+const $nameInput = document.getElementById("name-input");
+const $confirmName = document.getElementById("confirm-name");
+const $infoCard = document.getElementById("info-card");
+const $infoBody = document.getElementById("info-body-text");
+const $choices  = document.getElementById("choices");
+const $loading  = document.getElementById("loading");
+const $result   = document.getElementById("result-overlay");
+const $resTitle = document.getElementById("result-title");
+const $resDesc  = document.getElementById("result-desc");
+const $finishBtn = document.getElementById("finish-btn");
+const $toast    = document.getElementById("toast");
+const dots      = [0,1,2,3,4,5].map(i => document.getElementById("pd"+i));
+
+// ── Stars ─────────────────────────────────────────────────────────────────
+(function buildStars(){
+  const layer = document.getElementById("stars-layer");
+  for(let i=0;i<60;i++){
+    const s = document.createElement("div");
+    s.className = "star";
+    const size = Math.random()*2+1;
+    s.style.cssText = `
+      width:${size}px; height:${size}px;
+      top:${Math.random()*70}%;
+      left:${Math.random()*100}%;
+      animation-delay:${Math.random()*3}s;
+      animation-duration:${2+Math.random()*3}s;
+    `;
+    layer.appendChild(s);
+  }
+})();
+
+// ── Character helpers ──────────────────────────────────────────────────────
+const CHAR_COLORS = {
+  GLOBO:   "var(--c-globo)",
+  SINA:    "var(--c-sina)",
+  THOMAS:  "var(--c-thomas)",
+  NARRADOR:"var(--c-narrator)",
+  "":      "var(--text-sec)",
+};
+
+function showChars(visible=[], speaking=""){
+  // Hide all first
+  Object.keys($chars).forEach(k=>{
+    $chars[k].classList.remove("visible","speaking");
+  });
+  visible.forEach(name=>{
+    const key = name.toLowerCase();
+    if($chars[key]){
+      $chars[key].classList.add("visible");
+      if(name.toUpperCase()===speaking.toUpperCase())
+        $chars[key].classList.add("speaking");
+    }
+  });
+}
+
+function setBg(cls){
+  $bg.className = cls;
+}
+
+// ── Typewriter ─────────────────────────────────────────────────────────────
+function typeWrite(txt, onDone){
+  S.typing = true;
+  $tapHint.style.display = "none";
+  $text.textContent = "";
+  let i = 0;
+  clearTimeout(S.typeTimeout);
+  function next(){
+    if(i < txt.length){
+      $text.textContent += txt[i++];
+      S.typeTimeout = setTimeout(next, 22);
+    } else {
+      S.typing = false;
+      if(onDone) onDone();
+    }
+  }
+  next();
+}
+
+function skipTypewrite(){
+  // If currently typing, show full text immediately
+  clearTimeout(S.typeTimeout);
+  S.typing = false;
+}
+
+// ── Progress dots ──────────────────────────────────────────────────────────
+function updateDots(momentIdx){
+  dots.forEach((d,i)=>{
+    d.className = "pdot" + (i < momentIdx ? " done" : i===momentIdx ? " active" : "");
+  });
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+function toast(msg){
+  $toast.textContent = msg;
+  $toast.classList.add("show");
+  setTimeout(()=>$toast.classList.remove("show"), 2500);
+}
+
+// ── Input form ─────────────────────────────────────────────────────────────
+$nameInput.addEventListener("input", ()=>{
+  $confirmName.disabled = $nameInput.value.trim().length < 2;
+});
+$confirmName.addEventListener("click", ()=>{
+  const name = $nameInput.value.trim();
+  if(name.length < 2) return;
+  S.playerName = name;
+  hideInputForm();
+  advanceScript();
+});
+$nameInput.addEventListener("keydown", e=>{
+  if(e.key==="Enter" && !$confirmName.disabled) $confirmName.click();
+});
+
+function showInputForm(){
+  S.awaitingInput = true;
+  $inputForm.style.display = "flex";
+  $tapHint.style.display = "none";
+  setTimeout(()=>$nameInput.focus(), 100);
+}
+function hideInputForm(){
+  S.awaitingInput = false;
+  $inputForm.style.display = "none";
+}
+
+// ── Choices ────────────────────────────────────────────────────────────────
+function showChoices(options){
+  S.awaitingChoice = true;
+  $choices.style.display = "flex";
+  $choices.innerHTML = "";
+  $tapHint.style.display = "none";
+  options.forEach(opt=>{
+    const btn = document.createElement("button");
+    btn.className = "choice-btn" + (opt.cls ? " "+opt.cls : "");
+    btn.innerHTML = (opt.icon ? `<span>${opt.icon}</span>` : "") + opt.label;
+    btn.addEventListener("click", ()=>{
+      hideChoices();
+      opt.onSelect();
+    });
+    $choices.appendChild(btn);
+  });
+}
+function hideChoices(){
+  S.awaitingChoice = false;
+  $choices.style.display = "none";
+  $choices.innerHTML = "";
+}
+
+// ── Info card ──────────────────────────────────────────────────────────────
+function showInfo(text){
+  $infoBody.textContent = text;
+  $infoCard.style.display = "block";
+}
+function hideInfo(){
+  $infoCard.style.display = "none";
+}
+
+// ── Script engine ──────────────────────────────────────────────────────────
+// Each "moment" is a list of steps.
+// Step shape: { speaker, text, chars, speaking, bg, action }
+// action types: "input_name", "choice_personalidad", "info", "choice_saludo",
+//               "choice_thomas", "branch_thomas", "end"
+
+let SCRIPT = [];
+
+function buildScript(){
+  const p = () => S.playerName || "Tú";
+  const pers = () => S.personalidad;
+
+  SCRIPT = [
+    // ────── MOMENTO 0: GLOBO da la bienvenida ──────────────────────────────
+    { moment:0, speaker:"NARRADOR",  chars:[], speaking:"", bg:"bg-campamento",
+      text:"*El sol aún no ha salido. Llegas al campamento INMERSA con tu mochila al hombro.*" },
+    { moment:0, speaker:"GLOBO",     chars:["globo"], speaking:"GLOBO", bg:"bg-campamento",
+      text:"¡Eh! ¡Por fin llegas! Soy GLOBO, tu guía aquí en el campamento. Y tú… ¿cómo te llamas?" },
+    { moment:0, speaker:"GLOBO",     chars:["globo"], speaking:"GLOBO", bg:"bg-campamento",
+      text:"…anda, dime tu nombre.", action:"input_name" },
+    { moment:0, speaker:"GLOBO",     chars:["globo"], speaking:"GLOBO", bg:"bg-campamento",
+      text:()=>`¡${p()}! Buen nombre. Aquí aprenderás cómo funciona la sangre estudiando casos reales de pacientes.` },
+    { moment:0, speaker:"GLOBO",     chars:["globo"], speaking:"GLOBO", bg:"bg-campamento",
+      text:"Antes de empezar, dime: ¿cómo te describes a ti mismo/a?",
+      action:"choice_personalidad" },
+    // reacción dinámica — se rellena en tiempo de ejecución
+    { moment:0, speaker:"GLOBO",     chars:["globo"], speaking:"GLOBO", bg:"bg-campamento",
+      text:()=>reactionGlobo() },
+
+    // ────── MOMENTO 1: FILA — cosmético (cómo saludas a Thomas) ───────────
+    { moment:1, speaker:"NARRADOR",  chars:[], speaking:"", bg:"bg-fila",
+      text:"*Te unes a la fila de registro. Delante hay un chico de cabello negro que no conoce a nadie.*" },
+    { moment:1, speaker:"NARRADOR",  chars:["thomas"], speaking:"", bg:"bg-fila",
+      text:"*Es Thomas. Parece nervioso. ¿Cómo lo saludas?*",
+      action:"choice_saludo" },
+    { moment:1, speaker:"THOMAS",    chars:["thomas"], speaking:"THOMAS", bg:"bg-fila",
+      text:()=>thomasGreetResponse() },
+    { moment:1, speaker:"THOMAS",    chars:["thomas"], speaking:"THOMAS", bg:"bg-fila",
+      text:"Gracias… es mi primera vez en un campamento así." },
+
+    // ────── MOMENTO 2: TIENDA DE SINA — análisis de sangre ────────────────
+    { moment:2, speaker:"NARRADOR",  chars:[], speaking:"", bg:"bg-tienda",
+      text:"*En la tienda principal, la doctora SINA os explica la primera prueba: un análisis de sangre básico.*" },
+    { moment:2, speaker:"SINA",      chars:["sina"], speaking:"SINA", bg:"bg-tienda",
+      text:()=>`Bienvenidos. Hoy empezamos con lo fundamental: los componentes de la sangre. ${p()}, ¿sabes qué son los eritrocitos?` },
+    { moment:2, speaker:"SINA",      chars:["sina"], speaking:"SINA", bg:"bg-tienda",
+      text:"Los eritrocitos — también llamados glóbulos rojos — son las células que transportan oxígeno por todo tu cuerpo.",
+      action:"info",
+      infoText:"🔴 ERITROCITO = Glóbulo rojo. Función principal: transportar O₂ desde los pulmones hasta los tejidos. Contienen hemoglobina, la proteína que captura el oxígeno. Un adulto sano tiene entre 4.5 y 6 millones por μL de sangre." },
+    { moment:2, speaker:"SINA",      chars:["sina"], speaking:"SINA", bg:"bg-tienda",
+      text:"Su cantidad nos dice mucho sobre la salud de una persona. Un nivel bajo puede significar anemia… o algo más serio." },
+
+    // ────── MOMENTO 3: RESULTADO DE THOMAS ────────────────────────────────
+    { moment:3, speaker:"SINA",      chars:["sina","thomas"], speaking:"SINA", bg:"bg-resultado",
+      text:"Thomas, tu resultado llegó." },
+    { moment:3, speaker:"SINA",      chars:["sina","thomas"], speaking:"SINA", bg:"bg-resultado",
+      text:"Tienes 3.2 millones de eritrocitos por μL. Lo normal sería entre 4.5 y 6 millones.",
+      action:"info",
+      infoText:"⚠️ Nivel de eritrocitos: 3.2 M/μL (referencia: 4.5–6 M/μL). Este valor bajo puede indicar ANEMIA — una condición en la que la sangre no transporta suficiente oxígeno, causando fatiga, palidez y falta de aire." },
+    { moment:3, speaker:"THOMAS",    chars:["sina","thomas"], speaking:"THOMAS", bg:"bg-resultado",
+      text:"Yo… ya lo sabía. Por eso me canso tanto. Pero no quería faltar al campamento." },
+    { moment:3, speaker:"SINA",      chars:["sina","thomas"], speaking:"SINA", bg:"bg-resultado",
+      text:"Gracias por venir de todas formas, Thomas. Tu caso nos va a enseñar mucho a todos." },
+
+    // ────── MOMENTO 4: FORMACIÓN DE EQUIPOS ───────────────────────────────
+    { moment:4, speaker:"NARRADOR",  chars:[], speaking:"", bg:"bg-equipo",
+      text:"*Llega el momento de formar los equipos de trabajo. GLOBO lee los nombres en voz alta.*" },
+    { moment:4, speaker:"GLOBO",     chars:["globo","thomas"], speaking:"GLOBO", bg:"bg-equipo",
+      text:()=>`Equipo uno: ${p()}, Valentina, Mateo… y Thomas.` },
+    { moment:4, speaker:"NARRADOR",  chars:["globo","thomas"], speaking:"", bg:"bg-equipo",
+      text:"*Nadie se mueve hacia Thomas. Él mira el suelo.*" },
+    { moment:4, speaker:"GLOBO",     chars:["globo","thomas"], speaking:"GLOBO", bg:"bg-equipo",
+      text:()=>`${p()}, Thomas está en tu equipo. ¿Qué haces?`,
+      action:"choice_thomas" },
+
+    // ────── MOMENTO 5: RAMIFICACIÓN (rellena según S.decisionThomas) ───────
+    { moment:5, speaker:"", chars:[], speaking:"", bg:"bg-equipo",
+      text:"", action:"branch_thomas" },
+  ];
+}
+
+// ── Dynamic text helpers ───────────────────────────────────────────────────
+const PERSONALITY_REACTIONS = {
+  "Inteligente 🧠": (p)=>`¡Un científico nato! Con esa mente, ${p}, vas a entender la biología de la sangre en un abrir y cerrar de ojos.`,
+  "Gracioso/a 😄":  (p)=>`¡Ja! Me caes bien, ${p}. El humor ayuda a aprender. Solo no te rías cuando veamos eritrocitos, que son un tema serio… o no tanto.`,
+  "Bravo/a 💪":     (p)=>`¡Eso me gusta! Con energía, ${p}. Aquí vas a necesitar fuerza para enfrentar los casos clínicos más difíciles.`,
+  "Líder 👑":       (p)=>`Un líder. Perfecto, ${p}. Tu equipo va a depender de ti. Espero que estés a la altura del desafío.`,
+  "Tímido/a 🌸":    (p)=>`Tranquilo/a, ${p}. Aquí todos empezamos sin saber nada. La curiosidad es más importante que la confianza.`,
+  "Misterioso/a 🌙":(p)=>`Ooh, interesante. ${p} el misterioso. Me pregunto qué secretos guardas… igual que los glóbulos blancos.`,
+};
+
+function reactionGlobo(){
+  const fn = PERSONALITY_REACTIONS[S.personalidad];
+  return fn ? fn(S.playerName) : `Bien, ${S.playerName}. ¡Empecemos!`;
+}
+
+const GREETING_RESPONSES = {
+  "Hola, ¿cómo estás?": "B-bien, gracias. Es que… no conozco a nadie aquí.",
+  "¡Ey! Yo también soy nuevo/a.": "¿En serio? ¡Menos mal! Pensé que era el único.",
+  "*Asientes con la cabeza en silencio.*": "*Asiente también, un poco aliviado de que alguien lo note.*",
+};
+function thomasGreetResponse(){
+  return GREETING_RESPONSES[S.greetingThomas] || "...Hola.";
+}
+
+// ── Branch logic ───────────────────────────────────────────────────────────
+function runBranch(){
+  if(S.decisionThomas === "aceptar"){
+    playBranchLines([
+      { moment:5, speaker:"NARRADOR", chars:["thomas"], speaking:"", bg:"bg-equipo",
+        text:`*Caminas hacia Thomas y extiendes la mano.*` },
+      { moment:5, speaker:()=>S.playerName.toUpperCase(), chars:["thomas"], speaking:"PLAYER", bg:"bg-equipo",
+        text:`Ey, Thomas. Somos compañeros de equipo. Vamos juntos.` },
+      { moment:5, speaker:"THOMAS",   chars:["thomas"], speaking:"THOMAS", bg:"bg-equipo",
+        text:"Yo…" },
+      { moment:5, speaker:"THOMAS",   chars:["thomas"], speaking:"THOMAS", bg:"bg-equipo",
+        text:"Gracias. De verdad." },
+      { moment:5, speaker:"GLOBO",    chars:["globo","thomas"], speaking:"GLOBO", bg:"bg-equipo",
+        text:`Eso es trabajo en equipo, ${S.playerName}. En este campamento ganamos juntos — o perdemos juntos.` },
+      { moment:5, speaker:"SINA",     chars:["sina"], speaking:"SINA", bg:"bg-equipo",
+        text:"El caso de Thomas nos va a enseñar más de lo que imaginan. Empecemos.", action:"end" },
+    ]);
+  } else {
+    playBranchLines([
+      { moment:5, speaker:"NARRADOR", chars:["thomas"], speaking:"", bg:"bg-equipo",
+        text:"*No dices nada. Thomas lo nota.*" },
+      { moment:5, speaker:"THOMAS",   chars:["thomas"], speaking:"THOMAS", bg:"bg-equipo",
+        text:"Entiendo… ya estoy acostumbrado." },
+      { moment:5, speaker:"GLOBO",    chars:["globo","thomas"], speaking:"GLOBO", bg:"bg-equipo",
+        text:`${S.playerName}. La medicina trata a todos los pacientes por igual. Eso incluye a Thomas.` },
+      { moment:5, speaker:"GLOBO",    chars:["globo"], speaking:"GLOBO", bg:"bg-equipo",
+        text:"Trabaja con él. Es una orden del campamento.", action:"end" },
+    ]);
+  }
+}
+
+// ── Flat script player ─────────────────────────────────────────────────────
+let flatLines = [];
+let flatIdx = 0;
+let branchLines = null;
+let branchIdx = 0;
+
+function playBranchLines(lines){
+  branchLines = lines;
+  branchIdx = 0;
+  advanceLine();
+}
+
+function getCurrentLine(){
+  if(branchLines) return branchLines[branchIdx] || null;
+  return flatLines[flatIdx] || null;
+}
+
+function advanceFlatIdx(){
+  if(branchLines){
+    branchIdx++;
+    if(branchIdx >= branchLines.length) branchLines = null;
+  } else {
+    flatIdx++;
+  }
+}
+
+// ── Display a line ─────────────────────────────────────────────────────────
+function displayLine(line){
+  if(!line) return;
+
+  const momentIdx = typeof line.moment === "number" ? line.moment : S.moment;
+  updateDots(momentIdx);
+  S.moment = momentIdx;
+
+  // Background
+  if(line.bg) setBg(line.bg);
+
+  // Characters
+  showChars(line.chars || [], line.speaking || "");
+
+  // Speaker name
+  let spk = typeof line.speaker === "function" ? line.speaker() : (line.speaker||"");
+  $speaker.textContent = spk;
+  $speaker.style.color = CHAR_COLORS[spk.toUpperCase()] || "var(--text-sec)";
+
+  // Text
+  let txt = typeof line.text === "function" ? line.text() : (line.text||"");
+
+  hideInputForm();
+  hideChoices();
+  hideInfo();
+  $tapHint.style.display = "none";
+
+  if(line.action === "input_name"){
+    $text.textContent = txt;
+    showInputForm();
+  } else if(line.action === "choice_personalidad"){
+    $text.textContent = txt;
+    showChoices([
+      {icon:"🧠", label:"Inteligente 🧠", onSelect:()=>{ S.personalidad="Inteligente 🧠"; advanceLine(); }},
+      {icon:"😄", label:"Gracioso/a 😄",  onSelect:()=>{ S.personalidad="Gracioso/a 😄";  advanceLine(); }},
+      {icon:"💪", label:"Bravo/a 💪",     onSelect:()=>{ S.personalidad="Bravo/a 💪";     advanceLine(); }},
+      {icon:"👑", label:"Líder 👑",       onSelect:()=>{ S.personalidad="Líder 👑";       advanceLine(); }},
+      {icon:"🌸", label:"Tímido/a 🌸",    onSelect:()=>{ S.personalidad="Tímido/a 🌸";    advanceLine(); }},
+      {icon:"🌙", label:"Misterioso/a 🌙",onSelect:()=>{ S.personalidad="Misterioso/a 🌙"; advanceLine(); }},
+    ]);
+  } else if(line.action === "choice_saludo"){
+    $text.textContent = txt;
+    showChoices([
+      {label:"Hola, ¿cómo estás?",         onSelect:()=>{ S.greetingThomas="Hola, ¿cómo estás?";         advanceLine(); }},
+      {label:"¡Ey! Yo también soy nuevo/a.",onSelect:()=>{ S.greetingThomas="¡Ey! Yo también soy nuevo/a."; advanceLine(); }},
+      {label:"*Asientes con la cabeza en silencio.*", onSelect:()=>{ S.greetingThomas="*Asientes con la cabeza en silencio.*"; advanceLine(); }},
+    ]);
+  } else if(line.action === "info"){
+    typeWrite(txt, ()=>{
+      showInfo(line.infoText || "");
+      $tapHint.style.display = "block";
+    });
+  } else if(line.action === "choice_thomas"){
+    $text.textContent = txt;
+    showChoices([
+      {icon:"🤝", label:"Te acercas y lo invitas al equipo.", cls:"thomas-yes",
+        onSelect:()=>{ S.decisionThomas="aceptar"; advanceLine(); }},
+      {icon:"🚶", label:"No haces nada y esperas que otro lo incluya.", cls:"thomas-no",
+        onSelect:()=>{ S.decisionThomas="rechazar"; advanceLine(); }},
+    ]);
+  } else if(line.action === "branch_thomas"){
+    runBranch();
+    return; // branch will call advanceLine internally
+  } else if(line.action === "end"){
+    typeWrite(txt, ()=>{
+      setTimeout(()=>finishGame(), 1200);
+    });
+  } else {
+    typeWrite(txt, ()=>{
+      $tapHint.style.display = "block";
+    });
+  }
+}
+
+// ── Advance to next line ───────────────────────────────────────────────────
+function advanceLine(){
+  advanceFlatIdx();
+  const line = getCurrentLine();
+  if(!line){ finishGame(); return; }
+  displayLine(line);
+}
+
+// Starting point (called externally in script flow)
+function advanceScript(){
+  advanceLine();
+}
+
+// ── Tap-to-advance ─────────────────────────────────────────────────────────
+document.getElementById("scene").addEventListener("click", ()=>{
+  if(S.awaitingInput || S.awaitingChoice) return;
+  if(S.typing){
+    // Skip typewriter
+    const line = getCurrentLine();
+    if(!line) return;
+    clearTimeout(S.typeTimeout);
+    S.typing = false;
+    let txt = typeof line.text === "function" ? line.text() : (line.text||"");
+    $text.textContent = txt;
+    if(line.action==="info"){
+      showInfo(line.infoText||"");
+    }
+    $tapHint.style.display = "block";
+    return;
+  }
+  advanceLine();
+});
+
+// ── Firebase save + postMessage ────────────────────────────────────────────
+async function finishGame(){
+  const saveData = {
+    nombre:           S.playerName,
+    personalidad:     S.personalidad,
+    decision_thomas:  S.decisionThomas,
+    paso1_completado: true,
+    paso1_ts:         serverTimestamp(),
+  };
+
+  if(uid){
+    try {
+      await updateDoc(doc(db,"estudiantes",uid), saveData);
+    } catch(e){
+      console.warn("Firebase save error:", e);
+    }
+  }
+
+  // postMessage to parent (mapa.html iframe)
+  const msg = { tipo:"resultado_juego", paso:1, puntos:0, completado:true, tiempo_segundos:0 };
+  window.parent.postMessage(msg, "*");
+
+  // Show result overlay
+  $resTitle.textContent = S.decisionThomas === "aceptar"
+    ? "¡Bienvenido, " + S.playerName + "!"
+    : "El campamento ha comenzado.";
+  $resDesc.textContent = S.decisionThomas === "aceptar"
+    ? "Tomaste la decisión correcta. Thomas es ahora parte de tu equipo."
+    : "A veces las segundas oportunidades cambian todo. El campamento recién empieza.";
+  $result.classList.add("show");
+}
+
+$finishBtn.addEventListener("click", ()=>{
+  // If in iframe, parent already got the postMessage. Close or navigate.
+  if(window.parent !== window){
+    window.parent.postMessage({tipo:"cerrar_juego"}, "*");
+  } else {
+    window.history.back();
+  }
+});
+
+// ── Auth & init ────────────────────────────────────────────────────────────
+onAuthStateChanged(auth, user=>{
+  uid = user ? user.uid : null;
+  $loading.style.display = "none";
+  buildScript();
+  flatLines = SCRIPT;
+  flatIdx = -1; // will be incremented to 0 by first advanceLine
+  // Show first line
+  advanceLine();
+});
+</script>
+</body>
+</html>
