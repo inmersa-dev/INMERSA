@@ -7,285 +7,362 @@
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg:      #0A1628;
-      --bg-card: #0F2236;
-      --accent:  #00D4FF;
-      --teal:    #00C9A7;
-      --red:     #C0392B;
-      --yellow:  #F5C518;
-      --text:    #FFFFFF;
-      --text-sec:#8899AA;
-      --border:  rgba(136,153,170,0.2);
-      --radius:  14px;
-
-      --c-globo:  #E74C3C;
-      --c-sina:   #00C9A7;
-      --c-thomas: #A0AEC0;
-      --c-narrator: #F5C518;
+      --bg:        #0A1628;
+      --accent:    #00D4FF;
+      --teal:      #00C9A7;
+      --c-globo:   #E74C3C;
+      --c-sina:    #00A896;
+      --c-thomas:  #64748B;
+      --c-player:  #2563EB;
+      --bubble-bg: #FFFDF4;
+      --bubble-bd: #1C1C2E;
     }
 
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-
     html, body {
-      width:100%; height:100%;
-      background: var(--bg);
-      font-family: 'Nunito', system-ui, sans-serif;
-      color: var(--text);
-      overflow: hidden;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
+      width:100%; height:100%; overflow:hidden;
+      background:var(--bg);
+      font-family:'Nunito',system-ui,sans-serif;
+      color:#fff;
+      -webkit-tap-highlight-color:transparent;
+      user-select:none;
     }
 
-    /* ── Loading ── */
+    /* ── Loading ──────────────────────────────────────────────── */
     #loading {
       position:fixed; inset:0; z-index:999;
+      background:var(--bg);
       display:flex; align-items:center; justify-content:center;
-      background: var(--bg);
       flex-direction:column; gap:16px;
     }
     .spin {
       width:36px; height:36px;
-      border:3px solid rgba(0,212,255,0.15);
-      border-top-color: var(--accent);
+      border:3px solid rgba(0,212,255,.15);
+      border-top-color:var(--accent);
       border-radius:50%;
-      animation: spin 0.8s linear infinite;
+      animation:spin .8s linear infinite;
     }
     @keyframes spin { to { transform:rotate(360deg); } }
-    #loading p { color:var(--text-sec); font-size:14px; }
+    #loading p { color:#8899AA; font-size:14px; }
 
-    /* ── Scene wrapper ── */
-    #scene {
-      position:fixed; inset:0;
-      display:flex; flex-direction:column;
-      background: var(--bg);
-      background-image: radial-gradient(circle at 50% 0%, rgba(0,212,255,0.06), transparent 60%);
-    }
+    /* ── Scene ────────────────────────────────────────────────── */
+    #scene { position:fixed; inset:0; overflow:hidden; }
 
-    /* ── Scene background ── */
+    /* ── Background ───────────────────────────────────────────── */
     #scene-bg {
       position:absolute; inset:0; z-index:0;
-      transition: opacity 0.5s;
+      background-size:cover;
+      background-position:center top;
+      transition:opacity .45s ease;
     }
-    .bg-campamento { background: linear-gradient(180deg, #0d2b1e 0%, #0A1628 60%); }
-    .bg-fila       { background: linear-gradient(180deg, #1a1a2e 0%, #0A1628 60%); }
-    .bg-tienda     { background: linear-gradient(180deg, #1a0a2e 0%, #0A1628 60%); }
-    .bg-resultado  { background: linear-gradient(180deg, #0d1a2e 0%, #0A1628 60%); }
-    .bg-equipo     { background: linear-gradient(180deg, #0a2020 0%, #0A1628 60%); }
-    .bg-decision   { background: linear-gradient(180deg, #2e0a0a 0%, #0A1628 60%); }
+    /* gradient overlay so bottom chars/bubbles are readable */
+    #scene-bg::after {
+      content:'';
+      position:absolute; inset:0;
+      background:linear-gradient(
+        to bottom,
+        rgba(0,0,0,.08) 0%,
+        rgba(0,0,0,.0)  35%,
+        rgba(0,0,0,.42) 70%,
+        rgba(0,0,0,.72) 100%
+      );
+    }
 
-    /* ── Stars decoration ── */
-    .stars {
-      position:absolute; inset:0; overflow:hidden; pointer-events:none;
+    /* ── Progress dots ─────────────────────────────────────────── */
+    #progress-dots {
+      position:absolute; top:14px; left:50%; transform:translateX(-50%);
+      display:flex; gap:6px; z-index:10;
     }
-    .star {
-      position:absolute;
-      background:white; border-radius:50%;
-      animation: twinkle 3s ease-in-out infinite alternate;
+    .pdot {
+      width:8px; height:8px; border-radius:50%;
+      background:rgba(255,255,255,.28);
+      transition:background .3s, transform .3s;
     }
-    @keyframes twinkle { from { opacity:0.2; } to { opacity:0.9; } }
+    .pdot.done   { background:var(--teal); }
+    .pdot.active { background:var(--accent); transform:scale(1.3); }
 
-    /* ── Characters area ── */
+    /* ── Narrator caption (top strip) ──────────────────────────── */
+    #narrator-caption {
+      position:absolute; top:0; left:0; right:0; z-index:8;
+      background:rgba(8,16,32,.86);
+      border-bottom:2px solid rgba(0,212,255,.22);
+      padding:10px 18px 11px 14px;
+      display:none; align-items:center; gap:10px;
+      backdrop-filter:blur(8px);
+    }
+    #narrator-caption.show { display:flex; }
+    #narrator-caption .nar-icon { font-size:16px; flex-shrink:0; }
+    #narrator-caption .nar-text {
+      flex:1; color:#F5C518;
+      font-size:13.5px; font-weight:700; font-style:italic;
+      line-height:1.5;
+    }
+    #narrator-caption .nar-tap {
+      font-size:11px; color:rgba(255,255,255,.4);
+      flex-shrink:0;
+      animation:blink 1.5s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:.3} 50%{opacity:1} }
+
+    /* ── Characters area ───────────────────────────────────────── */
     #chars-area {
       position:absolute;
-      bottom:220px; left:0; right:0;
-      display:flex; align-items:flex-end; justify-content:center;
-      gap:24px; padding:0 24px;
-      z-index:1;
+      top:44px;      /* below narrator */
+      bottom:158px;  /* above bottom panel */
+      left:0; right:0;
+      z-index:auto;
+      display:flex;
+      align-items:stretch;
+      overflow:visible;
     }
+
+    /* ── Character slot ────────────────────────────────────────── */
     .char-slot {
-      display:flex; flex-direction:column; align-items:center; gap:8px;
-      opacity:0;
-      transform: translateY(20px);
-      transition: opacity 0.4s, transform 0.4s;
-    }
-    .char-slot.visible { opacity:1; transform:translateY(0); }
-    .char-slot.speaking { filter: brightness(1.15); }
-    .char-slot:not(.speaking) { filter: brightness(0.5); }
-
-    .char-avatar {
-      width:80px; height:80px;
-      border-radius:50%;
-      border:3px solid transparent;
-      display:flex; align-items:center; justify-content:center;
-      font-size:36px;
-      position:relative;
-      background: var(--bg-card);
-    }
-    .char-avatar.globo  { border-color: var(--c-globo);  background: rgba(231,76,60,0.15); }
-    .char-avatar.sina   { border-color: var(--c-sina);   background: rgba(0,201,167,0.15); }
-    .char-avatar.thomas { border-color: var(--c-thomas); background: rgba(160,174,192,0.15); }
-
-    .char-name-tag {
-      font-size:11px; font-weight:800;
-      letter-spacing:0.05em;
-      padding:2px 8px;
-      border-radius:20px;
-      background: var(--bg-card);
-    }
-    .char-name-tag.globo  { color:var(--c-globo);  border:1px solid var(--c-globo); }
-    .char-name-tag.sina   { color:var(--c-sina);   border:1px solid var(--c-sina); }
-    .char-name-tag.thomas { color:var(--c-thomas); border:1px solid var(--c-thomas); }
-
-    /* ── Dialogue box ── */
-    #dialogue-box {
-      position:absolute;
-      bottom:0; left:0; right:0;
-      z-index:2;
-      padding:12px 16px 28px;
-      background: linear-gradient(0deg, rgba(10,22,40,0.98) 60%, rgba(10,22,40,0.7) 100%);
-      min-height:200px;
-      display:flex; flex-direction:column; gap:8px;
-    }
-    #speaker-name {
-      font-size:13px; font-weight:800;
-      letter-spacing:0.08em;
-      text-transform:uppercase;
-      min-height:18px;
-    }
-    #dialogue-text {
-      font-size:15px; line-height:1.6; font-weight:600;
-      min-height:72px;
       flex:1;
+      display:flex; flex-direction:column; align-items:center;
+      overflow:visible;
+      transition:opacity .35s, filter .35s;
     }
-    #tap-hint {
-      align-self:flex-end;
-      font-size:12px; color:var(--text-sec);
-      animation: pulse 1.5s ease-in-out infinite;
-    }
-    @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
+    .char-slot.hidden { display:none !important; }
+    .char-slot.dimmed { opacity:.35; filter:saturate(.15) brightness(.65); pointer-events:none; }
 
-    /* ── Input form ── */
-    #input-form {
-      display:none;
-      flex-direction:column; gap:12px;
-      padding:12px 0 4px;
+    /* Bubble container — fills space above sprite */
+    .bubble-wrap {
+      flex:1;
+      display:flex; align-items:flex-end; justify-content:center;
+      padding-bottom:10px;
+      overflow:visible;
+      width:100%;
     }
+    #char-globo  .bubble-wrap { justify-content:flex-start; padding-left:6px; }
+    #char-thomas .bubble-wrap { justify-content:flex-end;   padding-right:6px; }
+
+    /* ── Speech bubble ─────────────────────────────────────────── */
+    .speech-bubble {
+      display:none;
+      background:var(--bubble-bg);
+      border:2.5px solid var(--bubble-bd);
+      border-radius:18px;
+      padding:9px 13px 7px;
+      width:230px;
+      max-width:82vw;
+      box-shadow:3px 4px 0 rgba(0,0,0,.3);
+      position:relative;
+    }
+    .speech-bubble.show { display:block; }
+
+    .bubble-speaker {
+      font-size:10px; font-weight:900;
+      letter-spacing:.09em; text-transform:uppercase;
+      margin-bottom:4px;
+    }
+    .globo-bubble  .bubble-speaker { color:var(--c-globo); }
+    .sina-bubble   .bubble-speaker { color:var(--c-sina); }
+    .thomas-bubble .bubble-speaker { color:var(--c-thomas); }
+    .player-bubble .bubble-speaker { color:var(--c-player); }
+
+    .bubble-text {
+      font-size:13px; font-weight:700;
+      color:#111827; line-height:1.55;
+      min-height:32px;
+    }
+    .bubble-tap {
+      display:none;
+      text-align:right;
+      font-size:11px; color:#6B7280;
+      margin-top:4px;
+      animation:blink 1.5s ease-in-out infinite;
+    }
+
+    /* Tail — points down-center by default */
+    .speech-bubble::before,
+    .speech-bubble::after {
+      content:'';
+      position:absolute; bottom:0; left:50%;
+      transform:translateX(-50%) translateY(100%);
+      width:0; height:0;
+    }
+    .speech-bubble::before {
+      border:10px solid transparent;
+      border-top:11px solid var(--bubble-bd);
+    }
+    .speech-bubble::after {
+      border:8px solid transparent;
+      border-top:10px solid var(--bubble-bg);
+      margin-top:-1px;
+    }
+    /* GLOBO (left slot) — tail at left of bubble */
+    #char-globo .speech-bubble::before,
+    #char-globo .speech-bubble::after { left:28%; }
+    /* THOMAS (right slot) — tail at right of bubble */
+    #char-thomas .speech-bubble::before,
+    #char-thomas .speech-bubble::after { left:72%; }
+
+    /* Player bubble — teal tint */
+    .player-bubble {
+      background:#EFF9FF;
+      border-color:#1D6FA4;
+    }
+    .player-bubble::before { border-top-color:#1D6FA4 !important; }
+    .player-bubble::after  { border-top-color:#EFF9FF !important; }
+
+    /* ── Character sprites ─────────────────────────────────────── */
+    .sprite-area {
+      flex-shrink:0;
+      height:158px;
+      width:100%;
+      display:flex; justify-content:center; align-items:flex-end;
+    }
+
+    .char-sprite {
+      background-repeat:no-repeat;
+      flex-shrink:0;
+    }
+
+    /* GLOBO — sprite sheet, 3 poses side by side */
+    .globo-sprite {
+      width:112px; height:148px;
+      background-image:url('../Imagenes/char_globo.webp');
+      background-size:300% auto;
+      background-position:0% 40%;
+      mix-blend-mode:multiply;
+      overflow:hidden;
+    }
+    .globo-sprite[data-pose="happy"]   { background-position:50% 40%; }
+    .globo-sprite[data-pose="confused"]{ background-position:100% 40%; }
+
+    /* SINA — sprite sheet, 3 poses */
+    .sina-sprite {
+      width:90px; height:158px;
+      background-image:url('../Imagenes/char_sina.webp');
+      background-size:300% auto;
+      background-position:0% 38%;
+      mix-blend-mode:multiply;
+      overflow:hidden;
+      clip-path:inset(8% 0 9% 0);
+    }
+    .sina-sprite[data-pose="happy"]     { background-position:50% 38%; }
+    .sina-sprite[data-pose="explaining"]{ background-position:100% 38%; }
+
+    /* THOMAS — single PNG, white bg removed with multiply */
+    .thomas-sprite {
+      width:88px; height:155px;
+      background-image:url('../Imagenes/char_thomas.png');
+      background-size:contain;
+      background-position:center bottom;
+      background-repeat:no-repeat;
+      mix-blend-mode:multiply;
+    }
+
+    /* ── Player slot (centered, no sprite) ─────────────────────── */
+    #char-player {
+      position:absolute;
+      bottom:0; left:50%;
+      transform:translateX(-50%);
+      width:75%;
+      flex:none;
+      display:none;
+    }
+    #char-player .bubble-wrap {
+      justify-content:center;
+      padding-bottom:8px;
+    }
+
+    /* ── Bottom panel ──────────────────────────────────────────── */
+    #bottom-panel {
+      position:absolute; bottom:0; left:0; right:0; z-index:6;
+      background:rgba(6,14,28,.93);
+      border-top:1.5px solid rgba(0,212,255,.18);
+      padding:10px 14px 22px;
+      backdrop-filter:blur(10px);
+      min-height:20px;
+    }
+
+    /* ── Input form ─────────────────────────────────────────────── */
+    #input-form { display:none; flex-direction:column; gap:9px; }
     #input-form input {
-      background: rgba(255,255,255,0.06);
-      border:2px solid var(--border);
+      background:rgba(255,255,255,.07);
+      border:2px solid rgba(136,153,170,.32);
       border-radius:10px;
-      color:var(--text);
-      font-family:'Nunito',sans-serif;
+      color:#fff; font-family:'Nunito',sans-serif;
       font-size:16px; font-weight:700;
-      padding:12px 16px;
-      outline:none;
-      transition: border-color 0.2s;
+      padding:11px 14px; outline:none;
+      transition:border-color .2s;
     }
     #input-form input:focus { border-color:var(--accent); }
-    #input-form input::placeholder { color:var(--text-sec); font-weight:400; }
-    #input-form .confirm-btn {
-      background: var(--accent);
-      color:#000; font-family:'Nunito',sans-serif;
+    #input-form input::placeholder { color:#8899AA; font-weight:400; }
+    .confirm-btn {
+      background:var(--accent); color:#000;
+      font-family:'Nunito',sans-serif;
       font-size:15px; font-weight:800;
-      padding:12px; border:none; border-radius:10px;
-      cursor:pointer;
-      transition: opacity 0.2s;
+      padding:11px; border:none; border-radius:10px;
+      cursor:pointer; transition:opacity .2s;
     }
-    #input-form .confirm-btn:disabled { opacity:0.4; }
+    .confirm-btn:disabled { opacity:.38; }
 
-    /* ── Choices ── */
-    #choices {
-      display:none;
-      flex-direction:column; gap:8px;
-      padding:8px 0 4px;
-      max-height:240px;
-      overflow-y:auto;
-    }
-    .choice-btn {
-      background: rgba(255,255,255,0.05);
-      border:1.5px solid var(--border);
-      border-radius:10px;
-      color:var(--text); font-family:'Nunito',sans-serif;
-      font-size:14px; font-weight:700;
-      padding:12px 16px;
-      text-align:left; cursor:pointer;
-      transition: background 0.2s, border-color 0.2s;
-      display:flex; align-items:center; gap:10px;
-    }
-    .choice-btn:hover, .choice-btn:active {
-      background: rgba(0,212,255,0.1);
-      border-color: var(--accent);
-    }
-    .choice-btn.thomas-yes {
-      border-color:var(--teal);
-      color:var(--teal);
-    }
-    .choice-btn.thomas-yes:hover { background:rgba(0,201,167,0.12); }
-    .choice-btn.thomas-no {
-      border-color:var(--c-globo);
-      color:#ff8080;
-    }
-    .choice-btn.thomas-no:hover { background:rgba(231,76,60,0.12); }
-
-    /* ── Info card (educational) ── */
+    /* ── Info card ──────────────────────────────────────────────── */
     #info-card {
       display:none;
-      background: rgba(0,212,255,0.06);
-      border:1.5px solid rgba(0,212,255,0.25);
+      background:rgba(0,212,255,.07);
+      border:1.5px solid rgba(0,212,255,.28);
       border-radius:12px;
-      padding:12px 14px;
-      margin-top:4px;
-      font-size:13px; line-height:1.6;
+      padding:10px 13px;
+      margin-bottom:6px;
     }
-    #info-card .info-title {
-      font-size:11px; font-weight:800;
-      letter-spacing:0.08em; text-transform:uppercase;
-      color:var(--accent); margin-bottom:6px;
+    .info-title {
+      font-size:10px; font-weight:900;
+      letter-spacing:.09em; text-transform:uppercase;
+      color:var(--accent); margin-bottom:5px;
     }
-    #info-card .info-body { color:#cce8ff; font-weight:600; }
+    .info-body { font-size:13px; color:#CCE8FF; font-weight:600; line-height:1.55; }
 
-    /* ── Result overlay ── */
+    /* ── Choices ─────────────────────────────────────────────────── */
+    #choices { display:none; flex-direction:column; gap:7px; max-height:240px; overflow-y:auto; }
+    .choice-btn {
+      background:rgba(255,255,255,.06);
+      border:1.5px solid rgba(136,153,170,.28);
+      border-radius:10px; color:#fff;
+      font-family:'Nunito',sans-serif;
+      font-size:13px; font-weight:700;
+      padding:10px 13px; text-align:left; cursor:pointer;
+      display:flex; align-items:center; gap:9px;
+      transition:background .15s, border-color .15s;
+    }
+    .choice-btn:active { background:rgba(0,212,255,.12); border-color:var(--accent); }
+    .choice-btn.thomas-yes { border-color:var(--teal); color:var(--teal); }
+    .choice-btn.thomas-yes:active { background:rgba(0,201,167,.12); }
+    .choice-btn.thomas-no  { border-color:#f87171; color:#f87171; }
+    .choice-btn.thomas-no:active  { background:rgba(231,76,60,.12); }
+
+    /* ── Result overlay ─────────────────────────────────────────── */
     #result-overlay {
       position:fixed; inset:0; z-index:50;
-      background:rgba(10,22,40,0.95);
-      display:none;
-      flex-direction:column;
+      background:rgba(10,22,40,.96);
+      display:none; flex-direction:column;
       align-items:center; justify-content:center;
-      gap:20px; padding:32px;
-      text-align:center;
+      gap:20px; padding:36px; text-align:center;
     }
     #result-overlay.show { display:flex; }
     #result-overlay .big-icon { font-size:64px; }
     #result-overlay h2 { font-size:24px; font-weight:900; }
-    #result-overlay p  { font-size:15px; color:var(--text-sec); line-height:1.6; }
-    #result-overlay .finish-btn {
-      margin-top:8px;
-      background: var(--accent); color:#000;
-      font-family:'Nunito',sans-serif; font-size:16px; font-weight:800;
-      padding:14px 36px; border:none; border-radius:12px;
-      cursor:pointer;
+    #result-overlay p  { font-size:15px; color:#8899AA; line-height:1.6; }
+    .finish-btn {
+      margin-top:8px; background:var(--accent); color:#000;
+      font-family:'Nunito',sans-serif;
+      font-size:16px; font-weight:800;
+      padding:14px 36px; border:none; border-radius:12px; cursor:pointer;
     }
 
-    /* ── Toast ── */
+    /* ── Toast ──────────────────────────────────────────────────── */
     #toast {
       position:fixed; top:20px; left:50%; transform:translateX(-50%);
-      background:var(--bg-card); border:1px solid var(--accent);
-      color:var(--text); font-size:14px; font-weight:700;
+      background:#0F2236; border:1px solid var(--accent);
+      color:#fff; font-size:14px; font-weight:700;
       padding:10px 20px; border-radius:10px;
-      z-index:100; opacity:0;
-      transition: opacity 0.3s;
+      z-index:100; opacity:0; transition:opacity .3s;
       pointer-events:none; white-space:nowrap;
     }
     #toast.show { opacity:1; }
-
-    /* ── ECG heartbeat decoration ── */
-    #ecg-line {
-      position:absolute; bottom:210px; left:0; right:0;
-      height:30px; z-index:1; pointer-events:none; opacity:0.12;
-    }
-
-    /* ── Progress dots ── */
-    #progress-dots {
-      position:absolute; top:16px; left:50%; transform:translateX(-50%);
-      display:flex; gap:6px; z-index:3;
-    }
-    .pdot {
-      width:8px; height:8px; border-radius:50%;
-      background: var(--border);
-      transition: background 0.3s, transform 0.3s;
-    }
-    .pdot.done { background:var(--teal); }
-    .pdot.active { background:var(--accent); transform:scale(1.3); }
   </style>
 </head>
 <body>
@@ -296,67 +373,99 @@
   <p>Cargando el campamento…</p>
 </div>
 
-<!-- Progress dots -->
-<div id="progress-dots">
-  <div class="pdot" id="pd0"></div>
-  <div class="pdot" id="pd1"></div>
-  <div class="pdot" id="pd2"></div>
-  <div class="pdot" id="pd3"></div>
-  <div class="pdot" id="pd4"></div>
-  <div class="pdot" id="pd5"></div>
-</div>
-
 <!-- Scene -->
 <div id="scene">
-  <div id="scene-bg" class="bg-campamento">
-    <div class="stars" id="stars-layer"></div>
+  <div id="scene-bg"></div>
+
+  <!-- Progress dots -->
+  <div id="progress-dots">
+    <div class="pdot" id="pd0"></div>
+    <div class="pdot" id="pd1"></div>
+    <div class="pdot" id="pd2"></div>
+    <div class="pdot" id="pd3"></div>
+    <div class="pdot" id="pd4"></div>
+    <div class="pdot" id="pd5"></div>
   </div>
 
-  <!-- ECG decoration -->
-  <svg id="ecg-line" viewBox="0 0 400 30" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-    <polyline points="0,15 60,15 70,5 80,25 90,10 100,15 160,15 170,5 180,25 190,10 200,15 260,15 270,5 280,25 290,10 300,15 400,15"
-      fill="none" stroke="var(--accent)" stroke-width="1.5"/>
-  </svg>
+  <!-- Narrator caption -->
+  <div id="narrator-caption">
+    <span class="nar-icon">📖</span>
+    <p class="nar-text" id="narrator-text"></p>
+    <span class="nar-tap">▶</span>
+  </div>
 
   <!-- Characters -->
   <div id="chars-area">
+
+    <!-- GLOBO -->
     <div class="char-slot" id="char-globo">
-      <div class="char-avatar globo">🔴</div>
-      <div class="char-name-tag globo">GLOBO</div>
+      <div class="bubble-wrap">
+        <div class="speech-bubble globo-bubble" id="bubble-globo">
+          <div class="bubble-speaker">Globo</div>
+          <p class="bubble-text"></p>
+          <span class="bubble-tap">toca para continuar ▶</span>
+        </div>
+      </div>
+      <div class="sprite-area">
+        <div class="char-sprite globo-sprite" id="sprite-globo" data-pose="neutral"></div>
+      </div>
     </div>
+
+    <!-- SINA -->
     <div class="char-slot" id="char-sina">
-      <div class="char-avatar sina">🩺</div>
-      <div class="char-name-tag sina">SINA</div>
+      <div class="bubble-wrap">
+        <div class="speech-bubble sina-bubble" id="bubble-sina">
+          <div class="bubble-speaker">Sina</div>
+          <p class="bubble-text"></p>
+          <span class="bubble-tap">toca para continuar ▶</span>
+        </div>
+      </div>
+      <div class="sprite-area">
+        <div class="char-sprite sina-sprite" id="sprite-sina" data-pose="neutral"></div>
+      </div>
     </div>
+
+    <!-- THOMAS -->
     <div class="char-slot" id="char-thomas">
-      <div class="char-avatar thomas">👦</div>
-      <div class="char-name-tag thomas">THOMAS</div>
+      <div class="bubble-wrap">
+        <div class="speech-bubble thomas-bubble" id="bubble-thomas">
+          <div class="bubble-speaker">Thomas</div>
+          <p class="bubble-text"></p>
+          <span class="bubble-tap">toca para continuar ▶</span>
+        </div>
+      </div>
+      <div class="sprite-area">
+        <div class="char-sprite thomas-sprite" id="sprite-thomas"></div>
+      </div>
     </div>
-  </div>
 
-  <!-- Dialogue box -->
-  <div id="dialogue-box">
-    <div id="speaker-name"></div>
-    <div id="dialogue-text"></div>
+    <!-- PLAYER (centered, no sprite) -->
+    <div class="char-slot" id="char-player">
+      <div class="bubble-wrap">
+        <div class="speech-bubble player-bubble" id="bubble-player">
+          <div class="bubble-speaker" id="player-name-tag">Tú</div>
+          <p class="bubble-text"></p>
+          <span class="bubble-tap">toca para continuar ▶</span>
+        </div>
+      </div>
+    </div>
 
-    <!-- Name input -->
+  </div><!-- /chars-area -->
+
+  <!-- Bottom panel -->
+  <div id="bottom-panel">
+    <div id="info-card">
+      <div class="info-title">💡 Dato científico</div>
+      <p class="info-body" id="info-body-text"></p>
+    </div>
     <div id="input-form">
       <input type="text" id="name-input" placeholder="Escribe tu nombre…" maxlength="20" autocomplete="off" />
       <button class="confirm-btn" id="confirm-name" disabled>Confirmar ✓</button>
     </div>
-
-    <!-- Info card (educational) -->
-    <div id="info-card">
-      <div class="info-title">💡 Dato científico</div>
-      <div class="info-body" id="info-body-text"></div>
-    </div>
-
-    <!-- Choices -->
-    <div id="choices" id="choices-container"></div>
-
-    <div id="tap-hint">Toca para continuar ▶</div>
+    <div id="choices"></div>
   </div>
-</div>
+
+</div><!-- /scene -->
 
 <!-- Result overlay -->
 <div id="result-overlay">
@@ -366,17 +475,16 @@
   <button class="finish-btn" id="finish-btn">Continuar →</button>
 </div>
 
-<!-- Toast -->
-<div id="toast" id="toast-el"></div>
+<div id="toast"></div>
 
 <script type="module">
-import { initializeApp }       from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { initializeApp }             from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged }from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, updateDoc, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// ── Firebase ──────────────────────────────────────────────────────────────
-const firebaseConfig = {
+// ── Firebase ───────────────────────────────────────────────────
+const app  = initializeApp({
   apiKey:            "AIzaSyARclfJXsjDISiT2JRjzwkoUrmPpGqpho4",
   authDomain:        "inmersa-mvp.firebaseapp.com",
   projectId:         "inmersa-mvp",
@@ -384,511 +492,441 @@ const firebaseConfig = {
   messagingSenderId: "554325663285",
   appId:             "1:554325663285:web:332e863d1e39e49783db7c",
   measurementId:     "G-RQPE6SVTDP"
-};
-const app  = initializeApp(firebaseConfig);
+});
 const auth = getAuth(app);
 const db   = getFirestore(app);
-let uid    = null;
+let uid = null;
 
-// ── State ─────────────────────────────────────────────────────────────────
+// ── State ──────────────────────────────────────────────────────
 const S = {
-  moment: 0,        // 0-based moment index
-  lineIdx: 0,       // line within current moment
-  playerName: "",
-  personalidad: "",
-  greetingThomas: "",
-  decisionThomas: "",  // "aceptar" | "rechazar"
-  typing: false,
-  awaitingInput: false,
-  awaitingChoice: false,
-  typeTimeout: null,
+  playerName:'', personalidad:'', greetingThomas:'', decisionThomas:'',
+  typing:false, awaitingInput:false, awaitingChoice:false,
+  typeTimeout:null, typeEl:null, tapEl:null, typeOnDone:null,
+  moment:0,
+};
+let currentTxt = '';
+
+// ── DOM ────────────────────────────────────────────────────────
+const $bg      = document.getElementById('scene-bg');
+const $loading = document.getElementById('loading');
+const $result  = document.getElementById('result-overlay');
+const dots     = [0,1,2,3,4,5].map(i => document.getElementById('pd'+i));
+
+const $narCap  = document.getElementById('narrator-caption');
+const $narText = document.getElementById('narrator-text');
+const $narTap  = $narCap.querySelector('.nar-tap');
+
+const $slots = {
+  globo:  document.getElementById('char-globo'),
+  sina:   document.getElementById('char-sina'),
+  thomas: document.getElementById('char-thomas'),
+  player: document.getElementById('char-player'),
+};
+const $sprites = {
+  globo:  document.getElementById('sprite-globo'),
+  sina:   document.getElementById('sprite-sina'),
+};
+const $bubbles = {
+  globo:  document.getElementById('bubble-globo'),
+  sina:   document.getElementById('bubble-sina'),
+  thomas: document.getElementById('bubble-thomas'),
+  player: document.getElementById('bubble-player'),
 };
 
-// ── DOM refs ──────────────────────────────────────────────────────────────
-const $bg       = document.getElementById("scene-bg");
-const $chars    = {
-  globo:  document.getElementById("char-globo"),
-  sina:   document.getElementById("char-sina"),
-  thomas: document.getElementById("char-thomas"),
+const $inputForm   = document.getElementById('input-form');
+const $nameInput   = document.getElementById('name-input');
+const $confirmName = document.getElementById('confirm-name');
+const $infoCard    = document.getElementById('info-card');
+const $infoBody    = document.getElementById('info-body-text');
+const $choices     = document.getElementById('choices');
+const $toast       = document.getElementById('toast');
+
+// ── Background ─────────────────────────────────────────────────
+const BG_MAP = {
+  'bg-campamento': "../Imagenes/bg_campamento.png",
+  'bg-fila':       "../Imagenes/bg_campamento.png",
+  'bg-tienda':     "../Imagenes/bg_carpa.png",
+  'bg-resultado':  "../Imagenes/bg_carpa.png",
+  'bg-equipo':     "../Imagenes/bg_carpa.png",
+  'bg-decision':   "../Imagenes/bg_carpa.png",
 };
-const $speaker  = document.getElementById("speaker-name");
-const $text     = document.getElementById("dialogue-text");
-const $tapHint  = document.getElementById("tap-hint");
-const $inputForm = document.getElementById("input-form");
-const $nameInput = document.getElementById("name-input");
-const $confirmName = document.getElementById("confirm-name");
-const $infoCard = document.getElementById("info-card");
-const $infoBody = document.getElementById("info-body-text");
-const $choices  = document.getElementById("choices");
-const $loading  = document.getElementById("loading");
-const $result   = document.getElementById("result-overlay");
-const $resTitle = document.getElementById("result-title");
-const $resDesc  = document.getElementById("result-desc");
-const $finishBtn = document.getElementById("finish-btn");
-const $toast    = document.getElementById("toast");
-const dots      = [0,1,2,3,4,5].map(i => document.getElementById("pd"+i));
+let currentBg = '';
+function setBg(cls) {
+  const url = BG_MAP[cls];
+  if (!url || url === currentBg) return;
+  currentBg = url;
+  $bg.style.opacity = '0';
+  setTimeout(() => {
+    $bg.style.backgroundImage = `url('${url}')`;
+    $bg.style.opacity = '1';
+  }, 420);
+}
 
-// ── Stars ─────────────────────────────────────────────────────────────────
-(function buildStars(){
-  const layer = document.getElementById("stars-layer");
-  for(let i=0;i<60;i++){
-    const s = document.createElement("div");
-    s.className = "star";
-    const size = Math.random()*2+1;
-    s.style.cssText = `
-      width:${size}px; height:${size}px;
-      top:${Math.random()*70}%;
-      left:${Math.random()*100}%;
-      animation-delay:${Math.random()*3}s;
-      animation-duration:${2+Math.random()*3}s;
-    `;
-    layer.appendChild(s);
-  }
-})();
-
-// ── Character helpers ──────────────────────────────────────────────────────
-const CHAR_COLORS = {
-  GLOBO:   "var(--c-globo)",
-  SINA:    "var(--c-sina)",
-  THOMAS:  "var(--c-thomas)",
-  NARRADOR:"var(--c-narrator)",
-  "":      "var(--text-sec)",
-};
-
-function showChars(visible=[], speaking=""){
-  // Hide all first
-  Object.keys($chars).forEach(k=>{
-    $chars[k].classList.remove("visible","speaking");
-  });
-  visible.forEach(name=>{
-    const key = name.toLowerCase();
-    if($chars[key]){
-      $chars[key].classList.add("visible");
-      if(name.toUpperCase()===speaking.toUpperCase())
-        $chars[key].classList.add("speaking");
+// ── Characters ─────────────────────────────────────────────────
+const CHAR_KEYS = ['globo','sina','thomas'];
+function showChars(visible=[], speaking='', pose='') {
+  const vis  = visible.map(v => v.toLowerCase());
+  const spk  = speaking.toLowerCase();
+  CHAR_KEYS.forEach(k => {
+    const slot = $slots[k];
+    if (!vis.includes(k)) {
+      slot.classList.add('hidden');
+      slot.classList.remove('dimmed');
+    } else {
+      slot.classList.remove('hidden');
+      if (spk && spk !== k) slot.classList.add('dimmed');
+      else slot.classList.remove('dimmed');
     }
+    // set pose
+    if (k === spk && $sprites[k] && pose) $sprites[k].dataset.pose = pose;
   });
+  $slots.player.style.display = 'none';
 }
 
-function setBg(cls){
-  $bg.className = cls;
+// ── Bubbles ────────────────────────────────────────────────────
+function hideAllBubbles() {
+  Object.values($bubbles).forEach(b => b.classList.remove('show'));
+  $narCap.classList.remove('show');
+  $slots.player.style.display = 'none';
 }
+const bubbleTxtEl = k => $bubbles[k].querySelector('.bubble-text');
+const bubbleTapEl = k => $bubbles[k].querySelector('.bubble-tap');
 
-// ── Typewriter ─────────────────────────────────────────────────────────────
-function typeWrite(txt, onDone){
-  S.typing = true;
-  $tapHint.style.display = "none";
-  $text.textContent = "";
-  let i = 0;
+// ── Typewriter ─────────────────────────────────────────────────
+function typeWrite(txt, el, tapEl, onDone) {
   clearTimeout(S.typeTimeout);
-  function next(){
-    if(i < txt.length){
-      $text.textContent += txt[i++];
+  S.typing    = true;
+  S.typeEl    = el;
+  S.tapEl     = tapEl;
+  S.typeOnDone = onDone;
+  el.textContent = '';
+  if (tapEl) tapEl.style.display = 'none';
+  let i = 0;
+  function next() {
+    if (i < txt.length) {
+      el.textContent += txt[i++];
       S.typeTimeout = setTimeout(next, 22);
     } else {
       S.typing = false;
-      if(onDone) onDone();
+      if (tapEl) tapEl.style.display = 'block';
+      if (onDone) { S.typeOnDone = null; onDone(); }
     }
   }
   next();
 }
-
-function skipTypewrite(){
-  // If currently typing, show full text immediately
+function skipTypewrite() {
+  if (!S.typing) return;
   clearTimeout(S.typeTimeout);
   S.typing = false;
+  if (S.typeEl)  S.typeEl.textContent = currentTxt;
+  if (S.tapEl)   S.tapEl.style.display = 'block';
+  const cb = S.typeOnDone; S.typeOnDone = null;
+  if (cb) cb();
 }
 
-// ── Progress dots ──────────────────────────────────────────────────────────
-function updateDots(momentIdx){
-  dots.forEach((d,i)=>{
-    d.className = "pdot" + (i < momentIdx ? " done" : i===momentIdx ? " active" : "");
+// ── Progress dots ──────────────────────────────────────────────
+function updateDots(idx) {
+  dots.forEach((d,i) => {
+    d.className = 'pdot' + (i<idx?' done':i===idx?' active':'');
   });
 }
 
-// ── Toast ──────────────────────────────────────────────────────────────────
-function toast(msg){
-  $toast.textContent = msg;
-  $toast.classList.add("show");
-  setTimeout(()=>$toast.classList.remove("show"), 2500);
+// ── Toast ──────────────────────────────────────────────────────
+function toast(msg) {
+  $toast.textContent = msg; $toast.classList.add('show');
+  setTimeout(() => $toast.classList.remove('show'), 2500);
 }
 
-// ── Input form ─────────────────────────────────────────────────────────────
-$nameInput.addEventListener("input", ()=>{
+// ── Input form ─────────────────────────────────────────────────
+$nameInput.addEventListener('input', () => {
   $confirmName.disabled = $nameInput.value.trim().length < 2;
 });
-$confirmName.addEventListener("click", ()=>{
-  const name = $nameInput.value.trim();
-  if(name.length < 2) return;
-  S.playerName = name;
+$confirmName.addEventListener('click', () => {
+  const n = $nameInput.value.trim();
+  if (n.length < 2) return;
+  S.playerName = n;
   hideInputForm();
-  advanceScript();
+  advanceLine();
 });
-$nameInput.addEventListener("keydown", e=>{
-  if(e.key==="Enter" && !$confirmName.disabled) $confirmName.click();
+$nameInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !$confirmName.disabled) $confirmName.click();
 });
-
-function showInputForm(){
+function showInputForm() {
   S.awaitingInput = true;
-  $inputForm.style.display = "flex";
-  $tapHint.style.display = "none";
-  setTimeout(()=>$nameInput.focus(), 100);
+  $inputForm.style.display = 'flex';
+  setTimeout(() => $nameInput.focus(), 80);
 }
-function hideInputForm(){
+function hideInputForm() {
   S.awaitingInput = false;
-  $inputForm.style.display = "none";
+  $inputForm.style.display = 'none';
 }
 
-// ── Choices ────────────────────────────────────────────────────────────────
-function showChoices(options){
+// ── Choices ────────────────────────────────────────────────────
+function showChoices(opts) {
   S.awaitingChoice = true;
-  $choices.style.display = "flex";
-  $choices.innerHTML = "";
-  $tapHint.style.display = "none";
-  options.forEach(opt=>{
-    const btn = document.createElement("button");
-    btn.className = "choice-btn" + (opt.cls ? " "+opt.cls : "");
-    btn.innerHTML = (opt.icon ? `<span>${opt.icon}</span>` : "") + opt.label;
-    btn.addEventListener("click", ()=>{
-      hideChoices();
-      opt.onSelect();
-    });
+  $choices.style.display = 'flex';
+  $choices.innerHTML = '';
+  opts.forEach(o => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn' + (o.cls ? ' '+o.cls : '');
+    btn.innerHTML = (o.icon ? `<span>${o.icon}</span>` : '') + o.label;
+    btn.addEventListener('click', () => { hideChoices(); o.onSelect(); });
     $choices.appendChild(btn);
   });
 }
-function hideChoices(){
+function hideChoices() {
   S.awaitingChoice = false;
-  $choices.style.display = "none";
-  $choices.innerHTML = "";
+  $choices.style.display = 'none';
+  $choices.innerHTML = '';
 }
 
-// ── Info card ──────────────────────────────────────────────────────────────
-function showInfo(text){
-  $infoBody.textContent = text;
-  $infoCard.style.display = "block";
-}
-function hideInfo(){
-  $infoCard.style.display = "none";
-}
+// ── Info card ──────────────────────────────────────────────────
+function showInfo(t) { $infoBody.textContent = t; $infoCard.style.display = 'block'; }
+function hideInfo()  { $infoCard.style.display = 'none'; }
 
-// ── Script engine ──────────────────────────────────────────────────────────
-// Each "moment" is a list of steps.
-// Step shape: { speaker, text, chars, speaking, bg, action }
-// action types: "input_name", "choice_personalidad", "info", "choice_saludo",
-//               "choice_thomas", "branch_thomas", "end"
+// ── Dynamic helpers ────────────────────────────────────────────
+const p = () => S.playerName || 'Tú';
 
+const PERS_REACTIONS = {
+  'Inteligente 🧠': n => `¡Un científico nato! Con esa mente, ${n}, vas a entender la biología de la sangre en un abrir y cerrar de ojos.`,
+  'Gracioso/a 😄':  n => `¡Ja! Me caes bien, ${n}. El humor ayuda a aprender. Solo no te rías cuando veamos eritrocitos — son un tema serio… o no tanto.`,
+  'Bravo/a 💪':     n => `¡Eso me gusta! Con energía, ${n}. Aquí vas a necesitar fuerza para enfrentar los casos clínicos más difíciles.`,
+  'Líder 👑':       n => `Un líder. Perfecto, ${n}. Tu equipo va a depender de ti. Espero que estés a la altura del desafío.`,
+  'Tímido/a 🌸':    n => `Tranquilo/a, ${n}. Aquí todos empezamos sin saber nada. La curiosidad es más importante que la confianza.`,
+  'Misterioso/a 🌙':n => `Ooh, interesante. ${n} el misterioso. Me pregunto qué secretos guardas… igual que los glóbulos blancos.`,
+};
+const GREET_RESPONSES = {
+  'Hola, ¿cómo estás?':               'B-bien, gracias. Es que… no conozco a nadie aquí.',
+  '¡Ey! Yo también soy nuevo/a.':     '¿En serio? ¡Menos mal! Pensé que era el único.',
+  '*Asientes con la cabeza en silencio.*': '*Asiente también, un poco aliviado de que alguien lo note.*',
+};
+
+// ── SCRIPT ─────────────────────────────────────────────────────
 let SCRIPT = [];
-
-function buildScript(){
-  const p = () => S.playerName || "Tú";
-  const pers = () => S.personalidad;
-
+function buildScript() {
   SCRIPT = [
-    // ────── MOMENTO 0: GLOBO da la bienvenida ──────────────────────────────
-    { moment:0, speaker:"NARRADOR",  chars:[], speaking:"", bg:"bg-campamento",
-      text:"*El sol aún no ha salido. Llegas al campamento INMERSA con tu mochila al hombro.*" },
-    { moment:0, speaker:"GLOBO",     chars:["globo"], speaking:"GLOBO", bg:"bg-campamento",
-      text:"¡Eh! ¡Por fin llegas! Soy GLOBO, tu guía aquí en el campamento. Y tú… ¿cómo te llamas?" },
-    { moment:0, speaker:"GLOBO",     chars:["globo"], speaking:"GLOBO", bg:"bg-campamento",
-      text:"…anda, dime tu nombre.", action:"input_name" },
-    { moment:0, speaker:"GLOBO",     chars:["globo"], speaking:"GLOBO", bg:"bg-campamento",
+    // ── Momento 0: Bienvenida ──────────────────────────────────
+    { moment:0, speaker:'NARRADOR', chars:[], speaking:'', bg:'bg-campamento',
+      text:'*El sol aún no ha salido. Llegas al Campamento Vital con tu mochila al hombro.*' },
+    { moment:0, speaker:'GLOBO', chars:['globo'], speaking:'GLOBO', bg:'bg-campamento', pose:'neutral',
+      text:'¡Eh! ¡Por fin llegas! Soy GLOBO, tu guía aquí en el campamento. Y tú… ¿cómo te llamas?' },
+    { moment:0, speaker:'GLOBO', chars:['globo'], speaking:'GLOBO', bg:'bg-campamento', pose:'confused',
+      text:'…anda, dime tu nombre.', action:'input_name' },
+    { moment:0, speaker:'GLOBO', chars:['globo'], speaking:'GLOBO', bg:'bg-campamento', pose:'happy',
       text:()=>`¡${p()}! Buen nombre. Aquí aprenderás cómo funciona la sangre estudiando casos reales de pacientes.` },
-    { moment:0, speaker:"GLOBO",     chars:["globo"], speaking:"GLOBO", bg:"bg-campamento",
-      text:"Antes de empezar, dime: ¿cómo te describes a ti mismo/a?",
-      action:"choice_personalidad" },
-    // reacción dinámica — se rellena en tiempo de ejecución
-    { moment:0, speaker:"GLOBO",     chars:["globo"], speaking:"GLOBO", bg:"bg-campamento",
-      text:()=>reactionGlobo() },
+    { moment:0, speaker:'GLOBO', chars:['globo'], speaking:'GLOBO', bg:'bg-campamento', pose:'neutral',
+      text:'Antes de empezar, dime: ¿cómo te describes a ti mismo/a?', action:'choice_personalidad' },
+    { moment:0, speaker:'GLOBO', chars:['globo'], speaking:'GLOBO', bg:'bg-campamento', pose:'happy',
+      text:()=> { const fn=PERS_REACTIONS[S.personalidad]; return fn?fn(p()):`Bien, ${p()}. ¡Empecemos!`; } },
 
-    // ────── MOMENTO 1: FILA — cosmético (cómo saludas a Thomas) ───────────
-    { moment:1, speaker:"NARRADOR",  chars:[], speaking:"", bg:"bg-fila",
-      text:"*Te unes a la fila de registro. Delante hay un chico de cabello negro que no conoce a nadie.*" },
-    { moment:1, speaker:"NARRADOR",  chars:["thomas"], speaking:"", bg:"bg-fila",
-      text:"*Es Thomas. Parece nervioso. ¿Cómo lo saludas?*",
-      action:"choice_saludo" },
-    { moment:1, speaker:"THOMAS",    chars:["thomas"], speaking:"THOMAS", bg:"bg-fila",
-      text:()=>thomasGreetResponse() },
-    { moment:1, speaker:"THOMAS",    chars:["thomas"], speaking:"THOMAS", bg:"bg-fila",
-      text:"Gracias… es mi primera vez en un campamento así." },
+    // ── Momento 1: Fila ────────────────────────────────────────
+    { moment:1, speaker:'NARRADOR', chars:[], speaking:'', bg:'bg-fila',
+      text:'*Te unes a la fila de registro. Delante hay un chico de cabello negro que no conoce a nadie.*' },
+    { moment:1, speaker:'NARRADOR', chars:['thomas'], speaking:'', bg:'bg-fila',
+      text:'*Es Thomas. Parece nervioso. ¿Cómo lo saludas?*', action:'choice_saludo' },
+    { moment:1, speaker:'THOMAS', chars:['thomas'], speaking:'THOMAS', bg:'bg-fila',
+      text:()=> GREET_RESPONSES[S.greetingThomas] || '...Hola.' },
+    { moment:1, speaker:'THOMAS', chars:['thomas'], speaking:'THOMAS', bg:'bg-fila',
+      text:'Gracias… es mi primera vez en un campamento así.' },
 
-    // ────── MOMENTO 2: TIENDA DE SINA — análisis de sangre ────────────────
-    { moment:2, speaker:"NARRADOR",  chars:[], speaking:"", bg:"bg-tienda",
-      text:"*En la tienda principal, la doctora SINA os explica la primera prueba: un análisis de sangre básico.*" },
-    { moment:2, speaker:"SINA",      chars:["sina"], speaking:"SINA", bg:"bg-tienda",
+    // ── Momento 2: Tienda SINA ─────────────────────────────────
+    { moment:2, speaker:'NARRADOR', chars:[], speaking:'', bg:'bg-tienda',
+      text:'*En la tienda principal, la doctora SINA os explica la primera prueba: un análisis de sangre básico.*' },
+    { moment:2, speaker:'SINA', chars:['sina'], speaking:'SINA', bg:'bg-tienda', pose:'happy',
       text:()=>`Bienvenidos. Hoy empezamos con lo fundamental: los componentes de la sangre. ${p()}, ¿sabes qué son los eritrocitos?` },
-    { moment:2, speaker:"SINA",      chars:["sina"], speaking:"SINA", bg:"bg-tienda",
-      text:"Los eritrocitos — también llamados glóbulos rojos — son las células que transportan oxígeno por todo tu cuerpo.",
-      action:"info",
-      infoText:"🔴 ERITROCITO = Glóbulo rojo. Función principal: transportar O₂ desde los pulmones hasta los tejidos. Contienen hemoglobina, la proteína que captura el oxígeno. Un adulto sano tiene entre 4.5 y 6 millones por μL de sangre." },
-    { moment:2, speaker:"SINA",      chars:["sina"], speaking:"SINA", bg:"bg-tienda",
-      text:"Su cantidad nos dice mucho sobre la salud de una persona. Un nivel bajo puede significar anemia… o algo más serio." },
+    { moment:2, speaker:'SINA', chars:['sina'], speaking:'SINA', bg:'bg-tienda', pose:'explaining',
+      text:'Los eritrocitos —también llamados glóbulos rojos— son las células que transportan oxígeno por todo tu cuerpo.',
+      action:'info', infoText:'🔴 ERITROCITO = Glóbulo rojo. Función: transportar O₂ desde los pulmones hasta los tejidos. Contienen hemoglobina. Valor normal: 4.5–6 millones por μL de sangre.' },
+    { moment:2, speaker:'SINA', chars:['sina'], speaking:'SINA', bg:'bg-tienda', pose:'neutral',
+      text:'Su cantidad nos dice mucho sobre la salud de una persona. Un nivel bajo puede significar anemia… o algo más serio.' },
 
-    // ────── MOMENTO 3: RESULTADO DE THOMAS ────────────────────────────────
-    { moment:3, speaker:"SINA",      chars:["sina","thomas"], speaking:"SINA", bg:"bg-resultado",
-      text:"Thomas, tu resultado llegó." },
-    { moment:3, speaker:"SINA",      chars:["sina","thomas"], speaking:"SINA", bg:"bg-resultado",
-      text:"Tienes 3.2 millones de eritrocitos por μL. Lo normal sería entre 4.5 y 6 millones.",
-      action:"info",
-      infoText:"⚠️ Nivel de eritrocitos: 3.2 M/μL (referencia: 4.5–6 M/μL). Este valor bajo puede indicar ANEMIA — una condición en la que la sangre no transporta suficiente oxígeno, causando fatiga, palidez y falta de aire." },
-    { moment:3, speaker:"THOMAS",    chars:["sina","thomas"], speaking:"THOMAS", bg:"bg-resultado",
-      text:"Yo… ya lo sabía. Por eso me canso tanto. Pero no quería faltar al campamento." },
-    { moment:3, speaker:"SINA",      chars:["sina","thomas"], speaking:"SINA", bg:"bg-resultado",
-      text:"Gracias por venir de todas formas, Thomas. Tu caso nos va a enseñar mucho a todos." },
+    // ── Momento 3: Resultado Thomas ────────────────────────────
+    { moment:3, speaker:'SINA', chars:['sina','thomas'], speaking:'SINA', bg:'bg-resultado', pose:'neutral',
+      text:'Thomas, tu resultado llegó.' },
+    { moment:3, speaker:'SINA', chars:['sina','thomas'], speaking:'SINA', bg:'bg-resultado', pose:'explaining',
+      text:'Tienes 3.2 millones de eritrocitos por μL. Lo normal es 4.5 a 6 millones.',
+      action:'info', infoText:'⚠️ Eritrocitos: 3.2 M/μL (ref: 4.5–6 M/μL). Nivel bajo → posible ANEMIA. La sangre no transporta suficiente O₂: fatiga, palidez, falta de aire.' },
+    { moment:3, speaker:'THOMAS', chars:['sina','thomas'], speaking:'THOMAS', bg:'bg-resultado',
+      text:'Yo… ya lo sabía. Por eso me canso tanto. Pero no quería faltar al campamento.' },
+    { moment:3, speaker:'SINA', chars:['sina','thomas'], speaking:'SINA', bg:'bg-resultado', pose:'happy',
+      text:'Gracias por venir de todas formas, Thomas. Tu caso nos va a enseñar mucho a todos.' },
 
-    // ────── MOMENTO 4: FORMACIÓN DE EQUIPOS ───────────────────────────────
-    { moment:4, speaker:"NARRADOR",  chars:[], speaking:"", bg:"bg-equipo",
-      text:"*Llega el momento de formar los equipos de trabajo. GLOBO lee los nombres en voz alta.*" },
-    { moment:4, speaker:"GLOBO",     chars:["globo","thomas"], speaking:"GLOBO", bg:"bg-equipo",
+    // ── Momento 4: Equipos ─────────────────────────────────────
+    { moment:4, speaker:'NARRADOR', chars:[], speaking:'', bg:'bg-equipo',
+      text:'*Llega el momento de formar los equipos. GLOBO lee los nombres en voz alta.*' },
+    { moment:4, speaker:'GLOBO', chars:['globo','thomas'], speaking:'GLOBO', bg:'bg-equipo', pose:'neutral',
       text:()=>`Equipo uno: ${p()}, Valentina, Mateo… y Thomas.` },
-    { moment:4, speaker:"NARRADOR",  chars:["globo","thomas"], speaking:"", bg:"bg-equipo",
-      text:"*Nadie se mueve hacia Thomas. Él mira el suelo.*" },
-    { moment:4, speaker:"GLOBO",     chars:["globo","thomas"], speaking:"GLOBO", bg:"bg-equipo",
-      text:()=>`${p()}, Thomas está en tu equipo. ¿Qué haces?`,
-      action:"choice_thomas" },
+    { moment:4, speaker:'NARRADOR', chars:['globo','thomas'], speaking:'', bg:'bg-equipo',
+      text:'*Nadie se mueve hacia Thomas. Él mira el suelo.*' },
+    { moment:4, speaker:'GLOBO', chars:['globo','thomas'], speaking:'GLOBO', bg:'bg-equipo', pose:'confused',
+      text:()=>`${p()}, Thomas está en tu equipo. ¿Qué haces?`, action:'choice_thomas' },
 
-    // ────── MOMENTO 5: RAMIFICACIÓN (rellena según S.decisionThomas) ───────
-    { moment:5, speaker:"", chars:[], speaking:"", bg:"bg-equipo",
-      text:"", action:"branch_thomas" },
+    // ── Momento 5: Ramificación ─────────────────────────────────
+    { moment:5, speaker:'', chars:[], speaking:'', bg:'bg-equipo', text:'', action:'branch_thomas' },
   ];
 }
 
-// ── Dynamic text helpers ───────────────────────────────────────────────────
-const PERSONALITY_REACTIONS = {
-  "Inteligente 🧠": (p)=>`¡Un científico nato! Con esa mente, ${p}, vas a entender la biología de la sangre en un abrir y cerrar de ojos.`,
-  "Gracioso/a 😄":  (p)=>`¡Ja! Me caes bien, ${p}. El humor ayuda a aprender. Solo no te rías cuando veamos eritrocitos, que son un tema serio… o no tanto.`,
-  "Bravo/a 💪":     (p)=>`¡Eso me gusta! Con energía, ${p}. Aquí vas a necesitar fuerza para enfrentar los casos clínicos más difíciles.`,
-  "Líder 👑":       (p)=>`Un líder. Perfecto, ${p}. Tu equipo va a depender de ti. Espero que estés a la altura del desafío.`,
-  "Tímido/a 🌸":    (p)=>`Tranquilo/a, ${p}. Aquí todos empezamos sin saber nada. La curiosidad es más importante que la confianza.`,
-  "Misterioso/a 🌙":(p)=>`Ooh, interesante. ${p} el misterioso. Me pregunto qué secretos guardas… igual que los glóbulos blancos.`,
-};
+// ── Script engine ───────────────────────────────────────────────
+let flatLines  = [];
+let flatIdx    = -1;
+let branchLines= null;
+let branchIdx  = 0;
 
-function reactionGlobo(){
-  const fn = PERSONALITY_REACTIONS[S.personalidad];
-  return fn ? fn(S.playerName) : `Bien, ${S.playerName}. ¡Empecemos!`;
+function getCurrentLine() {
+  return branchLines ? branchLines[branchIdx] : flatLines[flatIdx];
 }
-
-const GREETING_RESPONSES = {
-  "Hola, ¿cómo estás?": "B-bien, gracias. Es que… no conozco a nadie aquí.",
-  "¡Ey! Yo también soy nuevo/a.": "¿En serio? ¡Menos mal! Pensé que era el único.",
-  "*Asientes con la cabeza en silencio.*": "*Asiente también, un poco aliviado de que alguien lo note.*",
-};
-function thomasGreetResponse(){
-  return GREETING_RESPONSES[S.greetingThomas] || "...Hola.";
-}
-
-// ── Branch logic ───────────────────────────────────────────────────────────
-function runBranch(){
-  if(S.decisionThomas === "aceptar"){
-    playBranchLines([
-      { moment:5, speaker:"NARRADOR", chars:["thomas"], speaking:"", bg:"bg-equipo",
-        text:`*Caminas hacia Thomas y extiendes la mano.*` },
-      { moment:5, speaker:()=>S.playerName.toUpperCase(), chars:["thomas"], speaking:"PLAYER", bg:"bg-equipo",
-        text:`Ey, Thomas. Somos compañeros de equipo. Vamos juntos.` },
-      { moment:5, speaker:"THOMAS",   chars:["thomas"], speaking:"THOMAS", bg:"bg-equipo",
-        text:"Yo…" },
-      { moment:5, speaker:"THOMAS",   chars:["thomas"], speaking:"THOMAS", bg:"bg-equipo",
-        text:"Gracias. De verdad." },
-      { moment:5, speaker:"GLOBO",    chars:["globo","thomas"], speaking:"GLOBO", bg:"bg-equipo",
-        text:`Eso es trabajo en equipo, ${S.playerName}. En este campamento ganamos juntos — o perdemos juntos.` },
-      { moment:5, speaker:"SINA",     chars:["sina"], speaking:"SINA", bg:"bg-equipo",
-        text:"El caso de Thomas nos va a enseñar más de lo que imaginan. Empecemos.", action:"end" },
-    ]);
-  } else {
-    playBranchLines([
-      { moment:5, speaker:"NARRADOR", chars:["thomas"], speaking:"", bg:"bg-equipo",
-        text:"*No dices nada. Thomas lo nota.*" },
-      { moment:5, speaker:"THOMAS",   chars:["thomas"], speaking:"THOMAS", bg:"bg-equipo",
-        text:"Entiendo… ya estoy acostumbrado." },
-      { moment:5, speaker:"GLOBO",    chars:["globo","thomas"], speaking:"GLOBO", bg:"bg-equipo",
-        text:`${S.playerName}. La medicina trata a todos los pacientes por igual. Eso incluye a Thomas.` },
-      { moment:5, speaker:"GLOBO",    chars:["globo"], speaking:"GLOBO", bg:"bg-equipo",
-        text:"Trabaja con él. Es una orden del campamento.", action:"end" },
-    ]);
-  }
-}
-
-// ── Flat script player ─────────────────────────────────────────────────────
-let flatLines = [];
-let flatIdx = 0;
-let branchLines = null;
-let branchIdx = 0;
-
-function playBranchLines(lines){
-  branchLines = lines;
-  branchIdx = 0;
-  advanceLine();
-}
-
-function getCurrentLine(){
-  if(branchLines) return branchLines[branchIdx] || null;
-  return flatLines[flatIdx] || null;
-}
-
-function advanceFlatIdx(){
-  if(branchLines){
+function advanceFlatIdx() {
+  if (branchLines) {
     branchIdx++;
-    if(branchIdx >= branchLines.length) branchLines = null;
-  } else {
-    flatIdx++;
-  }
+    if (branchIdx >= branchLines.length) branchLines = null;
+  } else { flatIdx++; }
 }
-
-// ── Display a line ─────────────────────────────────────────────────────────
-function displayLine(line){
-  if(!line) return;
-
-  const momentIdx = typeof line.moment === "number" ? line.moment : S.moment;
-  updateDots(momentIdx);
-  S.moment = momentIdx;
-
-  // Background
-  if(line.bg) setBg(line.bg);
-
-  // Characters
-  showChars(line.chars || [], line.speaking || "");
-
-  // Speaker name
-  let spk = typeof line.speaker === "function" ? line.speaker() : (line.speaker||"");
-  $speaker.textContent = spk;
-  $speaker.style.color = CHAR_COLORS[spk.toUpperCase()] || "var(--text-sec)";
-
-  // Text
-  let txt = typeof line.text === "function" ? line.text() : (line.text||"");
-
-  hideInputForm();
-  hideChoices();
-  hideInfo();
-  $tapHint.style.display = "none";
-
-  if(line.action === "input_name"){
-    $text.textContent = txt;
-    showInputForm();
-  } else if(line.action === "choice_personalidad"){
-    $text.textContent = txt;
-    showChoices([
-      {icon:"🧠", label:"Inteligente 🧠", onSelect:()=>{ S.personalidad="Inteligente 🧠"; advanceLine(); }},
-      {icon:"😄", label:"Gracioso/a 😄",  onSelect:()=>{ S.personalidad="Gracioso/a 😄";  advanceLine(); }},
-      {icon:"💪", label:"Bravo/a 💪",     onSelect:()=>{ S.personalidad="Bravo/a 💪";     advanceLine(); }},
-      {icon:"👑", label:"Líder 👑",       onSelect:()=>{ S.personalidad="Líder 👑";       advanceLine(); }},
-      {icon:"🌸", label:"Tímido/a 🌸",    onSelect:()=>{ S.personalidad="Tímido/a 🌸";    advanceLine(); }},
-      {icon:"🌙", label:"Misterioso/a 🌙",onSelect:()=>{ S.personalidad="Misterioso/a 🌙"; advanceLine(); }},
-    ]);
-  } else if(line.action === "choice_saludo"){
-    $text.textContent = txt;
-    showChoices([
-      {label:"Hola, ¿cómo estás?",         onSelect:()=>{ S.greetingThomas="Hola, ¿cómo estás?";         advanceLine(); }},
-      {label:"¡Ey! Yo también soy nuevo/a.",onSelect:()=>{ S.greetingThomas="¡Ey! Yo también soy nuevo/a."; advanceLine(); }},
-      {label:"*Asientes con la cabeza en silencio.*", onSelect:()=>{ S.greetingThomas="*Asientes con la cabeza en silencio.*"; advanceLine(); }},
-    ]);
-  } else if(line.action === "info"){
-    typeWrite(txt, ()=>{
-      showInfo(line.infoText || "");
-      $tapHint.style.display = "block";
-    });
-  } else if(line.action === "choice_thomas"){
-    $text.textContent = txt;
-    showChoices([
-      {icon:"🤝", label:"Te acercas y lo invitas al equipo.", cls:"thomas-yes",
-        onSelect:()=>{ S.decisionThomas="aceptar"; advanceLine(); }},
-      {icon:"🚶", label:"No haces nada y esperas que otro lo incluya.", cls:"thomas-no",
-        onSelect:()=>{ S.decisionThomas="rechazar"; advanceLine(); }},
-    ]);
-  } else if(line.action === "branch_thomas"){
-    runBranch();
-    return; // branch will call advanceLine internally
-  } else if(line.action === "end"){
-    typeWrite(txt, ()=>{
-      setTimeout(()=>finishGame(), 1200);
-    });
-  } else {
-    typeWrite(txt, ()=>{
-      $tapHint.style.display = "block";
-    });
-  }
-}
-
-// ── Advance to next line ───────────────────────────────────────────────────
-function advanceLine(){
+function advanceLine() {
   advanceFlatIdx();
   const line = getCurrentLine();
-  if(!line){ finishGame(); return; }
+  if (!line) { finishGame(); return; }
   displayLine(line);
 }
-
-// Starting point (called externally in script flow)
-function advanceScript(){
-  advanceLine();
+function playBranch(lines) {
+  branchLines = lines; branchIdx = 0;
+  displayLine(lines[0]);
 }
 
-// ── Tap-to-advance ─────────────────────────────────────────────────────────
-document.getElementById("scene").addEventListener("click", ()=>{
-  if(S.awaitingInput || S.awaitingChoice) return;
-  if(S.typing){
-    // Skip typewriter
-    const line = getCurrentLine();
-    if(!line) return;
-    clearTimeout(S.typeTimeout);
-    S.typing = false;
-    let txt = typeof line.text === "function" ? line.text() : (line.text||"");
-    $text.textContent = txt;
-    if(line.action==="info"){
-      showInfo(line.infoText||"");
-    }
-    $tapHint.style.display = "block";
+// ── Display ─────────────────────────────────────────────────────
+function displayLine(line) {
+  if (!line) return;
+  const mi = typeof line.moment==='number' ? line.moment : S.moment;
+  updateDots(mi); S.moment = mi;
+  if (line.bg) setBg(line.bg);
+  showChars(line.chars||[], line.speaking||'', line.pose||'neutral');
+  hideAllBubbles(); hideInputForm(); hideChoices(); hideInfo();
+
+  const txt = typeof line.text==='function' ? line.text() : (line.text||'');
+  currentTxt = txt;
+  const spk = (typeof line.speaker==='function' ? line.speaker() : (line.speaker||'')).toUpperCase();
+
+  if      (line.action==='input_name')        { showLine(spk,txt,()=>showInputForm()); }
+  else if (line.action==='choice_personalidad'){ showLine(spk,txt,()=>showChoices(PERS_OPTS)); }
+  else if (line.action==='choice_saludo')      { showLine(spk,txt,()=>showChoices(SALUDO_OPTS)); }
+  else if (line.action==='choice_thomas')      { showLine(spk,txt,()=>showChoices(THOMAS_OPTS)); }
+  else if (line.action==='info')               { showLine(spk,txt,()=>showInfo(line.infoText||'')); }
+  else if (line.action==='branch_thomas')      { runBranch(); }
+  else if (line.action==='end')                { showLine(spk,txt,()=>setTimeout(finishGame,1200)); }
+  else                                         { showLine(spk,txt,null); }
+}
+
+function showLine(speaker, txt, onDone) {
+  if (speaker === 'NARRADOR' || !speaker) {
+    $narCap.classList.add('show');
+    typeWrite(txt, $narText, $narTap, onDone);
     return;
   }
+  const key = speaker.toLowerCase();
+  if (!CHAR_KEYS.includes(key)) {
+    // player
+    document.getElementById('player-name-tag').textContent = S.playerName || 'Tú';
+    $slots.player.style.display = 'flex';
+    $bubbles.player.classList.add('show');
+    typeWrite(txt, bubbleTxtEl('player'), bubbleTapEl('player'), onDone);
+    return;
+  }
+  $bubbles[key].classList.add('show');
+  typeWrite(txt, bubbleTxtEl(key), bubbleTapEl(key), onDone);
+}
+
+// ── Choices data ───────────────────────────────────────────────
+const PERS_OPTS = [
+  {icon:'🧠',label:'Inteligente 🧠', onSelect:()=>{S.personalidad='Inteligente 🧠';advanceLine();}},
+  {icon:'😄',label:'Gracioso/a 😄',  onSelect:()=>{S.personalidad='Gracioso/a 😄'; advanceLine();}},
+  {icon:'💪',label:'Bravo/a 💪',     onSelect:()=>{S.personalidad='Bravo/a 💪';    advanceLine();}},
+  {icon:'👑',label:'Líder 👑',       onSelect:()=>{S.personalidad='Líder 👑';      advanceLine();}},
+  {icon:'🌸',label:'Tímido/a 🌸',    onSelect:()=>{S.personalidad='Tímido/a 🌸';   advanceLine();}},
+  {icon:'🌙',label:'Misterioso/a 🌙',onSelect:()=>{S.personalidad='Misterioso/a 🌙';advanceLine();}},
+];
+const SALUDO_OPTS = [
+  {label:'Hola, ¿cómo estás?',                 onSelect:()=>{S.greetingThomas='Hola, ¿cómo estás?';               advanceLine();}},
+  {label:'¡Ey! Yo también soy nuevo/a.',        onSelect:()=>{S.greetingThomas='¡Ey! Yo también soy nuevo/a.';      advanceLine();}},
+  {label:'*Asientes con la cabeza en silencio.',onSelect:()=>{S.greetingThomas='*Asientes con la cabeza en silencio.*';advanceLine();}},
+];
+const THOMAS_OPTS = [
+  {icon:'🤝',label:'Te acercas y lo invitas al equipo.',       cls:'thomas-yes', onSelect:()=>{S.decisionThomas='aceptar'; advanceLine();}},
+  {icon:'🚶',label:'No haces nada y esperas que otro lo incluya.',cls:'thomas-no', onSelect:()=>{S.decisionThomas='rechazar';advanceLine();}},
+];
+
+// ── Branch ─────────────────────────────────────────────────────
+function runBranch() {
+  if (S.decisionThomas === 'aceptar') {
+    playBranch([
+      {moment:5,speaker:'NARRADOR',chars:['thomas'],speaking:'',bg:'bg-equipo',
+        text:'*Caminas hacia Thomas y extiendes la mano.*'},
+      {moment:5,speaker:'PLAYER',chars:['thomas'],speaking:'PLAYER',bg:'bg-equipo',
+        text:'Ey, Thomas. Somos compañeros de equipo. Vamos juntos.'},
+      {moment:5,speaker:'THOMAS',chars:['thomas'],speaking:'THOMAS',bg:'bg-equipo',
+        text:'Yo…'},
+      {moment:5,speaker:'THOMAS',chars:['thomas'],speaking:'THOMAS',bg:'bg-equipo',
+        text:'Gracias. De verdad.'},
+      {moment:5,speaker:'GLOBO',chars:['globo','thomas'],speaking:'GLOBO',bg:'bg-equipo',pose:'happy',
+        text:`Eso es trabajo en equipo, ${S.playerName}. En este campamento ganamos juntos — o perdemos juntos.`},
+      {moment:5,speaker:'SINA',chars:['sina'],speaking:'SINA',bg:'bg-equipo',pose:'explaining',
+        text:'El caso de Thomas nos va a enseñar más de lo que imaginan. Empecemos.',action:'end'},
+    ]);
+  } else {
+    playBranch([
+      {moment:5,speaker:'NARRADOR',chars:['thomas'],speaking:'',bg:'bg-equipo',
+        text:'*No dices nada. Thomas lo nota.*'},
+      {moment:5,speaker:'THOMAS',chars:['thomas'],speaking:'THOMAS',bg:'bg-equipo',
+        text:'Entiendo… ya estoy acostumbrado.'},
+      {moment:5,speaker:'GLOBO',chars:['globo','thomas'],speaking:'GLOBO',bg:'bg-equipo',pose:'confused',
+        text:`${S.playerName}. La medicina trata a todos los pacientes por igual. Eso incluye a Thomas.`},
+      {moment:5,speaker:'GLOBO',chars:['globo'],speaking:'GLOBO',bg:'bg-equipo',pose:'neutral',
+        text:'Trabaja con él. Es una orden del campamento.',action:'end'},
+    ]);
+  }
+}
+
+// ── Tap to advance ──────────────────────────────────────────────
+document.getElementById('scene').addEventListener('click', () => {
+  if (S.awaitingInput || S.awaitingChoice) return;
+  if (S.typing) { skipTypewrite(); return; }
+  if ($infoCard.style.display !== 'none') { hideInfo(); advanceLine(); return; }
   advanceLine();
 });
 
-// ── Firebase save + postMessage ────────────────────────────────────────────
-async function finishGame(){
-  const saveData = {
-    nombre:           S.playerName,
-    personalidad:     S.personalidad,
-    decision_thomas:  S.decisionThomas,
-    paso1_completado: true,
-    paso1_ts:         serverTimestamp(),
-  };
-
-  if(uid){
+// ── Finish ──────────────────────────────────────────────────────
+async function finishGame() {
+  if (uid) {
     try {
-      await updateDoc(doc(db,"estudiantes",uid), saveData);
-    } catch(e){
-      console.warn("Firebase save error:", e);
-    }
+      await updateDoc(doc(db,'estudiantes',uid), {
+        nombre:S.playerName, personalidad:S.personalidad,
+        decision_thomas:S.decisionThomas,
+        paso1_completado:true, paso1_ts:serverTimestamp(),
+      });
+    } catch(e){ console.warn('Firebase save error:',e); }
   }
-
-  // postMessage to parent (mapa.html iframe)
-  const msg = { tipo:"resultado_juego", paso:1, puntos:0, completado:true, tiempo_segundos:0 };
-  window.parent.postMessage(msg, "*");
-
-  // Show result overlay
-  $resTitle.textContent = S.decisionThomas === "aceptar"
-    ? "¡Bienvenido, " + S.playerName + "!"
-    : "El campamento ha comenzado.";
-  $resDesc.textContent = S.decisionThomas === "aceptar"
-    ? "Tomaste la decisión correcta. Thomas es ahora parte de tu equipo."
-    : "A veces las segundas oportunidades cambian todo. El campamento recién empieza.";
-  $result.classList.add("show");
+  window.parent.postMessage({tipo:'resultado_juego',paso:1,puntos:0,completado:true,tiempo_segundos:0},'*');
+  document.getElementById('result-title').textContent =
+    S.decisionThomas==='aceptar' ? `¡Bienvenido, ${S.playerName}!` : 'El campamento ha comenzado.';
+  document.getElementById('result-desc').textContent =
+    S.decisionThomas==='aceptar'
+      ? 'Tomaste la decisión correcta. Thomas es ahora parte de tu equipo.'
+      : 'A veces las segundas oportunidades cambian todo. El campamento recién empieza.';
+  $result.classList.add('show');
 }
 
-$finishBtn.addEventListener("click", ()=>{
-  // If in iframe, parent already got the postMessage. Close or navigate.
-  if(window.parent !== window){
-    window.parent.postMessage({tipo:"cerrar_juego"}, "*");
-  } else {
-    window.history.back();
-  }
+document.getElementById('finish-btn').addEventListener('click', () => {
+  if (window.parent!==window) window.parent.postMessage({tipo:'cerrar_juego'},'*');
+  else window.history.back();
 });
 
-// ── Auth & init ────────────────────────────────────────────────────────────
-onAuthStateChanged(auth, user=>{
+// ── Init ────────────────────────────────────────────────────────
+onAuthStateChanged(auth, user => {
   uid = user ? user.uid : null;
-  $loading.style.display = "none";
+  $loading.style.display = 'none';
+  $bg.style.backgroundImage = "url('../Imagenes/bg_campamento.png')";
+  $bg.style.opacity = '1';
   buildScript();
   flatLines = SCRIPT;
-  flatIdx = -1; // will be incremented to 0 by first advanceLine
-  // Show first line
+  flatIdx   = -1;
   advanceLine();
 });
 </script>
