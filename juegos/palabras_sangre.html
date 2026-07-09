@@ -218,6 +218,26 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 #cq-skip{background:none;border:none;color:var(--teal);font-family:inherit;font-size:.85rem;
   font-weight:600;cursor:pointer;opacity:.7;text-decoration:underline;padding:4px 8px}
 #cq-skip:hover{opacity:1}
+#cq-timer-row{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+#cq-timer-disp{font-size:1.1rem;font-weight:900;color:var(--accent);min-width:24px;text-align:right;font-variant-numeric:tabular-nums;transition:color .3s}
+#cq-timer-disp.warn{color:var(--yellow)}
+#cq-timer-disp.dngr{color:var(--red);animation:pulse .5s infinite}
+#cq-tbw{flex:1;background:#06111f;border-radius:6px;overflow:hidden;height:5px}
+#cq-tbar{height:5px;width:100%;background:linear-gradient(90deg,var(--teal),var(--accent));border-radius:6px;transition:width .2s linear,background .4s}
+
+/* NEXT-WORD TRANSITION */
+#next-transition{position:fixed;inset:0;z-index:190;background:rgba(0,0,0,.72);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .25s}
+#next-transition.show{opacity:1;pointer-events:all}
+#nt-box{background:var(--card);border:1px solid rgba(0,180,204,.3);border-radius:16px;
+  padding:28px 40px;text-align:center;min-width:240px;
+  box-shadow:0 0 40px rgba(0,180,204,.15);animation:slideUp .3s cubic-bezier(.34,1.56,.64,1)}
+#nt-icon{font-size:2.4rem;margin-bottom:8px}
+#nt-msg{font-size:1.25rem;font-weight:900;color:var(--accent);margin-bottom:4px}
+#nt-info{font-size:.78rem;color:var(--muted);margin-bottom:16px}
+#nt-prog{background:#06111f;border-radius:6px;overflow:hidden;height:4px}
+#nt-bar{height:4px;background:linear-gradient(90deg,var(--teal),var(--accent));border-radius:6px;width:100%}
 
 /* CONFETTI */
 #confetti{position:fixed;inset:0;z-index:90;pointer-events:none}
@@ -265,14 +285,14 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 
 <!-- AUDIO -->
 <audio id="mus-ambient"   src="Audio/Musica/ahorcado_ambient.mp3" loop preload="auto"></audio>
-<audio id="sfx-ok"        src="Audio/SFX/letter_correct.mp3"      preload="auto"></audio>
-<audio id="sfx-wrong"     src="Audio/SFX/letter_wrong.mp3"        preload="auto"></audio>
+<audio id="sfx-ok"        src="Audio/SFX/acierto.mp3"      preload="auto"></audio>
+<audio id="sfx-wrong"     src="Audio/SFX/error.mp3"        preload="auto"></audio>
 <audio id="sfx-word-win"  src="Audio/SFX/life_up.mp3"             preload="auto"></audio>
 <audio id="sfx-word-lose" src="Audio/SFX/game_over.mp3"           preload="auto"></audio>
-<audio id="sfx-alarm"     src="Audio/SFX/siren_loop.mp3"   loop   preload="auto"></audio>
-<audio id="sfx-quiz-ok"   src="Audio/SFX/quiz_correct.mp3"        preload="auto"></audio>
-<audio id="sfx-quiz-bad"  src="Audio/SFX/snake_rescate_incorrecto.mp3" preload="auto"></audio>
-<audio id="sfx-victory"   src="Audio/SFX/module_victory.mp3"      preload="auto"></audio>
+<audio id="sfx-alarm"     src="Audio/SFX/sirena.mp3"   loop   preload="auto"></audio>
+<audio id="sfx-quiz-ok"   src="Audio/SFX/acierto.mp3"        preload="auto"></audio>
+<audio id="sfx-quiz-bad"  src="Audio/SFX/error.mp3" preload="auto"></audio>
+<audio id="sfx-victory"   src="Audio/SFX/victoria.mp3"      preload="auto"></audio>
 
 <button id="btn-mute">🔊</button>
 <canvas id="confetti"></canvas>
@@ -289,11 +309,11 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 <div id="intro">
   <div style="font-size:3rem">🩸</div>
   <h1>Palabras Sanguíneas</h1>
-  <p>Descifra los componentes de la sangre. Selecciona las letras revueltas en el <strong>orden correcto</strong> para formar cada palabra antes de que el tiempo termine.</p>
+  <p>Descifra los componentes de la sangre y sus enfermedades. Selecciona las letras revueltas en el <strong>orden correcto</strong> para formar cada palabra antes de que el tiempo termine.</p>
   <div id="rules">
     <div class="rcard"><div class="ri">🔤</div><strong>Letras en orden</strong>Haz clic en las letras para armar la palabra de izquierda a derecha.</div>
     <div class="rcard"><div class="ri">💡</div><strong>Pistas (−15 pts)</strong>Cada pista revela automáticamente la siguiente letra correcta.</div>
-    <div class="rcard"><div class="ri">⏱️</div><strong>60 segundos</strong>Tienes un minuto por palabra. Más rápido = más puntos.</div>
+    <div class="rcard"><div class="ri">⏱️</div><strong>30 segundos</strong>Tienes 30 segundos por palabra. Más rápido = más puntos.</div>
     <div class="rcard"><div class="ri">🧠</div><strong>Quiz de comprensión</strong>Tras cada acierto, un quiz bonus de +50 pts.</div>
   </div>
   <button id="btn-play" onclick="startGame()">▶&nbsp; Comenzar</button>
@@ -303,8 +323,8 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 <div id="mv-overlay">
   <div id="mv-box">
     <div id="mv-badge">🏆</div>
-    <div id="mv-title">MÓDULO P01 — COMPONENTES SANGUÍNEOS<br><span id="mv-subtitle">COMPLETADO</span></div>
-    <div id="mv-tagline">Has dominado los 12 componentes del módulo.</div>
+    <div id="mv-title">MÓDULO P01 — COMPONENTES Y ENFERMEDADES<br><span id="mv-subtitle">COMPLETADO</span></div>
+    <div id="mv-tagline">Has dominado los 9 términos del módulo P01.</div>
     <div id="mv-stats">
       <div class="mv-stat"><span class="mv-stat-lbl">PALABRAS</span><span class="mv-stat-val" id="mv-words">0/12</span></div>
       <div class="mv-stat"><span class="mv-stat-lbl">COMPRENSIÓN</span><span class="mv-stat-val" id="mv-comp">0/12</span></div>
@@ -320,9 +340,20 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 <div id="cq-overlay">
   <div id="cq-box">
     <div id="cq-header">COMPRENSIÓN — <span id="cq-name"></span></div>
+    <div id="cq-timer-row"><span id="cq-timer-disp">15</span><div id="cq-tbw"><div id="cq-tbar"></div></div></div>
     <div id="cq-question"></div>
     <div id="cq-options"></div>
     <button id="cq-skip" onclick="skipCQ()">Saltar pregunta</button>
+  </div>
+</div>
+
+<!-- NEXT-WORD TRANSITION -->
+<div id="next-transition">
+  <div id="nt-box">
+    <div id="nt-icon">⚡</div>
+    <div id="nt-msg">¡A la siguiente!</div>
+    <div id="nt-info"></div>
+    <div id="nt-prog"><div id="nt-bar"></div></div>
   </div>
 </div>
 
@@ -482,30 +513,24 @@ document.getElementById('btn-mute').addEventListener('click',e=>{e.stopPropagati
    WORD BANK
 ═══════════════════════════════════════ */
 const WORDS=[
-  {word:'ERITROCITO', img:'../Imagenes/eritrocito.png', cat:'Glóbulo Rojo 🔴',
-   data:[{i:'🔢',k:'Cantidad',v:'4.5–6 millones / μL'},{i:'⏳',k:'Vida útil',v:'~120 días'},{i:'📏',k:'Tamaño',v:'6–8 μm'},{i:'🎯',k:'Función',v:'Transporte de O₂'},{i:'🧬',k:'Núcleo',v:'Anucleado'}]},
-  {word:'LEUCOCITO',  img:'../Imagenes/leucocito.png',  cat:'Glóbulo Blanco ⚪',
-   data:[{i:'🔢',k:'Cantidad',v:'4,500–11,000 / μL'},{i:'⏳',k:'Vida útil',v:'Horas a años'},{i:'📏',k:'Tamaño',v:'7–20 μm'},{i:'🎯',k:'Función',v:'Defensa inmune'},{i:'🧬',k:'Tipos',v:'5: N, L, M, E, B'}]},
-  {word:'PLAQUETA',   img:'../Imagenes/plaqueta.png',   cat:'Trombocito 🟡',
-   data:[{i:'🔢',k:'Cantidad',v:'150,000–400,000 / μL'},{i:'⏳',k:'Vida útil',v:'~10 días'},{i:'📏',k:'Tamaño',v:'2–3 μm'},{i:'🎯',k:'Función',v:'Coagulación'},{i:'🧬',k:'Origen',v:'Fragmento megacariocito'}]},
-  {word:'PLASMA',     img:'../Imagenes/plasma.png',     cat:'Fracción líquida 🟨',
-   data:[{i:'🔢',k:'Del volumen',v:'~55% de la sangre'},{i:'💧',k:'Composición',v:'90% agua'},{i:'🎯',k:'Función',v:'Transporte nutrientes'},{i:'🧪',k:'Color',v:'Amarillo pálido'},{i:'🌡️',k:'pH',v:'7.35–7.45'}]},
-  {word:'HEMOGLOBINA',img:'../Imagenes/hemoglobina.png',cat:'Proteína eritrocitaria 🔴',
-   data:[{i:'🔢',k:'Concentración',v:'12–17 g/dL'},{i:'⚙️',k:'Estructura',v:'4 cadenas + grupo hemo'},{i:'🎯',k:'Función',v:'Transportar O₂'},{i:'⚗️',k:'Contiene',v:'Hierro Fe²⁺'},{i:'🎨',k:'Color rojo',v:'Oxihemoglobina'}]},
-  {word:'TROMBOCITO', img:'../Imagenes/plaqueta.png',   cat:'Sinónimo de plaqueta 🟡',
-   data:[{i:'📖',k:'Otro nombre',v:'Plaqueta'},{i:'🔢',k:'Cantidad',v:'150,000–400,000 / μL'},{i:'🎯',k:'Función',v:'Hemostasia'},{i:'⏳',k:'Vida útil',v:'7–10 días'},{i:'🧬',k:'Etimología',v:'Trombo = coágulo'}]},
-  {word:'NEUTROFILO', img:'../Imagenes/leuco.png',      cat:'Leucocito granulócito ⚪',
-   data:[{i:'🔢',k:'% leucocitos',v:'60–70%'},{i:'⏳',k:'Vida útil',v:'6–12 h en sangre'},{i:'🎯',k:'Función',v:'1ª defensa bacteriana'},{i:'⚙️',k:'Mecanismo',v:'Fagocitosis'},{i:'🧬',k:'Núcleo',v:'Multilobulado 2–5 lóbulos'}]},
-  {word:'LINFOCITO',  img:'../Imagenes/leucocito.png',  cat:'Leucocito agranulócito ⚪',
-   data:[{i:'🔢',k:'% leucocitos',v:'20–40%'},{i:'⏳',k:'Vida útil',v:'Días a décadas'},{i:'🎯',k:'Función',v:'Inmunidad específica'},{i:'⚙️',k:'Tipos',v:'T, B y NK'},{i:'🧬',k:'Produce',v:'Anticuerpos (tipo B)'}]},
-  {word:'HEMATOCRITO',img:'../Imagenes/eritrocito2.png',cat:'Índice hematológico 📊',
-   data:[{i:'📊',k:'Definición',v:'% eritrocitos en sangre'},{i:'🔢',k:'Hombres',v:'40–54%'},{i:'🔢',k:'Mujeres',v:'37–47%'},{i:'🎯',k:'Uso clínico',v:'Diagnóstico anemia'},{i:'🧪',k:'Medición',v:'Centrifugado sanguíneo'}]},
-  {word:'FIBRINOGENO',img:'../Imagenes/plasma.png',     cat:'Proteína del plasma 🟨',
-   data:[{i:'🧬',k:'Tipo',v:'Glicoproteína'},{i:'🔢',k:'Concentración',v:'200–400 mg/dL'},{i:'🎯',k:'Función',v:'Precursor de fibrina'},{i:'⚙️',k:'En coagulación',v:'Trombina→fibrina'},{i:'🏭',k:'Síntesis',v:'Hígado'}]},
-  {word:'ALBUMINA',   img:'../Imagenes/plasma.png',     cat:'Proteína plasmática 🟨',
-   data:[{i:'🔢',k:'Concentración',v:'3.5–5 g/dL'},{i:'📊',k:'Del total proteico',v:'~60% del plasma'},{i:'🎯',k:'Función',v:'Presión osmótica'},{i:'⚙️',k:'Transporta',v:'Lípidos y hormonas'},{i:'🏭',k:'Síntesis',v:'Hígado (~20 días)'}]},
-  {word:'MONOCITO',   img:'../Imagenes/leuco.png',      cat:'Leucocito agranulócito ⚪',
-   data:[{i:'🔢',k:'% leucocitos',v:'2–8%'},{i:'📏',k:'Tamaño',v:'12–20 μm (el mayor)'},{i:'🎯',k:'Función',v:'Fagocitosis'},{i:'⚙️',k:'Diferencia en',v:'Macrófago en tejidos'},{i:'🧬',k:'Núcleo',v:'Forma de riñón'}]},
+  {word:'ERITROCITO',      img:'../Imagenes/eritrocito.png',      cat:'Componente sanguíneo 🔴',
+   data:[{i:'🎯',k:'Función',v:'Transporte de O₂ a los tejidos'},{i:'🧬',k:'Proteína clave',v:'Hemoglobina (lleva el hierro)'},{i:'🔢',k:'Cantidad',v:'4.5–6 millones / μL'},{i:'⏳',k:'Vida útil',v:'~120 días'},{i:'🧫',k:'Núcleo',v:'Anucleado (sin núcleo)'}]},
+  {word:'LEUCOCITO',       img:'../Imagenes/leucocito.png',       cat:'Componente sanguíneo ⚪',
+   data:[{i:'🎯',k:'Función',v:'Defensa contra infecciones'},{i:'🔢',k:'Cantidad',v:'4,500–11,000 / μL'},{i:'⏳',k:'Vida útil',v:'Horas a años'},{i:'📏',k:'Tamaño',v:'7–20 μm'},{i:'🧬',k:'Tipos',v:'Neutrófilo, linfocito, monocito…'}]},
+  {word:'PLAQUETA',        img:'../Imagenes/plaqueta.png',        cat:'Componente sanguíneo 🟡',
+   data:[{i:'🎯',k:'Función',v:'Coagulación / hemostasia'},{i:'📖',k:'Otro nombre',v:'Trombocito'},{i:'🔢',k:'Cantidad',v:'150,000–400,000 / μL'},{i:'⏳',k:'Vida útil',v:'~10 días'},{i:'🧬',k:'Origen',v:'Fragmento del megacariocito'}]},
+  {word:'PLASMA',          img:'../Imagenes/plasma.png',          cat:'Componente sanguíneo 🟨',
+   data:[{i:'🎯',k:'Función',v:'Transporta células y nutrientes'},{i:'📊',k:'% de la sangre',v:'~55% del volumen total'},{i:'💧',k:'Composición',v:'~90% agua'},{i:'🧪',k:'Color',v:'Amarillo pálido'},{i:'🌡️',k:'pH',v:'7.35–7.45'}]},
+  {word:'ANEMIA',          img:'../Imagenes/anemia.png',          cat:'Enfermedad sanguínea 🩸',
+   data:[{i:'⚠️',k:'Causa',v:'Pocos eritrocitos o hemoglobina baja'},{i:'😓',k:'Síntoma clave',v:'Fatiga, palidez, falta de oxígeno'},{i:'🔗',k:'Componente afectado',v:'Eritrocito / hemoglobina'},{i:'🧬',k:'Tipos',v:'Ferropénica, aplásica, hemolítica'},{i:'💊',k:'Tratamiento',v:'Hierro, B12, transfusión'}]},
+  {word:'LEUCEMIA',        img:'../Imagenes/leucemia.png',        cat:'Enfermedad sanguínea 🔬',
+   data:[{i:'⚠️',k:'Causa',v:'Leucocitos anormales descontrolados'},{i:'🏭',k:'Origen',v:'Médula ósea'},{i:'🔗',k:'Componente afectado',v:'Leucocito'},{i:'🧬',k:'Tipo',v:'Aguda o crónica; linfoide o mieloide'},{i:'💊',k:'Tratamiento',v:'Quimioterapia, trasplante de médula'}]},
+  {word:'HEMOFILIA',       img:'../Imagenes/hemofilia.png',       cat:'Enfermedad sanguínea 🧬',
+   data:[{i:'⚠️',k:'Causa',v:'Fallo en factores de coagulación'},{i:'🧬',k:'Origen',v:'Genético, ligado al cromosoma X'},{i:'🔗',k:'Componente afectado',v:'Plaqueta / coagulación'},{i:'😓',k:'Síntoma',v:'Sangrado excesivo ante cualquier herida'},{i:'💊',k:'Tratamiento',v:'Infusión de factores de coagulación'}]},
+  {word:'TROMBOCITOPENIA', img:'../Imagenes/trombocitopenia.png', cat:'Enfermedad sanguínea 💉',
+   data:[{i:'⚠️',k:'Causa',v:'Plaquetas bajas en sangre'},{i:'🔗',k:'Componente afectado',v:'Plaqueta (trombocito)'},{i:'🔢',k:'Umbral crítico',v:'< 100,000 plaquetas / μL'},{i:'😓',k:'Síntoma',v:'Moretones fáciles, sangrado sin control'},{i:'💊',k:'Tratamiento',v:'Corticoides, transfusión de plaquetas'}]},
+  {word:'SEPSIS',          img:'../Imagenes/sepsis.png',          cat:'Enfermedad sanguínea ⚠️',
+   data:[{i:'⚠️',k:'Causa',v:'Infección generalizada en la sangre'},{i:'🔗',k:'Componente afectado',v:'Leucocito (respuesta desbordada)'},{i:'😓',k:'Síntoma',v:'Fiebre alta, presión baja, confusión'},{i:'⏱️',k:'Urgencia',v:'Emergencia médica — minutos cuentan'},{i:'💊',k:'Tratamiento',v:'Antibióticos IV, UCI inmediata'}]},
 ];
 
 /* ═══════════════════════════════════════
@@ -513,20 +538,20 @@ const WORDS=[
 ═══════════════════════════════════════ */
 const CQ={
   ERITROCITO:[
-    {q:'¿Cuál es la vida media de un eritrocito sano?',opts:['8-11 días','24 horas','~120 días','30 días'],a:2},
-    {q:'¿Qué característica tiene el eritrocito respecto al núcleo?',opts:['Tiene 2 núcleos','Tiene núcleo multilobulado','Es anucleado','Tiene núcleo en forma de riñón'],a:2},
-    {q:'¿Cuántos eritrocitos hay aproximadamente por μL?',opts:['150,000–400,000','4,500–11,000','4.5–6 millones','200–400'],a:2},
     {q:'¿Cuál es la función principal del eritrocito?',opts:['Producir anticuerpos','Transportar oxígeno','Coagular la sangre','Fagocitar bacterias'],a:1},
+    {q:'¿Qué proteína dentro del eritrocito transporta el oxígeno?',opts:['Albúmina','Fibrinógeno','Hemoglobina','Trombina'],a:2},
+    {q:'¿Cuántos eritrocitos hay aproximadamente por μL?',opts:['150,000–400,000','4,500–11,000','4.5–6 millones','200–400'],a:2},
+    {q:'¿Cuánto vive un eritrocito sano?',opts:['~10 días','~24 horas','~120 días','~1 año'],a:2},
   ],
   LEUCOCITO:[
-    {q:'¿Cuál es el nombre común del leucocito?',opts:['Glóbulo rojo','Plaqueta','Glóbulo blanco','Trombocito'],a:2},
-    {q:'¿Cuántos tipos de leucocitos existen?',opts:['2','3','5','8'],a:2},
     {q:'¿Cuál es la función principal del leucocito?',opts:['Transportar O₂','Coagular','Defensa inmune','Dar color a la sangre'],a:2},
+    {q:'¿Cómo se llama popularmente el leucocito?',opts:['Glóbulo rojo','Plaqueta','Glóbulo blanco','Trombocito'],a:2},
     {q:'¿Cuántos leucocitos hay por μL en condiciones normales?',opts:['4.5–6 millones','4,500–11,000','150,000–400,000','100–500'],a:1},
+    {q:'¿Cuántos tipos principales de leucocitos existen?',opts:['2','3','5','8'],a:2},
   ],
   PLAQUETA:[
-    {q:'¿Cuál es el otro nombre científico de la plaqueta?',opts:['Eritrocito','Leucocito','Trombocito','Monocito'],a:2},
     {q:'¿Cuál es la función principal de la plaqueta?',opts:['Transportar O₂','Defensa inmune','Coagulación sanguínea','Síntesis de proteínas'],a:2},
+    {q:'¿Cuál es el nombre científico de la plaqueta?',opts:['Eritrocito','Leucocito','Trombocito','Monocito'],a:2},
     {q:'¿Cuánto vive una plaqueta aproximadamente?',opts:['~120 días','~10 días','~24 horas','~1 año'],a:1},
     {q:'¿De qué célula se originan las plaquetas?',opts:['Eritroblasto','Linfoblasto','Megacariocito','Monoblasto'],a:2},
   ],
@@ -536,52 +561,35 @@ const CQ={
     {q:'¿Cuál es el pH del plasma sanguíneo?',opts:['6.8–7.0','7.35–7.45','7.8–8.0','5.5–6.5'],a:1},
     {q:'¿Qué color tiene el plasma?',opts:['Rojo intenso','Azulado','Amarillo pálido','Incoloro'],a:2},
   ],
-  HEMOGLOBINA:[
-    {q:'¿Qué mineral contiene el grupo hemo de la hemoglobina?',opts:['Calcio','Zinc','Hierro','Magnesio'],a:2},
-    {q:'¿Cuántas cadenas tiene la hemoglobina?',opts:['2','4','6','8'],a:1},
-    {q:'¿Qué concentración normal de hemoglobina hay en sangre?',opts:['3.5–5 g/dL','12–17 g/dL','200–400 mg/dL','0.5–1 g/dL'],a:1},
-    {q:'¿Cómo se llama la hemoglobina unida al oxígeno?',opts:['Carboxihemoglobina','Desoxihemoglobina','Oxihemoglobina','Metahemoglobina'],a:2},
+  ANEMIA:[
+    {q:'¿Qué causa la anemia?',opts:['Exceso de plaquetas','Bajo número de eritrocitos o hemoglobina','Fallo del sistema inmune','Producción excesiva de plasma'],a:1},
+    {q:'¿Cuál es el componente principalmente afectado en la anemia?',opts:['Leucocito','Plasma','Eritrocito','Plaqueta'],a:2},
+    {q:'¿Cuál es el síntoma más característico de la anemia?',opts:['Fiebre alta','Moretones fáciles','Fatiga y palidez','Sangrado excesivo'],a:2},
+    {q:'¿Cuál de estos es un tipo de anemia?',opts:['Séptica','Ferropénica','Mieloide','Hemofílica'],a:1},
   ],
-  TROMBOCITO:[
-    {q:'Trombocito es sinónimo de...',opts:['Eritrocito','Leucocito','Plaqueta','Monocito'],a:2},
-    {q:'¿Qué proceso regula el trombocito?',opts:['Respiración celular','Hemostasia y coagulación','Síntesis de anticuerpos','Transporte de CO₂'],a:1},
-    {q:'¿Qué significa "trombo" en la etimología?',opts:['Célula','Coágulo','Sangre','Defensa'],a:1},
+  LEUCEMIA:[
+    {q:'¿Qué produce la leucemia?',opts:['Muy pocos eritrocitos','Exceso de hemoglobina','Leucocitos anormales descontrolados','Plaquetas defectuosas'],a:2},
+    {q:'¿Dónde se origina la leucemia?',opts:['Hígado','Bazo','Médula ósea','Pulmones'],a:2},
+    {q:'¿Qué componente está afectado en la leucemia?',opts:['Plasma','Eritrocito','Plaqueta','Leucocito'],a:3},
+    {q:'¿Cuál es un tratamiento común para la leucemia?',opts:['Hierro oral','Quimioterapia','Antibióticos','Anticoagulantes'],a:1},
   ],
-  NEUTROFILO:[
-    {q:'¿Qué porcentaje de los leucocitos representan los neutrófilos?',opts:['2–8%','20–40%','60–70%','5–10%'],a:2},
-    {q:'¿Cuál es el mecanismo principal del neutrófilo?',opts:['Producción de anticuerpos','Fagocitosis','Síntesis de hemoglobina','Liberación de histamina'],a:1},
-    {q:'¿Cuántos lóbulos tiene el núcleo del neutrófilo?',opts:['1','2–5','6–9','Núcleo redondo'],a:1},
-    {q:'¿Cuánto vive un neutrófilo en sangre?',opts:['120 días','6–12 horas','10 días','Varios años'],a:1},
+  HEMOFILIA:[
+    {q:'¿Qué falla en la hemofilia?',opts:['Los eritrocitos','Los leucocitos','Los factores de coagulación','El plasma'],a:2},
+    {q:'¿Cómo se transmite la hemofilia?',opts:['Por contagio','Genética, ligada al cromosoma X','Por la alimentación','Por infección bacteriana'],a:1},
+    {q:'¿Cuál es el síntoma principal de la hemofilia?',opts:['Fiebre persistente','Sangrado excesivo ante cualquier herida','Palidez extrema','Exceso de leucocitos'],a:1},
+    {q:'¿Con qué componente se relaciona la hemofilia?',opts:['Eritrocito','Plasma','Plaqueta / coagulación','Leucocito'],a:2},
   ],
-  LINFOCITO:[
-    {q:'¿Qué tipo de inmunidad dirige el linfocito?',opts:['Innata e inespecífica','Específica o adaptativa','Mecánica','Inflamatoria'],a:1},
-    {q:'¿Qué produce el linfocito B?',opts:['Hemoglobina','Plaquetas','Anticuerpos','Fibrinógeno'],a:2},
-    {q:'¿Qué porcentaje de leucocitos son linfocitos?',opts:['60–70%','2–8%','20–40%','5–10%'],a:2},
-    {q:'¿Cuáles son los 3 tipos de linfocitos?',opts:['N, E, B','T, B y NK','M, L, B','A, B, C'],a:1},
+  TROMBOCITOPENIA:[
+    {q:'¿Qué tiene bajo en sangre un paciente con trombocitopenia?',opts:['Eritrocitos','Leucocitos','Plasma','Plaquetas'],a:3},
+    {q:'¿Cuál es el síntoma principal de la trombocitopenia?',opts:['Fiebre alta','Fatiga y palidez','Moretones fáciles y sangrado sin control','Infecciones frecuentes'],a:2},
+    {q:'¿Con qué componente se relaciona la trombocitopenia?',opts:['Eritrocito','Leucocito','Plaqueta','Plasma'],a:2},
+    {q:'¿Cuál es otro nombre para la plaqueta?',opts:['Eritrocito','Leucocito','Trombocito','Monocito'],a:2},
   ],
-  HEMATOCRITO:[
-    {q:'¿Qué mide el hematocrito?',opts:['Cantidad de plaquetas','Concentración de hemoglobina','% de eritrocitos en sangre','pH de la sangre'],a:2},
-    {q:'¿Cuál es el hematocrito normal en hombres?',opts:['37–47%','40–54%','55–65%','25–35%'],a:1},
-    {q:'¿Cómo se mide el hematocrito?',opts:['Recuento manual','Centrifugado de sangre total','Análisis de orina','Biopsia'],a:1},
-    {q:'¿Para qué se usa el hematocrito clínicamente?',opts:['Detectar infecciones','Diagnosticar anemia o policitemia','Medir glucosa','Evaluar función renal'],a:1},
-  ],
-  FIBRINOGENO:[
-    {q:'¿En qué se convierte el fibrinógeno durante la coagulación?',opts:['Trombina','Fibrina','Protrombina','Albúmina'],a:1},
-    {q:'¿Qué enzima convierte el fibrinógeno en fibrina?',opts:['Lipasa','Amilasa','Trombina','Pepsina'],a:2},
-    {q:'¿Dónde se sintetiza el fibrinógeno?',opts:['Riñón','Páncreas','Hígado','Médula ósea'],a:2},
-    {q:'¿Cuál es la concentración normal de fibrinógeno?',opts:['3.5–5 g/dL','12–17 g/dL','200–400 mg/dL','4.5–6 millones/μL'],a:2},
-  ],
-  ALBUMINA:[
-    {q:'¿Qué porcentaje de las proteínas plasmáticas representa la albúmina?',opts:['~20%','~40%','~60%','~80%'],a:2},
-    {q:'¿Cuál es la función principal de la albúmina?',opts:['Transporte de O₂','Presión osmótica coloidal','Coagulación','Defensa inmune'],a:1},
-    {q:'¿Dónde se sintetiza la albúmina?',opts:['Riñón','Bazo','Hígado','Pulmón'],a:2},
-    {q:'¿Qué transporta la albúmina?',opts:['Solo glucosa','Solo O₂','Lípidos, hormonas y medicamentos','Solo CO₂'],a:2},
-  ],
-  MONOCITO:[
-    {q:'¿En qué célula se convierte el monocito al salir a los tejidos?',opts:['Neutrófilo','Linfocito','Macrófago','Eosinófilo'],a:2},
-    {q:'¿Cuál es el leucocito de mayor tamaño?',opts:['Neutrófilo','Linfocito','Eosinófilo','Monocito'],a:3},
-    {q:'¿Qué porcentaje de leucocitos son monocitos?',opts:['60–70%','20–40%','2–8%','40–50%'],a:2},
-    {q:'¿Qué forma tiene el núcleo del monocito?',opts:['Multilobulado','Esférico','En forma de riñón o herradura','Bilobulado'],a:2},
+  SEPSIS:[
+    {q:'¿Qué causa la sepsis?',opts:['Falta de eritrocitos','Infección generalizada que desborda las defensas','Fallo en coagulación','Exceso de plaquetas'],a:1},
+    {q:'¿Qué componente está principalmente involucrado en la sepsis?',opts:['Eritrocito','Plaqueta','Leucocito','Plasma'],a:2},
+    {q:'¿Cómo se clasifica médicamente la sepsis?',opts:['Enfermedad crónica','Emergencia médica urgente','Condición estable','Trastorno genético'],a:1},
+    {q:'¿Cuál de estos es un síntoma de sepsis?',opts:['Palidez y fatiga','Sangrado sin control','Fiebre alta, presión baja y confusión','Exceso de eritrocitos'],a:2},
   ],
 };
 
@@ -594,10 +602,11 @@ const S={
   hintWord:0,totalHints:0,totalErrors:0,
   score:0,correct:0,
   health:100, errorsThisWord:0,
-  timerSec:60,timerInt:null,
+  timerSec:30,timerInt:null,
   wordTimes:[],t0:0,
   active:false,hintsLog:[],
-  sessionStats:{}, /* word -> {won, cq} */
+  sessionStats:{},
+  cqTimerInt:null,
 };
 
 /* ═══════════════════════════════════════
@@ -718,7 +727,7 @@ function startGame(){
 function restartGame(){
   document.getElementById('overlay').classList.remove('show');
   document.getElementById('mv-overlay').classList.remove('show');
-  clearInterval(S.timerInt); stopAlarm(); stopMusic();
+  clearInterval(S.timerInt); stopAlarm(); stopMusic(); stopCQTimer();
   startGame();
 }
 
@@ -912,20 +921,20 @@ function nextWord(){
    TIMER
 ═══════════════════════════════════════ */
 function startTimer(){
-  clearInterval(S.timerInt); S.timerSec=60; tickTimer();
+  clearInterval(S.timerInt); S.timerSec=30; tickTimer();
   S.timerInt=setInterval(()=>{S.timerSec--;tickTimer();if(S.timerSec<=0){clearInterval(S.timerInt);timeOut();}},1000);
 }
 function stopTimer(){clearInterval(S.timerInt);}
 function tickTimer(){
   const el=document.getElementById('timer-disp'),bar=document.getElementById('tbar');
-  const pct=(S.timerSec/60)*100;
+  const pct=(S.timerSec/30)*100;
   el.textContent=S.timerSec;
-  el.className=S.timerSec<=10?'dngr':S.timerSec<=20?'warn':'';
+  el.className=S.timerSec<=5?'dngr':S.timerSec<=10?'warn':'';
   bar.style.width=pct+'%';
   bar.style.background=S.timerSec<=10?'linear-gradient(90deg,var(--red),#f87171)'
     :S.timerSec<=20?'linear-gradient(90deg,var(--yellow),#fbbf24)'
     :'linear-gradient(90deg,var(--teal),var(--accent))';
-  if(S.timerSec===15) playAlarm();
+  if(S.timerSec===8) playAlarm();
 }
 function timeOut(){
   if(!S.active) return;
@@ -970,6 +979,36 @@ function updateAttHud(){
 }
 
 /* ═══════════════════════════════════════
+   CQ TIMER
+═══════════════════════════════════════ */
+const CQ_TIME=15;
+function startCQTimer(){
+  stopCQTimer();
+  let t=CQ_TIME;
+  function tick(){
+    const disp=document.getElementById('cq-timer-disp'),bar=document.getElementById('cq-tbar');
+    if(disp){disp.textContent=t;disp.className=t<=3?'dngr':t<=7?'warn':'';}
+    if(bar){bar.style.width=(t/CQ_TIME*100)+'%';bar.style.background=t<=3?'linear-gradient(90deg,var(--red),#f87171)':t<=7?'linear-gradient(90deg,var(--yellow),#fbbf24)':'linear-gradient(90deg,var(--teal),var(--accent))';}
+    if(t<=0){stopCQTimer();cqTimeOut();return;}
+    t--;
+  }
+  tick();
+  S.cqTimerInt=setInterval(tick,1000);
+}
+function stopCQTimer(){clearInterval(S.cqTimerInt);S.cqTimerInt=null;}
+function cqTimeOut(){
+  const cont=document.getElementById('cq-options');
+  if(!cont) return;
+  cont.querySelectorAll('.cq-btn').forEach(b=>b.disabled=true);
+  const skip=document.getElementById('cq-skip');if(skip)skip.disabled=true;
+  const ci=parseInt(cont.dataset.correct);
+  if(!isNaN(ci)&&cont.children[ci]) cont.children[ci].classList.add('correct');
+  S.sessionStats[S.cur.word].cq=false;
+  playSFX('sfx-quiz-bad');
+  setTimeout(closeCQ,1600);
+}
+
+/* ═══════════════════════════════════════
    COMPREHENSION QUIZ
 ═══════════════════════════════════════ */
 function showCQ(){
@@ -983,6 +1022,7 @@ function showCQ(){
   document.getElementById('cq-name').textContent=S.cur.word;
   document.getElementById('cq-question').textContent=item.q;
   const cont=document.getElementById('cq-options'); cont.innerHTML='';
+  cont.dataset.correct=correctNew;
   idx.forEach((origIdx,pos)=>{
     const btn=document.createElement('button');
     btn.className='cq-btn'; btn.textContent=item.opts[origIdx];
@@ -990,8 +1030,10 @@ function showCQ(){
     cont.appendChild(btn);
   });
   document.getElementById('cq-overlay').classList.add('show');
+  startCQTimer();
 }
 function answerCQ(chosen,correct,cont){
+  stopCQTimer();
   cont.querySelectorAll('.cq-btn').forEach(b=>b.disabled=true);
   document.getElementById('cq-skip').disabled=true;
   const word=S.cur.word;
@@ -1010,11 +1052,25 @@ function answerCQ(chosen,correct,cont){
     setTimeout(closeCQ,1600);
   }
 }
-function skipCQ(){S.sessionStats[S.cur.word].cq=null;closeCQ();}
+function skipCQ(){stopCQTimer();S.sessionStats[S.cur.word].cq=null;closeCQ();}
 function closeCQ(){document.getElementById('cq-overlay').classList.remove('show');advanceFromCQ();}
 function advanceFromCQ(){
   if(S.idx+1>=S.words.length){endGame();}
-  else{document.getElementById('btn-next').style.display='inline-block';}
+  else{showNextTransition();}
+}
+function showNextTransition(){
+  const ov=document.getElementById('next-transition');
+  const info=document.getElementById('nt-info');
+  if(info) info.textContent='Palabra '+(S.idx+2)+' de '+S.words.length;
+  if(!ov){nextWord();return;}
+  ov.classList.add('show');
+  const bar=document.getElementById('nt-bar');
+  if(bar){
+    bar.style.transition='none'; bar.style.width='100%';
+    void bar.offsetWidth;
+    bar.style.transition='width 1.9s linear'; bar.style.width='0%';
+  }
+  setTimeout(()=>{ov.classList.remove('show'); nextWord();}, 2000);
 }
 
 /* ═══════════════════════════════════════
@@ -1066,6 +1122,15 @@ function showSimpleFinal(){
   document.getElementById('o-score').textContent=S.score+' pts';
   document.getElementById('overlay').classList.add('show');
   if(pct>=50) launchConfetti();
+  if (window.parent !== window) {
+    window.parent.postMessage({
+      tipo: 'resultado_juego',
+      paso: 7,
+      puntos: S.score,
+      completado: true,
+      tiempo_segundos: 0
+    }, '*');
+  }
 }
 
 /* ═══════════════════════════════════════
