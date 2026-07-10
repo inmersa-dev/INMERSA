@@ -551,8 +551,7 @@ const BG_MAP = {
   'bg-decision':   "../Imagenes/bg_carpa.png",
 };
 let currentBg = '';
-function setBg(cls) {
-  const url = BG_MAP[cls];
+function setSceneBg(url) {
   if (!url || url === currentBg) return;
   currentBg = url;
   $bg.style.opacity = '0';
@@ -561,10 +560,23 @@ function setBg(cls) {
     $bg.style.opacity = '1';
   }, 420);
 }
+function setBg(cls) { setSceneBg(BG_MAP[cls]); }
+
+const SCENE_MAP = {
+  'bg-campamento|globo|neutral':  '../Imagenes/camp_globo_neutral.png',
+  'bg-campamento|globo|confused': '../Imagenes/camp_globo_confused.png',
+  'bg-campamento|globo|happy':    '../Imagenes/camp_globo_happy.png',
+  'bg-fila|thomas|neutral':       '../Imagenes/camp_thomas_nervioso.png',
+};
+function getSceneImg(line) {
+  const chars = (line.chars||[]).slice().sort().join('-');
+  const pose  = line.pose || 'neutral';
+  return SCENE_MAP[`${line.bg}|${chars}|${pose}`] || null;
+}
 
 // ── Characters ─────────────────────────────────────────────────
 const CHAR_KEYS = ['globo','sina','thomas'];
-function showChars(visible=[], speaking='', pose='') {
+function showChars(visible=[], speaking='', pose='', hideSprites=false) {
   const vis  = visible.map(v => v.toLowerCase());
   const spk  = speaking.toLowerCase();
   CHAR_KEYS.forEach(k => {
@@ -577,8 +589,10 @@ function showChars(visible=[], speaking='', pose='') {
       if (spk && spk !== k) slot.classList.add('dimmed');
       else slot.classList.remove('dimmed');
     }
-    // set pose
     if (k === spk && $sprites[k] && pose) $sprites[k].dataset.pose = pose;
+  });
+  document.querySelectorAll('.sprite-area').forEach(el => {
+    el.style.display = hideSprites ? 'none' : '';
   });
   $slots.player.style.display = 'none';
 }
@@ -797,8 +811,10 @@ function displayLine(line) {
   if (!line) return;
   const mi = typeof line.moment==='number' ? line.moment : S.moment;
   updateDots(mi); S.moment = mi;
-  if (line.bg) setBg(line.bg);
-  showChars(line.chars||[], line.speaking||'', line.pose||'neutral');
+  const _fullImg = getSceneImg(line);
+  if (_fullImg) setSceneBg(_fullImg);
+  else if (line.bg) setBg(line.bg);
+  showChars(line.chars||[], line.speaking||'', line.pose||'neutral', !!_fullImg);
   hideAllBubbles(); hideInputForm(); hideChoices(); hideInfo();
 
   const txt = typeof line.text==='function' ? line.text() : (line.text||'');
