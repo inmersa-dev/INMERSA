@@ -563,10 +563,22 @@ function setSceneBg(url) {
 function setBg(cls) { setSceneBg(BG_MAP[cls]); }
 
 const SCENE_MAP = {
-  'bg-campamento|globo|neutral':  '../Imagenes/camp_globo_neutral.png',
-  'bg-campamento|globo|confused': '../Imagenes/camp_globo_confused.png',
-  'bg-campamento|globo|happy':    '../Imagenes/camp_globo_happy.png',
-  'bg-fila|thomas|neutral':       '../Imagenes/camp_thomas_nervioso.png',
+  'bg-campamento|globo|neutral':       '../Imagenes/camp_globo_neutral.png',
+  'bg-campamento|globo|confused':      '../Imagenes/camp_globo_confused.png',
+  'bg-campamento|globo|happy':         '../Imagenes/camp_globo_happy.png',
+  'bg-fila|thomas|neutral':            '../Imagenes/camp_thomas_nervioso.png',
+  'bg-tienda|sina|happy':              '../Imagenes/carpa_sina_happy.png',
+  'bg-tienda|sina|explaining':         '../Imagenes/carpa_sina_explaining.png',
+  'bg-tienda|sina|neutral':            '../Imagenes/carpa_sina_neutral.png',
+  'bg-resultado|sina-thomas|neutral':  '../Imagenes/carpa_sina_thomas_neutral.png',
+  'bg-resultado|sina-thomas|confused': '../Imagenes/carpa_sina_thomas_confused.png',
+  'bg-resultado|sina-thomas|happy':    '../Imagenes/carpa_sina_thomas_happy.png',
+  'bg-equipo|globo-thomas|neutral':    '../Imagenes/carpa_globo_thomas_neutral.png',
+  'bg-equipo|globo-thomas|confused':   '../Imagenes/carpa_globo_thomas_confused.png',
+  'bg-equipo|globo-thomas|happy':      '../Imagenes/carpa_globo_thomas_happy.png',
+  'bg-equipo|thomas|neutral':          '../Imagenes/carpa_thomas_solo.png',
+  'bg-equipo|sina|explaining':         '../Imagenes/carpa_sina_end.png',
+  'bg-equipo|globo|neutral':           '../Imagenes/carpa_globo_solo_serio.png',
 };
 function getSceneImg(line) {
   const chars = (line.chars||[]).slice().sort().join('-');
