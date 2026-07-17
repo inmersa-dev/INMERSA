@@ -324,7 +324,7 @@
 
 <!-- Scene -->
 <div id="scene">
-  <video id="scene-video" loop muted autoplay playsinline poster="../Imagenes/camp_globo_neutral.png"></video>
+  <video id="scene-video" loop muted autoplay playsinline></video>
   <div id="scene-grad"></div>
 
   <!-- Progress dots -->
@@ -486,24 +486,14 @@ const VIDEO_MAP = {
   decision_aceptar:      '../Videos/decision_aceptar.mp4',
   decision_rechazar:     '../Videos/decision_rechazar.mp4',
 };
-const POSTER_MAP = {
-  bienvenida:            '../Imagenes/camp_globo_neutral.png',
-  personalidad:          '../Imagenes/camp_globo_happy.png',
-  fila_thomas:           '../Imagenes/camp_thomas_nervioso.png',
-  tienda_sina:           '../Imagenes/carpa_sina_happy.png',
-  resultado_sina_thomas: '../Imagenes/carpa_sina_thomas_neutral.png',
-  equipo_globo_thomas:   '../Imagenes/carpa_globo_thomas_neutral.png',
-  decision_aceptar:      '../Imagenes/carpa_globo_thomas_happy.png',
-  decision_rechazar:     '../Imagenes/carpa_globo_thomas_confused.png',
-};
+
 let currentVideo = '';
 function setVideo(key) {
   if (!key || key === currentVideo) return;
   currentVideo = key;
   $video.style.opacity = '0';
   setTimeout(() => {
-    $video.poster = POSTER_MAP[key] || '';
-    $video.src    = VIDEO_MAP[key]  || '';
+    $video.src = VIDEO_MAP[key] || '';
     $video.load();
     $video.play().catch(()=>{});
     $video.style.opacity = '1';
