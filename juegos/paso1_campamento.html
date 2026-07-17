@@ -46,7 +46,7 @@
     #loading p { color:#8899AA; font-size:14px; }
 
     /* ── Scene ────────────────────────────────────────────────── */
-    #scene { position:fixed; top:0; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:480px; overflow:hidden; }
+    #scene { position:fixed; inset:0; overflow:hidden; }
 
     /* ── Background video ─────────────────────────────────────── */
     #scene-video {
@@ -285,7 +285,7 @@
 
     /* ── Result overlay ─────────────────────────────────────────── */
     #result-overlay {
-      position:fixed; top:0; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:480px; z-index:50;
+      position:fixed; inset:0; z-index:50;
       background:rgba(10,22,40,.96);
       display:none; flex-direction:column;
       align-items:center; justify-content:center;
