@@ -107,8 +107,8 @@
     /* ── Characters area ───────────────────────────────────────── */
     #chars-area {
       position:absolute;
-      top:44px;      /* below narrator */
-      bottom:158px;  /* above bottom panel */
+      top:44px;
+      bottom:0;
       left:0; right:0;
       z-index:auto;
       display:flex;
@@ -121,12 +121,9 @@
       flex:1;
       display:flex; flex-direction:column; align-items:center;
       overflow:visible;
-      transition:opacity .35s, filter .35s;
     }
-    .char-slot.hidden { display:none !important; }
-    .char-slot.dimmed { opacity:.35; filter:saturate(.15) brightness(.65); pointer-events:none; }
 
-    /* Bubble container — fills space above sprite */
+    /* Bubble container */
     .bubble-wrap {
       flex:1;
       display:flex; align-items:flex-end; justify-content:center;
@@ -461,9 +458,6 @@ const $narText = document.getElementById('narrator-text');
 const $narTap  = $narCap.querySelector('.nar-tap');
 
 const $slots = {
-  globo:  document.getElementById('char-globo'),
-  sina:   document.getElementById('char-sina'),
-  thomas: document.getElementById('char-thomas'),
   player: document.getElementById('char-player'),
 };
 const $bubbles = {
@@ -518,22 +512,6 @@ function setVideo(key) {
 
 // ── Characters ─────────────────────────────────────────────────
 const CHAR_KEYS = ['globo','sina','thomas'];
-function showChars(visible=[], speaking='') {
-  const vis = visible.map(v => v.toLowerCase());
-  const spk = speaking.toLowerCase();
-  CHAR_KEYS.forEach(k => {
-    const slot = $slots[k];
-    if (!vis.includes(k)) {
-      slot.classList.add('hidden');
-      slot.classList.remove('dimmed');
-    } else {
-      slot.classList.remove('hidden');
-      if (spk && spk !== k) slot.classList.add('dimmed');
-      else slot.classList.remove('dimmed');
-    }
-  });
-  $slots.player.style.display = 'none';
-}
 
 // ── Bubbles ────────────────────────────────────────────────────
 function hideAllBubbles() {
@@ -658,63 +636,63 @@ let SCRIPT = [];
 function buildScript() {
   SCRIPT = [
     // ── Momento 0: Bienvenida ──────────────────────────────────
-    { moment:0, video:'bienvenida', speaker:'NARRADOR', chars:[], speaking:'',
+    { moment:0, video:'bienvenida', speaker:'NARRADOR',
       text:'*El sol aún no ha salido. Llegas al Campamento Vital con tu mochila al hombro.*' },
-    { moment:0, video:'bienvenida', speaker:'GLOBO', chars:['globo'], speaking:'GLOBO',
+    { moment:0, video:'bienvenida', speaker:'GLOBO',
       text:'¡Eh! ¡Por fin llegas! Soy GLOBO, ¡el guía favorito de todos en este campamento! Y tú… ¿cómo te llamas?' },
-    { moment:0, video:'bienvenida', speaker:'GLOBO', chars:['globo'], speaking:'GLOBO',
+    { moment:0, video:'bienvenida', speaker:'GLOBO',
       text:'…anda, dime tu nombre.', action:'input_name' },
-    { moment:0, video:'personalidad', speaker:'GLOBO', chars:['globo'], speaking:'GLOBO',
+    { moment:0, video:'personalidad', speaker:'GLOBO',
       text:()=>`¡${p()}! Buen nombre. Aquí aprenderás cómo funciona la sangre estudiando casos reales de pacientes.` },
-    { moment:0, video:'personalidad', speaker:'GLOBO', chars:['globo'], speaking:'GLOBO',
+    { moment:0, video:'personalidad', speaker:'GLOBO',
       text:'Antes de empezar, dime: ¿cómo te describes a ti mismo/a?', action:'choice_personalidad' },
-    { moment:0, video:'personalidad', speaker:'GLOBO', chars:['globo'], speaking:'GLOBO',
+    { moment:0, video:'personalidad', speaker:'GLOBO',
       text:()=> { const fn=PERS_REACTIONS[S.personalidad]; return fn?fn(p()):`Bien, ${p()}. ¡Empecemos!`; } },
 
     // ── Momento 1: Fila ────────────────────────────────────────
-    { moment:1, video:'fila_thomas', speaker:'NARRADOR', chars:[], speaking:'',
+    { moment:1, video:'fila_thomas', speaker:'NARRADOR',
       text:'*Te unes a la fila de registro. Delante hay un chico de cabello negro que no conoce a nadie.*' },
-    { moment:1, video:'fila_thomas', speaker:'NARRADOR', chars:['thomas'], speaking:'',
+    { moment:1, video:'fila_thomas', speaker:'NARRADOR',
       text:'*Es Thomas. Parece nervioso. ¿Cómo lo saludas?*', action:'choice_saludo' },
-    { moment:1, video:'fila_thomas', speaker:'THOMAS', chars:['thomas'], speaking:'THOMAS',
+    { moment:1, video:'fila_thomas', speaker:'THOMAS',
       text:()=> GREET_RESPONSES[S.greetingThomas] || '...Hola.' },
-    { moment:1, video:'fila_thomas', speaker:'THOMAS', chars:['thomas'], speaking:'THOMAS',
+    { moment:1, video:'fila_thomas', speaker:'THOMAS',
       text:'Gracias… es mi primera vez en un campamento así.' },
 
     // ── Momento 2: Tienda SINA ─────────────────────────────────
-    { moment:2, video:'tienda_sina', speaker:'NARRADOR', chars:[], speaking:'',
+    { moment:2, video:'tienda_sina', speaker:'NARRADOR',
       text:'*En la tienda principal, la doctora SINA os explica la primera prueba: un análisis de sangre básico.*' },
-    { moment:2, video:'tienda_sina', speaker:'SINA', chars:['sina'], speaking:'SINA',
+    { moment:2, video:'tienda_sina', speaker:'SINA',
       text:()=>`Bienvenidos. Hoy empezamos con lo fundamental: los componentes de la sangre. ${p()}, ¿sabes qué son los eritrocitos?` },
-    { moment:2, video:'tienda_sina', speaker:'SINA', chars:['sina'], speaking:'SINA',
+    { moment:2, video:'tienda_sina', speaker:'SINA',
       text:'Los eritrocitos —también llamados glóbulos rojos— son las células que transportan oxígeno por todo tu cuerpo.',
       action:'info', infoText:'🔴 ERITROCITO = Glóbulo rojo. Función: transportar O₂ desde los pulmones hasta los tejidos. Contienen hemoglobina. Valor normal: 4.5–6 millones por μL de sangre.' },
-    { moment:2, video:'tienda_sina', speaker:'SINA', chars:['sina'], speaking:'SINA',
+    { moment:2, video:'tienda_sina', speaker:'SINA',
       text:'Su cantidad nos dice mucho sobre la salud de una persona. Un nivel bajo puede significar anemia… o algo más serio.' },
 
     // ── Momento 3: Resultado Thomas ────────────────────────────
-    { moment:3, video:'resultado_sina_thomas', speaker:'SINA', chars:['sina','thomas'], speaking:'SINA',
+    { moment:3, video:'resultado_sina_thomas', speaker:'SINA',
       text:'Thomas, tu resultado llegó.' },
-    { moment:3, video:'resultado_sina_thomas', speaker:'SINA', chars:['sina','thomas'], speaking:'SINA',
+    { moment:3, video:'resultado_sina_thomas', speaker:'SINA',
       text:'Thomas… tus eritrocitos están muy por debajo de lo normal. Esto es muy serio.',
       action:'info', infoText:'⚠️ ERITROCITOS MUY BAJOS → posible ANEMIA. La sangre no puede transportar suficiente oxígeno: fatiga, palidez, falta de aire.' },
-    { moment:3, video:'resultado_sina_thomas', speaker:'THOMAS', chars:['sina','thomas'], speaking:'THOMAS',
+    { moment:3, video:'resultado_sina_thomas', speaker:'THOMAS',
       text:'Yo… ya lo sabía. Por eso me canso tanto. Pero no quería faltar al campamento.' },
-    { moment:3, video:'resultado_sina_thomas', speaker:'SINA', chars:['sina','thomas'], speaking:'SINA',
+    { moment:3, video:'resultado_sina_thomas', speaker:'SINA',
       text:'Gracias por venir de todas formas, Thomas. Tu caso nos va a enseñar mucho a todos.' },
 
     // ── Momento 4: Equipos ─────────────────────────────────────
-    { moment:4, video:'equipo_globo_thomas', speaker:'NARRADOR', chars:[], speaking:'',
+    { moment:4, video:'equipo_globo_thomas', speaker:'NARRADOR',
       text:'*Llega el momento de formar los equipos. GLOBO lee los nombres en voz alta.*' },
-    { moment:4, video:'equipo_globo_thomas', speaker:'GLOBO', chars:['globo','thomas'], speaking:'GLOBO',
+    { moment:4, video:'equipo_globo_thomas', speaker:'GLOBO',
       text:()=>`Equipo uno: ${p()}, Valentina y Mateo.` },
-    { moment:4, video:'equipo_globo_thomas', speaker:'NARRADOR', chars:['globo','thomas'], speaking:'',
+    { moment:4, video:'equipo_globo_thomas', speaker:'NARRADOR',
       text:'*Thomas no ha sido llamado. Espera en silencio mirando el suelo. Nadie lo busca.*' },
-    { moment:4, video:'equipo_globo_thomas', speaker:'GLOBO', chars:['globo','thomas'], speaking:'GLOBO',
+    { moment:4, video:'equipo_globo_thomas', speaker:'GLOBO',
       text:()=>`${p()}, aún hay un lugar en tu equipo. Thomas está solo. ¿Qué haces?`, action:'choice_thomas' },
 
     // ── Momento 5: Ramificación ─────────────────────────────────
-    { moment:5, video:'equipo_globo_thomas', speaker:'', chars:[], speaking:'', text:'', action:'branch_thomas' },
+    { moment:5, video:'equipo_globo_thomas', speaker:'', text:'', action:'branch_thomas' },
   ];
 }
 
@@ -750,7 +728,6 @@ function displayLine(line) {
   const mi = typeof line.moment==='number' ? line.moment : S.moment;
   updateDots(mi); S.moment = mi;
   if (line.video) setVideo(line.video);
-  showChars(line.chars||[], line.speaking||'');
   hideAllBubbles(); hideInputForm(); hideChoices(); hideInfo();
 
   const txt = typeof line.text==='function' ? line.text() : (line.text||'');
@@ -809,29 +786,29 @@ const THOMAS_OPTS = [
 function runBranch() {
   if (S.decisionThomas === 'aceptar') {
     playBranch([
-      {moment:5,video:'decision_aceptar',speaker:'NARRADOR',chars:['thomas'],speaking:'',
+      {moment:5, video:'decision_aceptar', speaker:'NARRADOR',
         text:'*Caminas hacia Thomas y extiendes la mano.*'},
-      {moment:5,video:'decision_aceptar',speaker:'PLAYER',chars:['thomas'],speaking:'PLAYER',
+      {moment:5, video:'decision_aceptar', speaker:'PLAYER',
         text:'Ey, Thomas. Somos compañeros de equipo. Vamos juntos.'},
-      {moment:5,video:'decision_aceptar',speaker:'THOMAS',chars:['thomas'],speaking:'THOMAS',
+      {moment:5, video:'decision_aceptar', speaker:'THOMAS',
         text:'Yo…'},
-      {moment:5,video:'decision_aceptar',speaker:'THOMAS',chars:['thomas'],speaking:'THOMAS',
+      {moment:5, video:'decision_aceptar', speaker:'THOMAS',
         text:'Gracias. De verdad.'},
-      {moment:5,video:'decision_aceptar',speaker:'GLOBO',chars:['globo','thomas'],speaking:'GLOBO',
+      {moment:5, video:'decision_aceptar', speaker:'GLOBO',
         text:`Eso es trabajo en equipo, ${S.playerName}. En este campamento ganamos juntos — o perdemos juntos.`},
-      {moment:5,video:'decision_aceptar',speaker:'SINA',chars:['sina'],speaking:'SINA',
-        text:'El caso de Thomas nos va a enseñar más de lo que imaginan. Empecemos.',action:'end'},
+      {moment:5, video:'decision_aceptar', speaker:'SINA',
+        text:'El caso de Thomas nos va a enseñar más de lo que imaginan. Empecemos.', action:'end'},
     ]);
   } else {
     playBranch([
-      {moment:5,video:'decision_rechazar',speaker:'NARRADOR',chars:['thomas'],speaking:'',
+      {moment:5, video:'decision_rechazar', speaker:'NARRADOR',
         text:'*No dices nada. Thomas lo nota.*'},
-      {moment:5,video:'decision_rechazar',speaker:'THOMAS',chars:['thomas'],speaking:'THOMAS',
+      {moment:5, video:'decision_rechazar', speaker:'THOMAS',
         text:'Entiendo… ya estoy acostumbrado.'},
-      {moment:5,video:'decision_rechazar',speaker:'GLOBO',chars:['globo','thomas'],speaking:'GLOBO',
+      {moment:5, video:'decision_rechazar', speaker:'GLOBO',
         text:`${S.playerName}. La medicina trata a todos los pacientes por igual. Eso incluye a Thomas.`},
-      {moment:5,video:'decision_rechazar',speaker:'GLOBO',chars:['globo'],speaking:'GLOBO',
-        text:'Trabaja con él. Es una orden del campamento.',action:'end'},
+      {moment:5, video:'decision_rechazar', speaker:'GLOBO',
+        text:'Trabaja con él. Es una orden del campamento.', action:'end'},
     ]);
   }
 }
