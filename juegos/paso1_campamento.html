@@ -48,17 +48,17 @@
     /* ── Scene ────────────────────────────────────────────────── */
     #scene { position:fixed; top:0; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:480px; overflow:hidden; }
 
-    /* ── Background ───────────────────────────────────────────── */
-    #scene-bg {
+    /* ── Background video ─────────────────────────────────────── */
+    #scene-video {
       position:absolute; inset:0; z-index:0;
-      background-size:cover;
-      background-position:center top;
-      transition:opacity .45s ease;
+      width:100%; height:100%;
+      object-fit:cover;
+      object-position:center top;
+      transition:opacity .35s ease;
     }
-    /* gradient overlay so bottom chars/bubbles are readable */
-    #scene-bg::after {
-      content:'';
-      position:absolute; inset:0;
+    #scene-grad {
+      position:absolute; inset:0; z-index:1;
+      pointer-events:none;
       background:linear-gradient(
         to bottom,
         rgba(0,0,0,.08) 0%,
@@ -206,54 +206,6 @@
     .player-bubble::before { border-top-color:#1D6FA4 !important; }
     .player-bubble::after  { border-top-color:#EFF9FF !important; }
 
-    /* ── Character sprites ─────────────────────────────────────── */
-    .sprite-area {
-      flex-shrink:0;
-      height:158px;
-      width:100%;
-      display:flex; justify-content:center; align-items:flex-end;
-    }
-
-    .char-sprite {
-      background-repeat:no-repeat;
-      flex-shrink:0;
-    }
-
-    /* GLOBO — sprite sheet, 3 poses side by side */
-    .globo-sprite {
-      width:112px; height:148px;
-      background-image:url('../Imagenes/char_globo.png');
-      background-size:300% auto;
-      background-position:0% 25%;
-      mix-blend-mode:multiply;
-      overflow:hidden;
-    }
-    .globo-sprite[data-pose="happy"]   { background-position:50% 25%; }
-    .globo-sprite[data-pose="confused"]{ background-position:100% 25%; }
-
-    /* SINA — sprite sheet, 3 poses */
-    .sina-sprite {
-      width:130px; height:200px;
-      background-image:url('../Imagenes/char_sina.webp');
-      background-size:300% auto;
-      background-position:0% 50%;
-      mix-blend-mode:multiply;
-      overflow:hidden;
-      clip-path:inset(0 0 6% 0);
-    }
-    .sina-sprite[data-pose="happy"]     { background-position:50% 50%; }
-    .sina-sprite[data-pose="explaining"]{ background-position:100% 50%; }
-    #char-sina .sprite-area { height:200px; }
-
-    /* THOMAS — single PNG */
-    .thomas-sprite {
-      width:110px; height:185px;
-      background-image:url('../Imagenes/char_thomas.png');
-      background-size:contain;
-      background-position:center bottom;
-      background-repeat:no-repeat;
-    }
-
     /* ── Player slot (centered, no sprite) ─────────────────────── */
     #char-player {
       position:absolute;
@@ -375,7 +327,8 @@
 
 <!-- Scene -->
 <div id="scene">
-  <div id="scene-bg"></div>
+  <video id="scene-video" loop muted autoplay playsinline poster="../Imagenes/camp_globo_neutral.png"></video>
+  <div id="scene-grad"></div>
 
   <!-- Progress dots -->
   <div id="progress-dots">
@@ -406,9 +359,6 @@
           <span class="bubble-tap">toca para continuar ▶</span>
         </div>
       </div>
-      <div class="sprite-area">
-        <div class="char-sprite globo-sprite" id="sprite-globo" data-pose="neutral"></div>
-      </div>
     </div>
 
     <!-- SINA -->
@@ -420,9 +370,6 @@
           <span class="bubble-tap">toca para continuar ▶</span>
         </div>
       </div>
-      <div class="sprite-area">
-        <div class="char-sprite sina-sprite" id="sprite-sina" data-pose="neutral"></div>
-      </div>
     </div>
 
     <!-- THOMAS -->
@@ -433,9 +380,6 @@
           <p class="bubble-text"></p>
           <span class="bubble-tap">toca para continuar ▶</span>
         </div>
-      </div>
-      <div class="sprite-area">
-        <div class="char-sprite thomas-sprite" id="sprite-thomas"></div>
       </div>
     </div>
 
@@ -507,7 +451,7 @@ const S = {
 let currentTxt = '';
 
 // ── DOM ────────────────────────────────────────────────────────
-const $bg      = document.getElementById('scene-bg');
+const $video   = document.getElementById('scene-video');
 const $loading = document.getElementById('loading');
 const $result  = document.getElementById('result-overlay');
 const dots     = [0,1,2,3,4,5].map(i => document.getElementById('pd'+i));
@@ -521,10 +465,6 @@ const $slots = {
   sina:   document.getElementById('char-sina'),
   thomas: document.getElementById('char-thomas'),
   player: document.getElementById('char-player'),
-};
-const $sprites = {
-  globo:  document.getElementById('sprite-globo'),
-  sina:   document.getElementById('sprite-sina'),
 };
 const $bubbles = {
   globo:  document.getElementById('bubble-globo'),
@@ -541,56 +481,46 @@ const $infoBody    = document.getElementById('info-body-text');
 const $choices     = document.getElementById('choices');
 const $toast       = document.getElementById('toast');
 
-// ── Background ─────────────────────────────────────────────────
-const BG_MAP = {
-  'bg-campamento': "../Imagenes/bg_campamento.png",
-  'bg-fila':       "../Imagenes/bg_campamento.png",
-  'bg-tienda':     "../Imagenes/bg_carpa.png",
-  'bg-resultado':  "../Imagenes/bg_carpa.png",
-  'bg-equipo':     "../Imagenes/bg_carpa.png",
-  'bg-decision':   "../Imagenes/bg_carpa.png",
+// ── Video background ───────────────────────────────────────────
+const VIDEO_MAP = {
+  bienvenida:            '../Videos/bienvenida.mp4',
+  personalidad:          '../Videos/personalidad.mp4',
+  fila_thomas:           '../Videos/fila_thomas.mp4',
+  tienda_sina:           '../Videos/tienda_sina.mp4',
+  resultado_sina_thomas: '../Videos/resultado_sina_thomas.mp4',
+  equipo_globo_thomas:   '../Videos/equipo_globo_thomas.mp4',
+  decision_aceptar:      '../Videos/decision_aceptar.mp4',
+  decision_rechazar:     '../Videos/decision_rechazar.mp4',
 };
-let currentBg = '';
-function setSceneBg(url) {
-  if (!url || url === currentBg) return;
-  currentBg = url;
-  $bg.style.opacity = '0';
+const POSTER_MAP = {
+  bienvenida:            '../Imagenes/camp_globo_neutral.png',
+  personalidad:          '../Imagenes/camp_globo_happy.png',
+  fila_thomas:           '../Imagenes/camp_thomas_nervioso.png',
+  tienda_sina:           '../Imagenes/carpa_sina_happy.png',
+  resultado_sina_thomas: '../Imagenes/carpa_sina_thomas_neutral.png',
+  equipo_globo_thomas:   '../Imagenes/carpa_globo_thomas_neutral.png',
+  decision_aceptar:      '../Imagenes/carpa_globo_thomas_happy.png',
+  decision_rechazar:     '../Imagenes/carpa_globo_thomas_confused.png',
+};
+let currentVideo = '';
+function setVideo(key) {
+  if (!key || key === currentVideo) return;
+  currentVideo = key;
+  $video.style.opacity = '0';
   setTimeout(() => {
-    $bg.style.backgroundImage = `url('${url}')`;
-    $bg.style.opacity = '1';
-  }, 420);
-}
-function setBg(cls) { setSceneBg(BG_MAP[cls]); }
-
-const SCENE_MAP = {
-  'bg-campamento|globo|neutral':       '../Imagenes/camp_globo_neutral.png',
-  'bg-campamento|globo|confused':      '../Imagenes/camp_globo_confused.png',
-  'bg-campamento|globo|happy':         '../Imagenes/camp_globo_happy.png',
-  'bg-fila|thomas|neutral':            '../Imagenes/camp_thomas_nervioso.png',
-  'bg-tienda|sina|happy':              '../Imagenes/carpa_sina_happy.png',
-  'bg-tienda|sina|explaining':         '../Imagenes/carpa_sina_explaining.png',
-  'bg-tienda|sina|neutral':            '../Imagenes/carpa_sina_neutral.png',
-  'bg-resultado|sina-thomas|neutral':  '../Imagenes/carpa_sina_thomas_neutral.png',
-  'bg-resultado|sina-thomas|confused': '../Imagenes/carpa_sina_thomas_confused.png',
-  'bg-resultado|sina-thomas|happy':    '../Imagenes/carpa_sina_thomas_happy.png',
-  'bg-equipo|globo-thomas|neutral':    '../Imagenes/carpa_globo_thomas_neutral.png',
-  'bg-equipo|globo-thomas|confused':   '../Imagenes/carpa_globo_thomas_confused.png',
-  'bg-equipo|globo-thomas|happy':      '../Imagenes/carpa_globo_thomas_happy.png',
-  'bg-equipo|thomas|neutral':          '../Imagenes/carpa_thomas_solo.png',
-  'bg-equipo|sina|explaining':         '../Imagenes/carpa_sina_end.png',
-  'bg-equipo|globo|neutral':           '../Imagenes/carpa_globo_solo_serio.png',
-};
-function getSceneImg(line) {
-  const chars = (line.chars||[]).slice().sort().join('-');
-  const pose  = line.pose || 'neutral';
-  return SCENE_MAP[`${line.bg}|${chars}|${pose}`] || null;
+    $video.poster = POSTER_MAP[key] || '';
+    $video.src    = VIDEO_MAP[key]  || '';
+    $video.load();
+    $video.play().catch(()=>{});
+    $video.style.opacity = '1';
+  }, 350);
 }
 
 // ── Characters ─────────────────────────────────────────────────
 const CHAR_KEYS = ['globo','sina','thomas'];
-function showChars(visible=[], speaking='', pose='', hideSprites=false) {
-  const vis  = visible.map(v => v.toLowerCase());
-  const spk  = speaking.toLowerCase();
+function showChars(visible=[], speaking='') {
+  const vis = visible.map(v => v.toLowerCase());
+  const spk = speaking.toLowerCase();
   CHAR_KEYS.forEach(k => {
     const slot = $slots[k];
     if (!vis.includes(k)) {
@@ -601,10 +531,6 @@ function showChars(visible=[], speaking='', pose='', hideSprites=false) {
       if (spk && spk !== k) slot.classList.add('dimmed');
       else slot.classList.remove('dimmed');
     }
-    if (k === spk && $sprites[k] && pose) $sprites[k].dataset.pose = pose;
-  });
-  document.querySelectorAll('.sprite-area').forEach(el => {
-    el.style.display = hideSprites ? 'none' : '';
   });
   $slots.player.style.display = 'none';
 }
@@ -732,63 +658,63 @@ let SCRIPT = [];
 function buildScript() {
   SCRIPT = [
     // ── Momento 0: Bienvenida ──────────────────────────────────
-    { moment:0, speaker:'NARRADOR', chars:[], speaking:'', bg:'bg-campamento',
+    { moment:0, video:'bienvenida', speaker:'NARRADOR', chars:[], speaking:'',
       text:'*El sol aún no ha salido. Llegas al Campamento Vital con tu mochila al hombro.*' },
-    { moment:0, speaker:'GLOBO', chars:['globo'], speaking:'GLOBO', bg:'bg-campamento', pose:'neutral',
+    { moment:0, video:'bienvenida', speaker:'GLOBO', chars:['globo'], speaking:'GLOBO',
       text:'¡Eh! ¡Por fin llegas! Soy GLOBO, ¡el guía favorito de todos en este campamento! Y tú… ¿cómo te llamas?' },
-    { moment:0, speaker:'GLOBO', chars:['globo'], speaking:'GLOBO', bg:'bg-campamento', pose:'confused',
+    { moment:0, video:'bienvenida', speaker:'GLOBO', chars:['globo'], speaking:'GLOBO',
       text:'…anda, dime tu nombre.', action:'input_name' },
-    { moment:0, speaker:'GLOBO', chars:['globo'], speaking:'GLOBO', bg:'bg-campamento', pose:'happy',
+    { moment:0, video:'personalidad', speaker:'GLOBO', chars:['globo'], speaking:'GLOBO',
       text:()=>`¡${p()}! Buen nombre. Aquí aprenderás cómo funciona la sangre estudiando casos reales de pacientes.` },
-    { moment:0, speaker:'GLOBO', chars:['globo'], speaking:'GLOBO', bg:'bg-campamento', pose:'neutral',
+    { moment:0, video:'personalidad', speaker:'GLOBO', chars:['globo'], speaking:'GLOBO',
       text:'Antes de empezar, dime: ¿cómo te describes a ti mismo/a?', action:'choice_personalidad' },
-    { moment:0, speaker:'GLOBO', chars:['globo'], speaking:'GLOBO', bg:'bg-campamento', pose:'happy',
+    { moment:0, video:'personalidad', speaker:'GLOBO', chars:['globo'], speaking:'GLOBO',
       text:()=> { const fn=PERS_REACTIONS[S.personalidad]; return fn?fn(p()):`Bien, ${p()}. ¡Empecemos!`; } },
 
     // ── Momento 1: Fila ────────────────────────────────────────
-    { moment:1, speaker:'NARRADOR', chars:[], speaking:'', bg:'bg-fila',
+    { moment:1, video:'fila_thomas', speaker:'NARRADOR', chars:[], speaking:'',
       text:'*Te unes a la fila de registro. Delante hay un chico de cabello negro que no conoce a nadie.*' },
-    { moment:1, speaker:'NARRADOR', chars:['thomas'], speaking:'', bg:'bg-fila',
+    { moment:1, video:'fila_thomas', speaker:'NARRADOR', chars:['thomas'], speaking:'',
       text:'*Es Thomas. Parece nervioso. ¿Cómo lo saludas?*', action:'choice_saludo' },
-    { moment:1, speaker:'THOMAS', chars:['thomas'], speaking:'THOMAS', bg:'bg-fila',
+    { moment:1, video:'fila_thomas', speaker:'THOMAS', chars:['thomas'], speaking:'THOMAS',
       text:()=> GREET_RESPONSES[S.greetingThomas] || '...Hola.' },
-    { moment:1, speaker:'THOMAS', chars:['thomas'], speaking:'THOMAS', bg:'bg-fila',
+    { moment:1, video:'fila_thomas', speaker:'THOMAS', chars:['thomas'], speaking:'THOMAS',
       text:'Gracias… es mi primera vez en un campamento así.' },
 
     // ── Momento 2: Tienda SINA ─────────────────────────────────
-    { moment:2, speaker:'NARRADOR', chars:[], speaking:'', bg:'bg-tienda',
+    { moment:2, video:'tienda_sina', speaker:'NARRADOR', chars:[], speaking:'',
       text:'*En la tienda principal, la doctora SINA os explica la primera prueba: un análisis de sangre básico.*' },
-    { moment:2, speaker:'SINA', chars:['sina'], speaking:'SINA', bg:'bg-tienda', pose:'happy',
+    { moment:2, video:'tienda_sina', speaker:'SINA', chars:['sina'], speaking:'SINA',
       text:()=>`Bienvenidos. Hoy empezamos con lo fundamental: los componentes de la sangre. ${p()}, ¿sabes qué son los eritrocitos?` },
-    { moment:2, speaker:'SINA', chars:['sina'], speaking:'SINA', bg:'bg-tienda', pose:'explaining',
+    { moment:2, video:'tienda_sina', speaker:'SINA', chars:['sina'], speaking:'SINA',
       text:'Los eritrocitos —también llamados glóbulos rojos— son las células que transportan oxígeno por todo tu cuerpo.',
       action:'info', infoText:'🔴 ERITROCITO = Glóbulo rojo. Función: transportar O₂ desde los pulmones hasta los tejidos. Contienen hemoglobina. Valor normal: 4.5–6 millones por μL de sangre.' },
-    { moment:2, speaker:'SINA', chars:['sina'], speaking:'SINA', bg:'bg-tienda', pose:'neutral',
+    { moment:2, video:'tienda_sina', speaker:'SINA', chars:['sina'], speaking:'SINA',
       text:'Su cantidad nos dice mucho sobre la salud de una persona. Un nivel bajo puede significar anemia… o algo más serio.' },
 
     // ── Momento 3: Resultado Thomas ────────────────────────────
-    { moment:3, speaker:'SINA', chars:['sina','thomas'], speaking:'SINA', bg:'bg-resultado', pose:'neutral',
+    { moment:3, video:'resultado_sina_thomas', speaker:'SINA', chars:['sina','thomas'], speaking:'SINA',
       text:'Thomas, tu resultado llegó.' },
-    { moment:3, speaker:'SINA', chars:['sina','thomas'], speaking:'SINA', bg:'bg-resultado', pose:'confused',
+    { moment:3, video:'resultado_sina_thomas', speaker:'SINA', chars:['sina','thomas'], speaking:'SINA',
       text:'Thomas… tus eritrocitos están muy por debajo de lo normal. Esto es muy serio.',
       action:'info', infoText:'⚠️ ERITROCITOS MUY BAJOS → posible ANEMIA. La sangre no puede transportar suficiente oxígeno: fatiga, palidez, falta de aire.' },
-    { moment:3, speaker:'THOMAS', chars:['sina','thomas'], speaking:'THOMAS', bg:'bg-resultado',
+    { moment:3, video:'resultado_sina_thomas', speaker:'THOMAS', chars:['sina','thomas'], speaking:'THOMAS',
       text:'Yo… ya lo sabía. Por eso me canso tanto. Pero no quería faltar al campamento.' },
-    { moment:3, speaker:'SINA', chars:['sina','thomas'], speaking:'SINA', bg:'bg-resultado', pose:'happy',
+    { moment:3, video:'resultado_sina_thomas', speaker:'SINA', chars:['sina','thomas'], speaking:'SINA',
       text:'Gracias por venir de todas formas, Thomas. Tu caso nos va a enseñar mucho a todos.' },
 
     // ── Momento 4: Equipos ─────────────────────────────────────
-    { moment:4, speaker:'NARRADOR', chars:[], speaking:'', bg:'bg-equipo',
+    { moment:4, video:'equipo_globo_thomas', speaker:'NARRADOR', chars:[], speaking:'',
       text:'*Llega el momento de formar los equipos. GLOBO lee los nombres en voz alta.*' },
-    { moment:4, speaker:'GLOBO', chars:['globo','thomas'], speaking:'GLOBO', bg:'bg-equipo', pose:'neutral',
+    { moment:4, video:'equipo_globo_thomas', speaker:'GLOBO', chars:['globo','thomas'], speaking:'GLOBO',
       text:()=>`Equipo uno: ${p()}, Valentina y Mateo.` },
-    { moment:4, speaker:'NARRADOR', chars:['globo','thomas'], speaking:'', bg:'bg-equipo',
+    { moment:4, video:'equipo_globo_thomas', speaker:'NARRADOR', chars:['globo','thomas'], speaking:'',
       text:'*Thomas no ha sido llamado. Espera en silencio mirando el suelo. Nadie lo busca.*' },
-    { moment:4, speaker:'GLOBO', chars:['globo','thomas'], speaking:'GLOBO', bg:'bg-equipo', pose:'confused',
+    { moment:4, video:'equipo_globo_thomas', speaker:'GLOBO', chars:['globo','thomas'], speaking:'GLOBO',
       text:()=>`${p()}, aún hay un lugar en tu equipo. Thomas está solo. ¿Qué haces?`, action:'choice_thomas' },
 
     // ── Momento 5: Ramificación ─────────────────────────────────
-    { moment:5, speaker:'', chars:[], speaking:'', bg:'bg-equipo', text:'', action:'branch_thomas' },
+    { moment:5, video:'equipo_globo_thomas', speaker:'', chars:[], speaking:'', text:'', action:'branch_thomas' },
   ];
 }
 
@@ -823,10 +749,8 @@ function displayLine(line) {
   if (!line) return;
   const mi = typeof line.moment==='number' ? line.moment : S.moment;
   updateDots(mi); S.moment = mi;
-  const _fullImg = getSceneImg(line);
-  if (_fullImg) setSceneBg(_fullImg);
-  else if (line.bg) setBg(line.bg);
-  showChars(line.chars||[], line.speaking||'', line.pose||'neutral', !!_fullImg);
+  if (line.video) setVideo(line.video);
+  showChars(line.chars||[], line.speaking||'');
   hideAllBubbles(); hideInputForm(); hideChoices(); hideInfo();
 
   const txt = typeof line.text==='function' ? line.text() : (line.text||'');
@@ -885,28 +809,28 @@ const THOMAS_OPTS = [
 function runBranch() {
   if (S.decisionThomas === 'aceptar') {
     playBranch([
-      {moment:5,speaker:'NARRADOR',chars:['thomas'],speaking:'',bg:'bg-equipo',
+      {moment:5,video:'decision_aceptar',speaker:'NARRADOR',chars:['thomas'],speaking:'',
         text:'*Caminas hacia Thomas y extiendes la mano.*'},
-      {moment:5,speaker:'PLAYER',chars:['thomas'],speaking:'PLAYER',bg:'bg-equipo',
+      {moment:5,video:'decision_aceptar',speaker:'PLAYER',chars:['thomas'],speaking:'PLAYER',
         text:'Ey, Thomas. Somos compañeros de equipo. Vamos juntos.'},
-      {moment:5,speaker:'THOMAS',chars:['thomas'],speaking:'THOMAS',bg:'bg-equipo',
+      {moment:5,video:'decision_aceptar',speaker:'THOMAS',chars:['thomas'],speaking:'THOMAS',
         text:'Yo…'},
-      {moment:5,speaker:'THOMAS',chars:['thomas'],speaking:'THOMAS',bg:'bg-equipo',
+      {moment:5,video:'decision_aceptar',speaker:'THOMAS',chars:['thomas'],speaking:'THOMAS',
         text:'Gracias. De verdad.'},
-      {moment:5,speaker:'GLOBO',chars:['globo','thomas'],speaking:'GLOBO',bg:'bg-equipo',pose:'happy',
+      {moment:5,video:'decision_aceptar',speaker:'GLOBO',chars:['globo','thomas'],speaking:'GLOBO',
         text:`Eso es trabajo en equipo, ${S.playerName}. En este campamento ganamos juntos — o perdemos juntos.`},
-      {moment:5,speaker:'SINA',chars:['sina'],speaking:'SINA',bg:'bg-equipo',pose:'explaining',
+      {moment:5,video:'decision_aceptar',speaker:'SINA',chars:['sina'],speaking:'SINA',
         text:'El caso de Thomas nos va a enseñar más de lo que imaginan. Empecemos.',action:'end'},
     ]);
   } else {
     playBranch([
-      {moment:5,speaker:'NARRADOR',chars:['thomas'],speaking:'',bg:'bg-equipo',
+      {moment:5,video:'decision_rechazar',speaker:'NARRADOR',chars:['thomas'],speaking:'',
         text:'*No dices nada. Thomas lo nota.*'},
-      {moment:5,speaker:'THOMAS',chars:['thomas'],speaking:'THOMAS',bg:'bg-equipo',
+      {moment:5,video:'decision_rechazar',speaker:'THOMAS',chars:['thomas'],speaking:'THOMAS',
         text:'Entiendo… ya estoy acostumbrado.'},
-      {moment:5,speaker:'GLOBO',chars:['globo','thomas'],speaking:'GLOBO',bg:'bg-equipo',pose:'confused',
+      {moment:5,video:'decision_rechazar',speaker:'GLOBO',chars:['globo','thomas'],speaking:'GLOBO',
         text:`${S.playerName}. La medicina trata a todos los pacientes por igual. Eso incluye a Thomas.`},
-      {moment:5,speaker:'GLOBO',chars:['globo'],speaking:'GLOBO',bg:'bg-equipo',pose:'neutral',
+      {moment:5,video:'decision_rechazar',speaker:'GLOBO',chars:['globo'],speaking:'GLOBO',
         text:'Trabaja con él. Es una orden del campamento.',action:'end'},
     ]);
   }
@@ -950,8 +874,6 @@ document.getElementById('finish-btn').addEventListener('click', () => {
 onAuthStateChanged(auth, user => {
   uid = user ? user.uid : null;
   $loading.style.display = 'none';
-  $bg.style.backgroundImage = "url('../Imagenes/bg_campamento.png')";
-  $bg.style.opacity = '1';
   buildScript();
   flatLines = SCRIPT;
   flatIdx   = -1;
