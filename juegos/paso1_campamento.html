@@ -652,14 +652,14 @@ function buildScript() {
 
     // ── Momento 2: Tienda SINA ─────────────────────────────────
     { moment:2, video:'tienda_sina', speaker:'NARRADOR',
-      text:'*En la tienda principal, la doctora SINA os explica la primera prueba: un análisis de sangre básico.*' },
+      text:'*En la tienda principal, la doctora SINA explica la primera tarea del campamento.*' },
     { moment:2, video:'tienda_sina', speaker:'SINA',
-      text:()=>`Bienvenidos. Hoy empezamos con lo fundamental: los componentes de la sangre. ${p()}, ¿sabes qué son los eritrocitos?` },
+      text:'Bienvenidos. Antes de empezar cualquier actividad, necesitamos llenar la ficha médica de cada participante. El dato más importante: su tipo de sangre.' },
     { moment:2, video:'tienda_sina', speaker:'SINA',
-      text:'Los eritrocitos —también llamados glóbulos rojos— son las células que transportan oxígeno por todo tu cuerpo.',
-      action:'info', infoText:'🔴 ERITROCITO = Glóbulo rojo. Función: transportar O₂ desde los pulmones hasta los tejidos. Contienen hemoglobina. Valor normal: 4.5–6 millones por μL de sangre.' },
+      text:'Si ocurre una emergencia aquí en el campamento, necesitamos saber el grupo sanguíneo y el factor Rh de cada uno. Sin esa información, una transfusión puede salir muy mal.',
+      action:'info', infoText:'🩸 TIPIFICACIÓN = Grupo sanguíneo A, B, AB u O + factor Rh +/-. Dato obligatorio en cualquier ficha de emergencia médica.' },
     { moment:2, video:'tienda_sina', speaker:'SINA',
-      text:'Su cantidad nos dice mucho sobre la salud de una persona. Un nivel bajo puede significar anemia… o algo más serio.' },
+      text:'Es rápido y no duele. Pero puede salvarles la vida. Empecemos.' },
 
     // ── Momento 3: Resultado Thomas ────────────────────────────
     { moment:3, video:'resultado_sina_thomas', speaker:'SINA',
