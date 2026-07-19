@@ -480,6 +480,7 @@ const VIDEO_MAP = {
   espera_nombre:         '../Videos/espera_nombre.mp4',
   personalidad:          '../Videos/personalidad.mp4',
   fila_thomas:           '../Videos/fila_thomas.mp4',
+  fila_thomas_atento:    '../Videos/fila_thomas_atento.mp4',
   tienda_sina:           '../Videos/tienda_sina.mp4',
   resultado_sina_thomas: '../Videos/resultado_sina_thomas.mp4',
   equipo_globo_thomas:   '../Videos/equipo_globo_thomas.mp4',
@@ -644,9 +645,9 @@ function buildScript() {
       text:'*Te unes a la fila de registro. Delante hay un chico de cabello negro que no conoce a nadie.*' },
     { moment:1, video:'fila_thomas', speaker:'NARRADOR',
       text:'*Es Thomas. Parece nervioso. ¿Cómo lo saludas?*', action:'choice_saludo' },
-    { moment:1, video:'fila_thomas', speaker:'THOMAS',
+    { moment:1, video:'fila_thomas_atento', speaker:'THOMAS',
       text:()=> GREET_RESPONSES[S.greetingThomas] || '...Hola.' },
-    { moment:1, video:'fila_thomas', speaker:'THOMAS',
+    { moment:1, video:'fila_thomas_atento', speaker:'THOMAS',
       text:'Gracias… es mi primera vez en un campamento así.' },
 
     // ── Momento 2: Tienda SINA ─────────────────────────────────
