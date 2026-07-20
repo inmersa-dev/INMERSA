@@ -285,15 +285,34 @@
     /* ── Result overlay ─────────────────────────────────────────── */
     #result-overlay {
       position:fixed; inset:0; z-index:50;
-      background:rgba(10,22,40,.96);
+      background:rgba(10,22,40,.97);
       display:none; flex-direction:column;
       align-items:center; justify-content:center;
-      gap:20px; padding:36px; text-align:center;
+      gap:16px; padding:36px; text-align:center;
     }
     #result-overlay.show { display:flex; }
-    #result-overlay .big-icon { font-size:64px; }
-    #result-overlay h2 { font-size:24px; font-weight:900; }
-    #result-overlay p  { font-size:15px; color:#8899AA; line-height:1.6; }
+    .hito-badge { font-size:64px; animation:pulse-badge 2s ease-in-out infinite; }
+    @keyframes pulse-badge {
+      0%,100% { transform:scale(1);    filter:drop-shadow(0 0 8px rgba(0,212,255,.4)); }
+      50%      { transform:scale(1.08); filter:drop-shadow(0 0 20px rgba(0,212,255,.8)); }
+    }
+    .hito-label {
+      font-size:11px; font-weight:900; letter-spacing:.2em; text-transform:uppercase;
+      color:var(--accent);
+    }
+    #result-overlay h2 { font-size:22px; font-weight:900; color:#fff; margin:0; }
+    .hito-stats {
+      background:rgba(0,212,255,.06);
+      border:1.5px solid rgba(0,212,255,.22);
+      border-radius:12px;
+      padding:14px 24px;
+      width:100%; max-width:320px;
+      display:flex; flex-direction:column; gap:10px;
+    }
+    .stat-row { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .stat-key { font-size:12px; color:#8899AA; font-weight:700; text-transform:uppercase; letter-spacing:.06em; }
+    .stat-val { font-size:14px; color:#fff; font-weight:800; text-align:right; }
+    #result-overlay p { font-size:14px; color:#8899AA; line-height:1.6; max-width:320px; margin:0; }
     .finish-btn {
       margin-top:8px; background:var(--accent); color:#000;
       font-family:'Nunito',sans-serif;
@@ -409,9 +428,20 @@
 
 <!-- Result overlay -->
 <div id="result-overlay">
-  <div class="big-icon">🏕️</div>
-  <h2 id="result-title">¡Bienvenido al campamento!</h2>
-  <p id="result-desc">Tu aventura en INMERSA ha comenzado.</p>
+  <div class="hito-badge">🏕️</div>
+  <div class="hito-label">✦ Hito Completado ✦</div>
+  <h2>Bienvenida al Campamento Vital</h2>
+  <div class="hito-stats">
+    <div class="stat-row">
+      <span class="stat-key">Participante</span>
+      <span class="stat-val" id="stat-nombre"></span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-key">Personalidad</span>
+      <span class="stat-val" id="stat-personalidad"></span>
+    </div>
+  </div>
+  <p id="result-desc"></p>
   <button class="finish-btn" id="finish-btn">Continuar →</button>
 </div>
 
@@ -800,9 +830,7 @@ function runBranch() {
       {moment:5, video:'decision_rechazar', speaker:'THOMAS',
         text:'Entiendo… ya estoy acostumbrado.'},
       {moment:5, video:'decision_rechazar', speaker:'GLOBO',
-        text:`${S.playerName}. La medicina trata a todos los pacientes por igual. Eso incluye a Thomas.`},
-      {moment:5, video:'decision_rechazar', speaker:'GLOBO',
-        text:'Trabaja con él. Es una orden del campamento.', action:'end'},
+        text:`Es tu decisión, ${S.playerName}. La competencia continúa.`, action:'end'},
     ]);
   }
 }
@@ -827,8 +855,8 @@ async function finishGame() {
     } catch(e){ console.warn('Firebase save error:',e); }
   }
   window.parent.postMessage({tipo:'resultado_juego',paso:1,puntos:0,completado:true,tiempo_segundos:0},'*');
-  document.getElementById('result-title').textContent =
-    S.decisionThomas==='aceptar' ? `¡Bienvenido, ${S.playerName}!` : 'El campamento ha comenzado.';
+  document.getElementById('stat-nombre').textContent      = S.playerName;
+  document.getElementById('stat-personalidad').textContent = S.personalidad;
   document.getElementById('result-desc').textContent =
     S.decisionThomas==='aceptar'
       ? 'Tomaste la decisión correcta. Thomas es ahora parte de tu equipo.'
