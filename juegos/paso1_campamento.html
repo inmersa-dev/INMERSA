@@ -446,6 +446,7 @@
 </div>
 
 <div id="toast"></div>
+<audio id="bg-music" loop src="../Audio/musica_paso1.mp3"></audio>
 
 <script type="module">
 import { initializeApp }             from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -868,6 +869,11 @@ document.getElementById('finish-btn').addEventListener('click', () => {
   if (window.parent!==window) window.parent.postMessage({tipo:'cerrar_juego'},'*');
   else window.history.back();
 });
+
+// ── Music ────────────────────────────────────────────────────────
+const $bgMusic = document.getElementById('bg-music');
+$bgMusic.volume = 0.3;
+document.addEventListener('click', () => $bgMusic.play().catch(()=>{}), {once:true});
 
 // ── Init ────────────────────────────────────────────────────────
 onAuthStateChanged(auth, user => {
