@@ -423,15 +423,20 @@ const VIDEO_MAP = {
 };
 let currentVideo = '';
 function setVideo(key) {
-  if (!key || key === currentVideo) return;
+  if (!key || key === currentVideo) return Promise.resolve();
   currentVideo = key;
   $video.style.opacity = '0';
-  setTimeout(() => {
-    $video.src = VIDEO_MAP[key] || '';
-    $video.load();
-    $video.play().catch(()=>{});
-    $video.style.opacity = '1';
-  }, 350);
+  return new Promise(resolve => {
+    setTimeout(() => {
+      $video.src = VIDEO_MAP[key] || '';
+      $video.load();
+      let settled = false;
+      const finish = () => { if (settled) return; settled = true; $video.style.opacity = '1'; resolve(); };
+      $video.addEventListener('canplay', finish, { once: true });
+      setTimeout(finish, 2000);
+      $video.play().catch(finish);
+    }, 350);
+  });
 }
 
 // ── Characters ─────────────────────────────────────────────────
@@ -548,11 +553,11 @@ function advanceLine() {
   displayLine(line);
 }
 
-function displayLine(line) {
+async function displayLine(line) {
   const mi = typeof line.moment==='number' ? line.moment : S.moment;
   updateDots(mi); S.moment = mi;
-  if (line.video) setVideo(line.video);
   hideAllBubbles(); hideChoices();
+  if (line.video) await setVideo(line.video);
 
   const txt = typeof line.text==='function' ? line.text() : (line.text||'');
   currentTxt = txt;
