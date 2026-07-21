@@ -213,7 +213,6 @@
       transition:background .15s, border-color .15s;
     }
     .choice-btn:active { background:rgba(0,212,255,.12); border-color:var(--accent); }
-    .choice-btn.exact  { border-color:var(--teal); color:var(--teal); }
 
     /* ── Result overlay ─────────────────────────────────────────── */
     #result-overlay {
@@ -514,12 +513,12 @@ function hideChoices() {
 
 // ── Script ─────────────────────────────────────────────────────
 const LEARN_OPTS = [
-  { label:'Que hay que aprender para poder ganar.', cls:'exact',
-    onSelect:()=>{ S.exactAnswer=true;  advanceLine(); } },
   { label:'Que hay que practicar mucho.',
     onSelect:()=>{ S.exactAnswer=false; advanceLine(); } },
   { label:'Que es muy difícil.',
     onSelect:()=>{ S.exactAnswer=false; advanceLine(); } },
+  { label:'Que hay que aprender para poder ganar.',
+    onSelect:()=>{ S.exactAnswer=true;  advanceLine(); } },
 ];
 
 const SCRIPT = [
