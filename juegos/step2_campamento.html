@@ -544,6 +544,7 @@ const SCRIPT = [
 
 // ── Engine ──────────────────────────────────────────────────────
 let flatIdx = -1;
+let firstVideoReady = false;
 
 function advanceLine() {
   flatIdx++;
@@ -557,6 +558,7 @@ async function displayLine(line) {
   updateDots(mi); S.moment = mi;
   hideAllBubbles(); hideChoices();
   if (line.video) await setVideo(line.video);
+  if (!firstVideoReady) { firstVideoReady = true; $loading.style.display = 'none'; }
 
   const txt = typeof line.text==='function' ? line.text() : (line.text||'');
   currentTxt = txt;
@@ -617,7 +619,6 @@ document.addEventListener('click', () => $bgMusic.play().catch(()=>{}), {once:tr
 // ── Init ────────────────────────────────────────────────────────
 onAuthStateChanged(auth, user => {
   uid = user ? user.uid : null;
-  $loading.style.display = 'none';
   advanceLine();
 });
 </script>
