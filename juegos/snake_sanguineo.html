@@ -1679,7 +1679,7 @@ function gameOver(sfxKey){
   if (window.parent !== window) {
     window.parent.postMessage({
       tipo: 'resultado_juego',
-      paso: 5,
+      paso: 6,
       puntos: score,
       completado: true,
       tiempo_segundos: 0
@@ -1703,7 +1703,7 @@ function victory(){
   if (window.parent !== window) {
     window.parent.postMessage({
       tipo: 'resultado_juego',
-      paso: 5,
+      paso: 6,
       puntos: score,
       completado: true,
       tiempo_segundos: 0

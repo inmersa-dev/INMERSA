@@ -424,7 +424,7 @@
     <div class="pildora">Sistema Circulatorio — Píldora 01</div>
     <h1>Componentes de la Sangre</h1>
     <div class="sub" id="greeting">Cargando...</div>
-    <span class="progress-badge" id="progressBadge">0 / 20</span>
+    <span class="progress-badge" id="progressBadge">0 / 21</span>
 
     <div class="stats">
       <div class="stat">
@@ -503,15 +503,16 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // ---------- Definición de los 20 pasos ----------
+    // ---------- Definición de los 21 pasos ----------
     const ICONS = { Interactivo: "💬", Narrativa: "📖", Juego: "🎮", Emergencia: "🚑" };
 
     const STEPS = [
       { sec: "El campamento", tipo: "Interactivo", nombre: "Bienvenida al campamento", desc: "Registro, personalidad, eritrocitos bajos y la decisión sobre Thomas.", tiempo: "3-4 min", reward: "+50 pts" },
       { sec: "El campamento", tipo: "Narrativa", nombre: "El guía presenta la competencia", desc: "Conoce las reglas, la tabla de puntos y se introduce el rompecabezas.", tiempo: "1 min", reward: "+20 pts" },
-      { sec: "El campamento", tipo: "Juego", nombre: "Rompecabezas compuesto", desc: "Arma visualmente los 4 componentes de la sangre.", tiempo: "3-5 min", reward: "+80 pts · 🃏 Tarjeta" },
+      { sec: "El campamento", tipo: "Juego", nombre: "Rompecabezas · Parte 1", desc: "Arma el eritrocito y el plasma, y lee su ficha de datos.", tiempo: "2-4 min", reward: "+80 pts · 🃏 Tarjeta" },
 
       { sec: "Conoce al enemigo", tipo: "Interactivo", nombre: "Conversación de equipo", desc: "Tu compañero pregunta y el guía advierte sobre las enfermedades.", tiempo: "1-2 min", reward: "+30 pts" },
+      { sec: "Conoce al enemigo", tipo: "Juego", nombre: "Rompecabezas · Parte 2", desc: "Arma el leucocito y la plaqueta, y lee su ficha de datos.", tiempo: "2-4 min", reward: "+80 pts" },
       { sec: "Conoce al enemigo", tipo: "Juego", nombre: "Snake sanguíneo", desc: "Come componentes y evita las enfermedades para crecer.", tiempo: "3-5 min", reward: "+90 pts" },
       { sec: "Conoce al enemigo", tipo: "Narrativa", nombre: "Noche de cuentos", desc: "Fogata: la hemofilia como maldición, contada en un cómic ilustrado.", tiempo: "3-5 min", reward: "+30 pts · 🃏 Tarjeta" },
 
@@ -539,19 +540,22 @@
     const JUEGOS = {
       1:  "juegos/paso1_campamento.html",
       2:  "juegos/step2_campamento.html",
-      3:  "juegos/rompecabezas_componentes.html",
-      5:  "juegos/snake_sanguineo.html",
-      7:  "juegos/palabras_sangre.html",
-      9:  "juegos/defensa_inmune.html",
-      12: "juegos/ahorcado_sangre.html",
-      15: "juegos/memoria_variado.html",
-      17: "juegos/runner_sangre.html"
+      3:  "juegos/rompecabezas_parte1.html",
+      5:  "juegos/rompecabezas_parte2.html",
+      6:  "juegos/snake_sanguineo.html",
+      8:  "juegos/palabras_sangre.html",
+      10: "juegos/defensa_inmune.html",
+      13: "juegos/ahorcado_sangre.html",
+      16: "juegos/memoria_variado.html",
+      18: "juegos/runner_sangre.html"
     };
 
     // Pasos que desbloquean una tarjeta al completarse, con su id de tarjeta.
+    // Nota: los ids (tarjeta_06, tarjeta_09…) conservan su nombre original
+    // aunque el paso se haya corrido, para no romper las definiciones de tarjetas.
     const TARJETA_POR_PASO = {
-      3: "tarjeta_03", 6: "tarjeta_06", 9: "tarjeta_09", 12: "tarjeta_12",
-      15: "tarjeta_15", 17: "tarjeta_17", 19: "tarjeta_19"
+      3: "tarjeta_03", 7: "tarjeta_06", 10: "tarjeta_09", 13: "tarjeta_12",
+      16: "tarjeta_15", 18: "tarjeta_17", 20: "tarjeta_19"
     };
 
     // Datos del estudiante cargados (se actualizan tras cada juego).
@@ -617,13 +621,13 @@
       const completados = Math.max(0, pasoActual - 1);
 
       $("greeting").textContent = `¡Hola, ${nombre}! Sigue tu camino.`;
-      $("progressBadge").textContent = `${completados} / 20`;
+      $("progressBadge").textContent = `${completados} / ${STEPS.length}`;
       $("statRacha").textContent = data.racha_dias ?? 0;
       $("statPuntos").textContent = data.puntos_totales ?? 0;
       const tarjetas = Array.isArray(data.tarjetas_desbloqueadas) ? data.tarjetas_desbloqueadas.length : 0;
       $("statTarjetas").textContent = `${tarjetas} / ${TOTAL_TARJETAS}`;
 
-      const pct = Math.round((completados / 20) * 100);
+      const pct = Math.round((completados / STEPS.length) * 100);
       $("progressPct").textContent = `${pct}%`;
       requestAnimationFrame(() => { $("progressFill").style.width = pct + "%"; });
 
