@@ -445,7 +445,7 @@ let uid = null;
 
 // ── State ──────────────────────────────────────────────────────
 const S = {
-  playerName:'Estudiante', decisionThomas:'',
+  playerName:'Estudiante', decisionThomas:'', reviewAnswer:'',
   typing:false, awaitingChoice:false, awaitingScoreboard:false,
   typeTimeout:null, typeEl:null, tapEl:null, typeOnDone:null,
   moment:0,
@@ -639,11 +639,11 @@ function hideScoreboard() {
 // ── Script ─────────────────────────────────────────────────────
 const REVIEW_OPTS = [
   { label:'Eran dos: eritrocito y plasma.',
-    onSelect:()=>advanceLine() },
+    onSelect:()=>{ S.reviewAnswer='correcto'; advanceLine(); } },
   { label:'No recuerdo cuántas eran, pero sé que una era eritrocito y otra plasma.',
-    onSelect:()=>advanceLine() },
+    onSelect:()=>{ S.reviewAnswer='parcial'; advanceLine(); } },
   { label:'La verdad, no me acuerdo de nada.',
-    onSelect:()=>advanceLine() },
+    onSelect:()=>{ S.reviewAnswer='nada'; advanceLine(); } },
 ];
 
 const SCRIPT = [
@@ -656,7 +656,12 @@ const SCRIPT = [
 
   // ── Momento 1: Alicia explica ──────────────────────────────
   { moment:1, video:'step4_alicia_explains', speaker:'ALICIA',
-    text:'Al final de cada uno les salió una tarjeta con detalles. Se supone que ustedes saben leer. Eran dos: glóbulo rojo y eritrocito son lo mismo, y el plasma es la parte líquida de la sangre.' },
+    text:()=>{
+      const intro = S.reviewAnswer==='correcto' ? 'Correcto, prestaste atención.'
+                  : S.reviewAnswer==='parcial'  ? 'Casi. Al menos recuerdas los nombres.'
+                  :                                '¿En serio? Para eso salieron las tarjetas.';
+      return intro + ' Eran dos: glóbulo rojo y eritrocito son la misma cosa — la parte roja que lleva el oxígeno. Y el plasma es la parte líquida, donde viaja todo lo demás.';
+    } },
   { moment:1, video:'step4_beto_grateful', speaker:'BETO',
     text:'Por eso hay que tener amigas inteligentes.' },
   { moment:1, video:'step4_beto_grateful', speaker:'PLAYER',
@@ -664,6 +669,8 @@ const SCRIPT = [
 
   // ── Momento 2: Pizarra de posiciones ───────────────────────
   { moment:2, action:'scoreboard' },
+  { moment:2, video:'step4_beto_grateful', speaker:'BETO',
+    text:'¿Tercer lugar? ¡Con Alicia de nuestro lado, subimos rápido!' },
 
   // ── Momento 3: Thomas (solo si lo aceptaste en el Paso 1) ──
   { moment:3, video:'step4_thomas', speaker:'THOMAS',
