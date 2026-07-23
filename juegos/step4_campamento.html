@@ -115,8 +115,8 @@
 
     /* Bubble container */
     .bubble-wrap {
-      flex:1; display:flex; align-items:center; justify-content:center;
-      overflow:visible; width:100%;
+      flex:1; display:flex; align-items:flex-start; justify-content:center;
+      overflow:visible; width:100%; padding-top:30px;
     }
     #char-left   .bubble-wrap { justify-content:flex-start; padding-left:6px; }
     #char-right  .bubble-wrap { justify-content:flex-end;   padding-right:6px; }
@@ -184,7 +184,7 @@
       transform:translateX(-50%);
       width:75%; flex:none; display:none;
     }
-    #char-player .bubble-wrap { justify-content:center; padding-bottom:8px; }
+    #char-player .bubble-wrap { justify-content:center; padding-top:0; padding-bottom:8px; }
 
     /* ── Bottom panel ──────────────────────────────────────────── */
     #bottom-panel {
@@ -478,7 +478,9 @@ const $scoreboard = document.getElementById('scoreboard-overlay');
 // ── Video ──────────────────────────────────────────────────────
 const VIDEO_MAP = {
   step4_beto_confused:   '../Videos/step4_beto_confused.mp4',
+  step4_beto_trying:     '../Videos/step4_beto_trying.mp4',
   step4_alicia_explains: '../Videos/step4_alicia_explains.mp4',
+  step4_beto_grateful:   '../Videos/step4_beto_grateful.mp4',
   step4_thomas:          '../Videos/step4_thomas.mp4',
 };
 let currentVideo = '';
@@ -649,15 +651,15 @@ const SCRIPT = [
   { moment:0, video:'step4_beto_confused', speaker:'BETO',
     text:'Tantas horas haciendo eso y ni me acuerdo si era mitrocito, asma o borbojito.',
     action:'choice_review' },
-  { moment:0, video:'step4_beto_confused', speaker:'BETO',
+  { moment:0, video:'step4_beto_trying', speaker:'BETO',
     text:'Yo sé que hay una que es roja y lleva oxígeno, y la otra parte es como un líquido.' },
 
   // ── Momento 1: Alicia explica ──────────────────────────────
   { moment:1, video:'step4_alicia_explains', speaker:'ALICIA',
     text:'Al final de cada uno les salió una tarjeta con detalles. Se supone que ustedes saben leer. Eran dos: glóbulo rojo y eritrocito son lo mismo, y el plasma es la parte líquida de la sangre.' },
-  { moment:1, video:'step4_alicia_explains', speaker:'BETO',
+  { moment:1, video:'step4_beto_grateful', speaker:'BETO',
     text:'Por eso hay que tener amigas inteligentes.' },
-  { moment:1, video:'step4_alicia_explains', speaker:'PLAYER',
+  { moment:1, video:'step4_beto_grateful', speaker:'PLAYER',
     text:'Deberías dejar de fallar tanto en los juegos para que no sigamos perdiendo puntos… Mira la pizarra.' },
 
   // ── Momento 2: Pizarra de posiciones ───────────────────────
