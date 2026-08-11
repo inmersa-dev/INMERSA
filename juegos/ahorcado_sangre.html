@@ -1272,16 +1272,21 @@ function guessLetter(ch) {
     if (kbtn) { kbtn.classList.add('hit'); kbtn.disabled = true; }
     if (chip) chip.className = 'chip hit';
     triggerFlash(0, 180, 80);
-    points += 100;
+    /* Escala equiparada a Palabras Sanguíneas (juego de duración similar):
+       35 letras x10 + 5 palabras x100 + 5 comprensiones x25 = 975.
+       Antes eran 100/400/50 = 5750, seis veces más que cualquier otro juego,
+       y con el 61% del puntaje en revelar letras en vez de resolver. */
+    points += 10;
     updateStats();
     updateRegistro();
-    showToast('✅ +100 pts', 'green');
+    showToast('✅ +10 pts', 'green');
     playSFX('sfx-letter-ok');
 
     // Win check
     if (word.split('').every(c => guessed.has(c))) {
       wordActive = false;
-      points += 400;
+      /* Resolver la palabra ahora pesa más que revelarla letra a letra. */
+      points += 100;
       updateStats();
       stopAlarmLoop();
       playSFX('sfx-word-won');
@@ -1404,9 +1409,9 @@ function answerComprehension(chosen, correct, container) {
   if (chosen === correct) {
     btns[chosen].classList.add('correct');
     if (sessionStats[wordName] !== undefined) sessionStats[wordName].comprehension = true;
-    points += 50;
+    points += 25;
     updateStats();
-    showToast('⭐ +50 bonus', 'green');
+    showToast('⭐ +25 bonus', 'green');
     playSFX('sfx-quiz-ok');
     setTimeout(closeComprehension, 900);
   } else {
