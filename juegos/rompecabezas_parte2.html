@@ -1026,7 +1026,14 @@ function sendPostMessage(puntos){
 function showFinalWin(){
   document.getElementById('win-time').textContent     = fmtTime(totalElapsedSecs);
   document.getElementById('win-attempts').textContent = totalAttempts;
-  baseScore = PUZZLES.length * TOTAL * 10;
+  /* Puntaje por desempeño (mismo criterio que la Parte 1): un intento por
+     pieza es lo perfecto; lo que exceda son fallos y descuentan. */
+  var PIEZAS_TOTALES = PUZZLES.length * TOTAL;
+  var PUNTAJE_MAX    = PIEZAS_TOTALES * 10;               /* 400 si es perfecto */
+  var PUNTAJE_MIN    = Math.round(PUNTAJE_MAX * 0.4);     /* piso: 160 */
+  var PENAL_FALLO    = 4;
+  var fallos = Math.max(0, totalAttempts - PIEZAS_TOTALES);
+  baseScore = Math.max(PUNTAJE_MIN, PUNTAJE_MAX - fallos * PENAL_FALLO);
   document.getElementById('win-score').textContent    = baseScore+' pts';
   winOverlay.classList.add('show');
   try { var _mus=document.getElementById('mus-ambient'); if(_mus) _mus.pause(); } catch(e){}

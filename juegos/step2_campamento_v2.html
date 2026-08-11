@@ -132,8 +132,9 @@ async function finish() {
       }, { merge: true });
     } catch(e){ console.warn('Firebase save error:', e); }
   }
-  // PUNTOS debe coincidir con el "reward" que el mapa anuncia (+20 pts).
-  window.parent.postMessage({tipo:'resultado_juego',paso:2,puntos:20,completado:true,tiempo_segundos:0},'*');
+  // PUNTOS debe coincidir con el "reward" que el mapa anuncia (+150 pts,
+  // escalón "narrativa corta").
+  window.parent.postMessage({tipo:'resultado_juego',paso:2,puntos:150,completado:true,tiempo_segundos:0},'*');
   document.getElementById('result').classList.add('show');
 }
 

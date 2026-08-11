@@ -426,7 +426,7 @@
 <script type="module">
 import { initializeApp }              from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc, serverTimestamp }
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // ── Firebase ───────────────────────────────────────────────────
@@ -445,7 +445,7 @@ let uid = null;
 
 // ── State ──────────────────────────────────────────────────────
 const S = {
-  playerName:'Estudiante', decisionThomas:'', reviewAnswer:'', puntosTotales:0,
+  playerName:'Estudiante', decisionThomas:'', reviewAnswer:'', puntosTotales:0, posEquipo:3,
   typing:false, awaitingChoice:false, awaitingScoreboard:false,
   typeTimeout:null, typeEl:null, tapEl:null, typeOnDone:null,
   moment:0,
@@ -586,21 +586,58 @@ function hideChoices() {
 }
 
 // ── Scoreboard ─────────────────────────────────────────────────
-// Los equipos no existen como dato real: se derivan de los puntos del jugador
-// conservando las proporciones de la tabla original (tu equipo valía 180 con 75
-// puntos tuyos = 2.4x, y el resto guardaba estas razones respecto al tuyo). Así
-// la tabla escala contigo en vez de contradecirte.
-const TEAM_MULT_YOU = 2.4;
-const TEAMS = [
-  { pos:1, name:'Equipo Rojo',     dot:'🔴', ratio:240/180 },
-  { pos:2, name:'Equipo Amarillo', dot:'🟡', ratio:210/180 },
-  { pos:3, name:'Equipo Verde',    dot:'🟢', ratio:1, you:true },
-  { pos:4, name:'Equipo Azul',     dot:'🔵', ratio:150/180 },
-];
+// Modelo de "liga" (como el modo carrera de un juego deportivo): el campamento
+// avanza por su cuenta. Cada personaje rinde un % FIJO del máximo disponible
+// hasta este punto, y el jugador entra con sus puntos REALES. El ranking es
+// honesto: se puede subir hasta el primer puesto y también caer al último.
+//
+// Máximo que otorga cada nodo — debe coincidir con los `reward` de mapa.html.
+const MAX_POR_NODO = { 1:400, 2:150, 3:400 };
+const PASO_ACTUAL  = 4;
+
+// Rendimiento de cada personaje, en % del máximo disponible.
+const RENDIMIENTO = {
+  thomas:93, valentina:90, raul:89, alicia:88,
+  mateo:78, sofia:74, beto:68,
+  relleno:75,          // compañeros sin nombre que completan cada equipo
+};
+
+// Equipos según el guion (Globo los lee en voz alta en el nodo 1):
+// Verde = TÚ, Alicia y Beto · Rojo = Valentina y Mateo · Azul = Sofía ·
+// Amarillo = Raúl. Thomas entra en TU equipo si lo aceptaste, y en el Azul
+// si lo rechazaste ("En el Azul nos falta uno"), así que esa decisión mueve
+// la tabla de verdad.
+function plantillas(conThomas) {
+  return [
+    { name:'Equipo Verde',    dot:'🟢', you:true,
+      miembros:['alicia','beto', conThomas ? 'thomas' : 'relleno'] },
+    { name:'Equipo Rojo',     dot:'🔴',
+      miembros:['valentina','mateo','relleno','relleno'] },
+    { name:'Equipo Amarillo', dot:'🟡',
+      miembros:['raul','relleno','relleno','relleno'] },
+    { name:'Equipo Azul',     dot:'🔵',
+      miembros:['sofia','relleno','relleno', conThomas ? 'relleno' : 'thomas'] },
+  ];
+}
+
 function buildScoreboard() {
-  // Base del equipo propio; con 0 puntos se conserva la tabla del guion.
-  const baseEquipo = Math.max(180, Math.round((Math.max(0, S.puntosTotales) || 0) * TEAM_MULT_YOU));
-  TEAMS.forEach(t => t.pts = Math.round(baseEquipo * t.ratio));
+  // Máximo acumulado por los nodos ya completados (los anteriores a este).
+  let MAX = 0;
+  for (let n = 1; n < PASO_ACTUAL; n++) MAX += MAX_POR_NODO[n] || 0;
+
+  const pts  = clave => Math.round(RENDIMIENTO[clave] * MAX / 100);
+  const P    = Math.max(0, Math.round(S.puntosTotales) || 0);
+  const conThomas = S.decisionThomas === 'aceptar';
+
+  const TEAMS = plantillas(conThomas);
+  // El equipo propio suma los puntos reales del jugador, no un porcentaje.
+  TEAMS.forEach(t => {
+    t.pts = t.miembros.reduce((suma, k) => suma + pts(k), 0) + (t.you ? P : 0);
+  });
+  TEAMS.sort((a, b) => b.pts - a.pts);
+  TEAMS.forEach((t, i) => t.pos = i + 1);
+  // La posición del equipo ya no es fija: el diálogo posterior la usa.
+  S.posEquipo = (TEAMS.find(t => t.you) || {}).pos || 0;
 
   const teamsBox = document.getElementById('score-teams');
   teamsBox.innerHTML = '';
@@ -615,26 +652,31 @@ function buildScoreboard() {
     teamsBox.appendChild(row);
   });
 
-  // Tabla individual: los puntos del jugador son los REALES (puntos_totales) y
-  // los rivales se recolocan alrededor, conservando la forma del guion
-  // (dos por encima, dos por debajo) para que siempre haya a quién alcanzar.
-  const P = Math.max(0, Math.round(S.puntosTotales) || 0);
-  const g = Math.max(4, Math.round(P * 0.07));   // separación entre puestos
+  // Tabla individual: cada rival con su rendimiento fijo, el jugador con sus
+  // puntos reales. Para ser primero hay que superar a Thomas (93%).
   const individual = [
-    { name:'Alicia',      pts: P + g * 3 },
-    { name:'Valentina',   pts: P + g },
+    { name:'Thomas',      pts: pts('thomas') },
+    { name:'Valentina',   pts: pts('valentina') },
+    { name:'Raúl',        pts: pts('raul') },
+    { name:'Alicia',      pts: pts('alicia') },
+    { name:'Mateo',       pts: pts('mateo') },
+    { name:'Sofía',       pts: pts('sofia') },
+    { name:'Beto',        pts: pts('beto') },
     { name:S.playerName,  pts: P, you:true },
-    { name:'Mateo',       pts: Math.max(0, P - g) },
-    { name:'Beto',        pts: Math.max(0, P - g * 3) },
   ];
   // Orden por puntos (estable: ante empate se respeta el orden anterior, así
   // el jugador nunca cae por debajo de quien tenga su mismo puntaje).
   individual.sort((a, b) => b.pts - a.pts);
   individual.forEach((p, i) => p.pos = i + 1);
 
+  // Se muestran los 5 primeros y, si el jugador quedó fuera, su fila al final
+  // (como el marcador de una liga: ves la cabeza de la tabla y dónde estás tú).
+  const visibles = individual.slice(0, 5);
+  if (!visibles.some(p => p.you)) visibles.push(individual.find(p => p.you));
+
   const indBox = document.getElementById('score-individual');
   indBox.innerHTML = '';
-  individual.forEach(p => {
+  visibles.forEach(p => {
     const row = document.createElement('div');
     row.className = 'score-row' + (p.you ? ' you' : '');
     row.innerHTML =
@@ -689,7 +731,13 @@ const SCRIPT = [
   // ── Momento 2: Pizarra de posiciones ───────────────────────
   { moment:2, action:'scoreboard' },
   { moment:2, video:'step4_beto_grateful', speaker:'BETO',
-    text:'¿Tercer lugar? ¡Con Alicia de nuestro lado, subimos rápido!' },
+    text:()=>{
+      // El puesto depende de cómo vaya el jugador, así que Beto reacciona a él.
+      const n = S.posEquipo;
+      if (n === 1) return '¿Primeros? ¡Con Alicia de nuestro lado no nos alcanza nadie!';
+      if (n === 4) return 'Últimos… pero con Alicia de nuestro lado remontamos, ya verás.';
+      return `¿${n === 2 ? 'Segundo' : 'Tercer'} lugar? ¡Con Alicia de nuestro lado, subimos rápido!`;
+    } },
 
   // ── Momento 3: Thomas (solo si lo aceptaste en el Paso 1) ──
   { moment:3, video:'step4_thomas', speaker:'THOMAS',
@@ -763,12 +811,14 @@ document.getElementById('score-continue').addEventListener('click', () => {
 async function finishGame() {
   if (uid) {
     try {
-      await updateDoc(doc(db,'estudiantes',uid), {
+      // setDoc+merge: updateDoc falla con not-found si el doc no existe.
+      await setDoc(doc(db,'estudiantes',uid), {
         paso4_completado:true, paso4_ts:serverTimestamp(),
-      });
+      }, { merge: true });
     } catch(e){ console.warn('Firebase save error:',e); }
   }
-  window.parent.postMessage({tipo:'resultado_juego',paso:4,puntos:0,completado:true,tiempo_segundos:0},'*');
+  // +200 pts: escalón "interactivo con decisión" del mapa (antes enviaba 0).
+  window.parent.postMessage({tipo:'resultado_juego',paso:4,puntos:200,completado:true,tiempo_segundos:0},'*');
   $result.classList.add('show');
 }
 

@@ -506,32 +506,38 @@
     // ---------- Definición de los 21 pasos ----------
     const ICONS = { Interactivo: "💬", Narrativa: "📖", Juego: "🎮", Emergencia: "🚑" };
 
+    // `reward` refleja el MÁXIMO real que cada nodo puede otorgar (auditado
+    // sobre el código de cada juego), no una cifra decorativa. Los nodos
+    // narrativos/interactivos usan 4 escalones: 150 (corta), 200 (con decisión),
+    // 300 (larga), 400 (nodo 1) y 500 (emergencias).
+    // PROVISIONAL: Defensa Inmune (1500) y Corredor Sanguíneo (2000) no tienen
+    // tope en su código; esas dos cifras son estimaciones a la espera de medirlas.
     const STEPS = [
-      { sec: "El campamento", tipo: "Interactivo", nombre: "Bienvenida al campamento", desc: "Registro, personalidad, eritrocitos bajos y la decisión sobre Thomas.", tiempo: "6-8 min", reward: "+50 pts" },
-      { sec: "El campamento", tipo: "Narrativa", nombre: "El guía presenta la competencia", desc: "Conoce las reglas, la tabla de puntos y se introduce el rompecabezas.", tiempo: "1 min", reward: "+20 pts" },
-      { sec: "El campamento", tipo: "Juego", nombre: "Rompecabezas · Parte 1", desc: "Arma el eritrocito y el plasma, y lee su ficha de datos.", tiempo: "2-4 min", reward: "+80 pts · 🃏 Tarjeta" },
+      { sec: "El campamento", tipo: "Interactivo", nombre: "Bienvenida al campamento", desc: "Registro, personalidad, eritrocitos bajos y la decisión sobre Thomas.", tiempo: "6-8 min", reward: "+400 pts" },
+      { sec: "El campamento", tipo: "Narrativa", nombre: "El guía presenta la competencia", desc: "Conoce las reglas, la tabla de puntos y se introduce el rompecabezas.", tiempo: "1 min", reward: "+150 pts" },
+      { sec: "El campamento", tipo: "Juego", nombre: "Rompecabezas · Parte 1", desc: "Arma el eritrocito y el plasma, y lee su ficha de datos.", tiempo: "2-4 min", reward: "+400 pts · 🃏 Tarjeta" },
 
-      { sec: "Conoce al enemigo", tipo: "Interactivo", nombre: "Conversación de equipo", desc: "Tu compañero pregunta y el guía advierte sobre las enfermedades.", tiempo: "1-2 min", reward: "+30 pts" },
-      { sec: "Conoce al enemigo", tipo: "Juego", nombre: "Rompecabezas · Parte 2", desc: "Arma el leucocito y la plaqueta, y lee su ficha de datos.", tiempo: "2-4 min", reward: "+80 pts" },
-      { sec: "Conoce al enemigo", tipo: "Juego", nombre: "Snake sanguíneo", desc: "Come componentes y evita las enfermedades para crecer.", tiempo: "3-5 min", reward: "+90 pts" },
-      { sec: "Conoce al enemigo", tipo: "Narrativa", nombre: "Noche de cuentos", desc: "Fogata: la hemofilia como maldición, contada en un cómic ilustrado.", tiempo: "3-5 min", reward: "+30 pts · 🃏 Tarjeta" },
+      { sec: "Conoce al enemigo", tipo: "Interactivo", nombre: "Conversación de equipo", desc: "Tu compañero pregunta y el guía advierte sobre las enfermedades.", tiempo: "1-2 min", reward: "+200 pts" },
+      { sec: "Conoce al enemigo", tipo: "Juego", nombre: "Rompecabezas · Parte 2", desc: "Arma el leucocito y la plaqueta, y lee su ficha de datos.", tiempo: "2-4 min", reward: "+400 pts" },
+      { sec: "Conoce al enemigo", tipo: "Juego", nombre: "Snake sanguíneo", desc: "Come componentes y evita las enfermedades para crecer.", tiempo: "3-5 min", reward: "+2500 pts" },
+      { sec: "Conoce al enemigo", tipo: "Narrativa", nombre: "Noche de cuentos", desc: "Fogata: la hemofilia como maldición, contada en un cómic ilustrado.", tiempo: "3-5 min", reward: "+300 pts · 🃏 Tarjeta" },
 
-      { sec: "Domina el vocabulario", tipo: "Juego", nombre: "Palabras sanguíneas", desc: "Pistas y letras sobre componentes y enfermedades.", tiempo: "3-5 min", reward: "+90 pts" },
-      { sec: "Domina el vocabulario", tipo: "Interactivo", nombre: "Anima a tu compañero", desc: "Tabla y diálogo con consecuencias según tu elección.", tiempo: "1-2 min", reward: "+30 pts" },
-      { sec: "Domina el vocabulario", tipo: "Juego", nombre: "Defensa Inmune", desc: "Shooter: enfermedades contra tus aliados del sistema inmune.", tiempo: "5-8 min", reward: "+120 pts · 🃏 Tarjeta" },
-      { sec: "Domina el vocabulario", tipo: "Emergencia", nombre: "Emergencia 1", desc: "Caso clínico: diagnostica como un verdadero doctor.", tiempo: "2-3 min", reward: "+100 pts" },
+      { sec: "Domina el vocabulario", tipo: "Juego", nombre: "Palabras sanguíneas", desc: "Pistas y letras sobre componentes y enfermedades.", tiempo: "3-5 min", reward: "+950 pts" },
+      { sec: "Domina el vocabulario", tipo: "Interactivo", nombre: "Anima a tu compañero", desc: "Tabla y diálogo con consecuencias según tu elección.", tiempo: "1-2 min", reward: "+200 pts" },
+      { sec: "Domina el vocabulario", tipo: "Juego", nombre: "Defensa Inmune", desc: "Shooter: enfermedades contra tus aliados del sistema inmune.", tiempo: "5-8 min", reward: "+1500 pts · 🃏 Tarjeta" },
+      { sec: "Domina el vocabulario", tipo: "Emergencia", nombre: "Emergencia 1", desc: "Caso clínico: diagnostica como un verdadero doctor.", tiempo: "2-3 min", reward: "+500 pts" },
 
-      { sec: "Demuestra dominio", tipo: "Interactivo", nombre: "Charla de equipo", desc: "Comentan la defensa, repaso en la tabla y el guía introduce el ahorcado.", tiempo: "2 min", reward: "+30 pts" },
-      { sec: "Demuestra dominio", tipo: "Juego", nombre: "Ahorcado", desc: "Pon a prueba todo el vocabulario aprendido.", tiempo: "3-5 min", reward: "+90 pts · 🃏 Tarjeta" },
-      { sec: "Demuestra dominio", tipo: "Emergencia", nombre: "Emergencia 2", desc: "Un caso clínico más complejo para diagnosticar.", tiempo: "2-3 min", reward: "+110 pts" },
-      { sec: "Demuestra dominio", tipo: "Narrativa", nombre: "Motivación del guía", desc: "No es momento de descansar: viene el reto de memoria.", tiempo: "30 seg", reward: "+15 pts" },
+      { sec: "Demuestra dominio", tipo: "Interactivo", nombre: "Charla de equipo", desc: "Comentan la defensa, repaso en la tabla y el guía introduce el ahorcado.", tiempo: "2 min", reward: "+200 pts" },
+      { sec: "Demuestra dominio", tipo: "Juego", nombre: "Ahorcado", desc: "Pon a prueba todo el vocabulario aprendido.", tiempo: "3-5 min", reward: "+5750 pts · 🃏 Tarjeta" },
+      { sec: "Demuestra dominio", tipo: "Emergencia", nombre: "Emergencia 2", desc: "Un caso clínico más complejo para diagnosticar.", tiempo: "2-3 min", reward: "+500 pts" },
+      { sec: "Demuestra dominio", tipo: "Narrativa", nombre: "Motivación del guía", desc: "No es momento de descansar: viene el reto de memoria.", tiempo: "30 seg", reward: "+150 pts" },
 
-      { sec: "La batalla final", tipo: "Juego", nombre: "Memoria 3 niveles", desc: "Imagen+nombre, nombre+descripción e imagen+descripción.", tiempo: "5-8 min", reward: "+120 pts · 🃏 Tarjeta" },
-      { sec: "La batalla final", tipo: "Interactivo", nombre: "La recta final", desc: "Tabla, el tema de Thomas y preparación para el runner.", tiempo: "2 min", reward: "+30 pts" },
-      { sec: "La batalla final", tipo: "Juego", nombre: "Corredor Sanguíneo", desc: "El integrador final, todo bajo presión.", tiempo: "5-8 min", reward: "+150 pts · 🃏 Tarjeta" },
-      { sec: "La batalla final", tipo: "Interactivo", nombre: "Empate", desc: "Sorpresa: eligen entre snake o defensa para el desempate.", tiempo: "1 min", reward: "+20 pts" },
-      { sec: "La batalla final", tipo: "Juego", nombre: "Desempate", desc: "La batalla final con el juego que elegiste.", tiempo: "3-5 min", reward: "+130 pts · 🃏 Tarjeta" },
-      { sec: "La batalla final", tipo: "Narrativa", nombre: "Fogata de cierre", desc: "Celebración, el destino de Thomas y un cliffhanger.", tiempo: "1-2 min", reward: "+50 pts" }
+      { sec: "La batalla final", tipo: "Juego", nombre: "Memoria 3 niveles", desc: "Imagen+nombre, nombre+descripción e imagen+descripción.", tiempo: "5-8 min", reward: "+2400 pts · 🃏 Tarjeta" },
+      { sec: "La batalla final", tipo: "Interactivo", nombre: "La recta final", desc: "Tabla, el tema de Thomas y preparación para el runner.", tiempo: "2 min", reward: "+200 pts" },
+      { sec: "La batalla final", tipo: "Juego", nombre: "Corredor Sanguíneo", desc: "El integrador final, todo bajo presión.", tiempo: "5-8 min", reward: "+2000 pts · 🃏 Tarjeta" },
+      { sec: "La batalla final", tipo: "Interactivo", nombre: "Empate", desc: "Sorpresa: eligen entre snake o defensa para el desempate.", tiempo: "1 min", reward: "+150 pts" },
+      { sec: "La batalla final", tipo: "Juego", nombre: "Desempate", desc: "La batalla final con el juego que elegiste.", tiempo: "3-5 min", reward: "+500 pts · 🃏 Tarjeta" },
+      { sec: "La batalla final", tipo: "Narrativa", nombre: "Fogata de cierre", desc: "Celebración, el destino de Thomas y un cliffhanger.", tiempo: "1-2 min", reward: "+300 pts" }
     ];
 
     const TOTAL_TARJETAS = 9;
