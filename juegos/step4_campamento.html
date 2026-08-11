@@ -586,13 +586,22 @@ function hideChoices() {
 }
 
 // ── Scoreboard ─────────────────────────────────────────────────
+// Los equipos no existen como dato real: se derivan de los puntos del jugador
+// conservando las proporciones de la tabla original (tu equipo valía 180 con 75
+// puntos tuyos = 2.4x, y el resto guardaba estas razones respecto al tuyo). Así
+// la tabla escala contigo en vez de contradecirte.
+const TEAM_MULT_YOU = 2.4;
 const TEAMS = [
-  { pos:1, name:'Equipo Rojo',     dot:'🔴', pts:240 },
-  { pos:2, name:'Equipo Amarillo', dot:'🟡', pts:210 },
-  { pos:3, name:'Equipo Verde',    dot:'🟢', pts:180, you:true },
-  { pos:4, name:'Equipo Azul',     dot:'🔵', pts:150 },
+  { pos:1, name:'Equipo Rojo',     dot:'🔴', ratio:240/180 },
+  { pos:2, name:'Equipo Amarillo', dot:'🟡', ratio:210/180 },
+  { pos:3, name:'Equipo Verde',    dot:'🟢', ratio:1, you:true },
+  { pos:4, name:'Equipo Azul',     dot:'🔵', ratio:150/180 },
 ];
 function buildScoreboard() {
+  // Base del equipo propio; con 0 puntos se conserva la tabla del guion.
+  const baseEquipo = Math.max(180, Math.round((Math.max(0, S.puntosTotales) || 0) * TEAM_MULT_YOU));
+  TEAMS.forEach(t => t.pts = Math.round(baseEquipo * t.ratio));
+
   const teamsBox = document.getElementById('score-teams');
   teamsBox.innerHTML = '';
   TEAMS.forEach(t => {
