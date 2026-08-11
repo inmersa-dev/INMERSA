@@ -124,8 +124,11 @@ const scene = createScene({
 });
 
 function finish() {
+  // Sub-escena del capítulo 1: avisa a capitulo1.html para que avance, pero
+  // NO reclama un nodo del mapa (antes decía paso:2/completado:true y, abierta
+  // suelta, daba por completado el nodo 2). El nodo lo cierra capitulo1.html.
   window.parent.postMessage(
-    {tipo:'resultado_juego',paso:2,puntos:0,completado:true,tiempo_segundos:0},'*');
+    {tipo:'resultado_juego',paso:1,puntos:0,completado:false,tiempo_segundos:0},'*');
   document.getElementById('done').classList.add('show');
 }
 

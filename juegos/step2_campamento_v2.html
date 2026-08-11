@@ -42,7 +42,7 @@
 <script type="module">
 import { initializeApp }              from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc, serverTimestamp }
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { createScene }                from "./scene-engine.js?v=6";
 
@@ -126,12 +126,14 @@ const scene = createScene({
 async function finish() {
   if (uid) {
     try {
-      await updateDoc(doc(db,'estudiantes',uid), {
+      // setDoc+merge: updateDoc falla con not-found si el doc no existe.
+      await setDoc(doc(db,'estudiantes',uid), {
         paso2_completado:true, paso2_ts:serverTimestamp(),
-      });
+      }, { merge: true });
     } catch(e){ console.warn('Firebase save error:', e); }
   }
-  window.parent.postMessage({tipo:'resultado_juego',paso:2,puntos:0,completado:true,tiempo_segundos:0},'*');
+  // PUNTOS debe coincidir con el "reward" que el mapa anuncia (+20 pts).
+  window.parent.postMessage({tipo:'resultado_juego',paso:2,puntos:20,completado:true,tiempo_segundos:0},'*');
   document.getElementById('result').classList.add('show');
 }
 

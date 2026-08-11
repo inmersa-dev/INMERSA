@@ -74,6 +74,9 @@ const T_CARPA= 'Antes de cualquier prueba, todos pasan por el puesto médico. Al
 const T_ANFI = 'Con lo que se supo de Thomas, llega el momento de formar los equipos. Una decisión queda en tus manos.';
 const CIERRE = 'Los equipos están armados. Tu decisión ya es parte de la historia… El Campamento Vital apenas comienza.';
 
+// Puntos del nodo 1 en el mapa (ficha del nodo: "+50 pts").
+const PUNTOS = 50;
+
 // ── Secuencia del capítulo ────────────────────────────────────────
 const STEPS = [
   { t:'narr',  text:INTRO },
@@ -121,9 +124,10 @@ function run() {
     frame.classList.remove('show');
     narr.classList.remove('show');
     document.getElementById('end').classList.add('show');
-    // Avisar al mapa que el paso quedó completo.
+    // Avisar al mapa que el paso quedó completo. PUNTOS debe coincidir con
+    // el "reward" que el mapa anuncia para este nodo (+50 pts).
     if (window.parent !== window)
-      window.parent.postMessage({tipo:'resultado_juego',paso:1,puntos:0,completado:true,tiempo_segundos:0},'*');
+      window.parent.postMessage({tipo:'resultado_juego',paso:1,puntos:PUNTOS,completado:true,tiempo_segundos:0},'*');
   }
 }
 

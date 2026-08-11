@@ -48,7 +48,7 @@
 <script type="module">
 import { initializeApp }              from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, updateDoc, serverTimestamp }
+import { getFirestore, doc, setDoc, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { createScene }                from "./juegos/scene-engine.js?v=2";
 
@@ -172,12 +172,14 @@ const scene = createScene({
 async function finish() {
   if (uid) {
     try {
-      await updateDoc(doc(db,'estudiantes',uid), {
+      // setDoc+merge, no updateDoc: si el documento no existiera, updateDoc
+      // falla con not-found y se perderían nombre y personalidad.
+      await setDoc(doc(db,'estudiantes',uid), {
         nombre: S.playerName,
         personalidad: S.personalidad,
         bienvenida_completada: true,
         bienvenida_ts: serverTimestamp(),
-      });
+      }, { merge: true });
     } catch(e){ console.warn('Firebase save error:', e); }
   }
   window.parent.postMessage({tipo:'resultado_juego',paso:1,puntos:0,completado:false,tiempo_segundos:0},'*');

@@ -40,7 +40,7 @@
 <script type="module">
 import { initializeApp }              from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc, serverTimestamp }
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { createScene }                from "./juegos/scene-engine.js?v=6";
 
@@ -152,13 +152,17 @@ const scene = createScene({
 async function finish() {
   if (uid) {
     try {
-      await updateDoc(doc(db,'estudiantes',uid), {
+      // setDoc+merge: updateDoc falla con not-found si el doc no existe.
+      await setDoc(doc(db,'estudiantes',uid), {
         decision_thomas: S.decisionThomas,
         anfiteatro_completado: true, anfiteatro_ts: serverTimestamp(),
-      });
+      }, { merge: true });
     } catch(e){ console.warn('Firebase save error:', e); }
   }
-  window.parent.postMessage({tipo:'resultado_juego',paso:3,puntos:0,completado:true,tiempo_segundos:0},'*');
+  // Sub-escena del capítulo 1: avisa a capitulo1.html para que avance, pero
+  // NO reclama un nodo del mapa (antes decía paso:3/completado:true y, abierta
+  // suelta, completaba el nodo 3 y regalaba tarjeta_03 sin jugarlo).
+  window.parent.postMessage({tipo:'resultado_juego',paso:1,puntos:0,completado:false,tiempo_segundos:0},'*');
   document.getElementById('result-desc').innerHTML = accept()
     ? `Invitaste a <span class="k">Thomas</span> a tu equipo. A veces una oportunidad lo cambia todo.`
     : `No dijiste nada. La competencia continúa… pero Thomas no lo olvidará.`;
