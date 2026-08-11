@@ -507,7 +507,7 @@
     const ICONS = { Interactivo: "💬", Narrativa: "📖", Juego: "🎮", Emergencia: "🚑" };
 
     const STEPS = [
-      { sec: "El campamento", tipo: "Interactivo", nombre: "Bienvenida al campamento", desc: "Registro, personalidad, eritrocitos bajos y la decisión sobre Thomas.", tiempo: "3-4 min", reward: "+50 pts" },
+      { sec: "El campamento", tipo: "Interactivo", nombre: "Bienvenida al campamento", desc: "Registro, personalidad, eritrocitos bajos y la decisión sobre Thomas.", tiempo: "6-8 min", reward: "+50 pts" },
       { sec: "El campamento", tipo: "Narrativa", nombre: "El guía presenta la competencia", desc: "Conoce las reglas, la tabla de puntos y se introduce el rompecabezas.", tiempo: "1 min", reward: "+20 pts" },
       { sec: "El campamento", tipo: "Juego", nombre: "Rompecabezas · Parte 1", desc: "Arma el eritrocito y el plasma, y lee su ficha de datos.", tiempo: "2-4 min", reward: "+80 pts · 🃏 Tarjeta" },
 
@@ -538,8 +538,8 @@
 
     // Mapeo de pasos a archivos de juego.
     const JUEGOS = {
-      1:  "juegos/paso1_campamento.html",
-      2:  "juegos/step2_campamento.html",
+      1:  "capitulo1.html",   // Bienvenida + Puesto médico + Formación (encadenadas con narración)
+      2:  "juegos/step2_campamento_v2.html",
       3:  "juegos/rompecabezas_parte1.html",
       4:  "juegos/step4_campamento.html",
       5:  "juegos/rompecabezas_parte2.html",

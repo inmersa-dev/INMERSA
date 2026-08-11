@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>INMERSA — Capítulo 1</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;overflow:hidden;background:#070F1E;
+    font-family:'Nunito',system-ui,sans-serif;color:#fff;
+    -webkit-tap-highlight-color:transparent;user-select:none}
+
+  /* ── Escena (iframe) ── */
+  #frame{position:fixed;inset:0;width:100%;height:100%;border:0;
+    opacity:0;transition:opacity .5s ease;z-index:10}
+  #frame.show{opacity:1}
+
+  /* ── Pantalla de narración ── */
+  #narr{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;padding:40px 32px;
+    background:radial-gradient(ellipse at 50% 42%, #142744 0%, #0A1628 55%, #070F1E 100%);
+    opacity:0;pointer-events:none;transition:opacity .6s ease}
+  #narr.show{opacity:1;pointer-events:auto}
+  #narr .cap{font-size:11px;font-weight:900;letter-spacing:.28em;text-transform:uppercase;
+    color:#00D4FF;margin-bottom:26px;opacity:.9}
+  #narr .icon{font-size:34px;margin-bottom:18px;filter:drop-shadow(0 2px 10px rgba(0,0,0,.5))}
+  #narr .text{font-size:clamp(18px,4.6vw,26px);font-weight:800;font-style:italic;
+    color:#F5C518;line-height:1.6;max-width:640px;min-height:3.2em;
+    text-shadow:0 2px 12px rgba(0,0,0,.6)}
+  #narr .tap{margin-top:34px;font-size:13px;font-weight:700;color:rgba(255,255,255,.5);
+    letter-spacing:.04em;opacity:0;animation:blink 1.6s ease-in-out infinite}
+  #narr .tap.show{opacity:1}
+  @keyframes blink{0%,100%{opacity:.35}50%{opacity:.9}}
+
+  /* ── Cierre del capítulo ── */
+  #end{position:fixed;inset:0;z-index:30;display:none;flex-direction:column;
+    align-items:center;justify-content:center;gap:18px;padding:40px;text-align:center;
+    background:radial-gradient(ellipse at 50% 42%, #142744 0%, #0A1628 60%, #070F1E 100%)}
+  #end.show{display:flex}
+  #end .badge{font-size:60px;animation:pulse 2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{transform:scale(1);filter:drop-shadow(0 0 8px rgba(0,212,255,.4))}
+    50%{transform:scale(1.08);filter:drop-shadow(0 0 22px rgba(0,212,255,.85))}}
+  #end .lbl{font-size:11px;font-weight:900;letter-spacing:.2em;text-transform:uppercase;color:#00D4FF}
+  #end h2{font-size:22px;font-weight:900;margin:0}
+  #end p{font-size:14px;color:#8899AA;line-height:1.6;max-width:320px;margin:0}
+  #end .btn{margin-top:8px;background:#00D4FF;color:#000;font-family:'Nunito',sans-serif;
+    font-size:16px;font-weight:800;padding:14px 40px;border:none;border-radius:12px;cursor:pointer}
+</style>
+</head>
+<body>
+
+<iframe id="frame" title="Escena" allow="autoplay"></iframe>
+
+<div id="narr" role="button" aria-label="Continuar">
+  <div class="cap">Capítulo 1 · El Campamento Vital</div>
+  <div class="icon">📖</div>
+  <p class="text" id="narr-text"></p>
+  <div class="tap" id="narr-tap">toca para continuar ▶</div>
+</div>
+
+<div id="end">
+  <div class="badge">🏕️</div>
+  <div class="lbl">✦ Capítulo 1 Completado ✦</div>
+  <h2>El Campamento Vital</h2>
+  <p>Bienvenida, puesto médico y formación de equipos… tu aventura apenas comienza.</p>
+  <button class="btn" id="end-btn">Continuar →</button>
+</div>
+
+<script>
+// ── Texto de narración (editable) ─────────────────────────────────
+const INTRO  = 'Amanece en el Campamento Vital. Hoy, un nuevo scout llega… y su aventura por el cuerpo humano está por comenzar.';
+const T_CARPA= 'Antes de cualquier prueba, todos pasan por el puesto médico. Allí, la doctora Sina tiene noticias sobre un compañero…';
+const T_ANFI = 'Con lo que se supo de Thomas, llega el momento de formar los equipos. Una decisión queda en tus manos.';
+const CIERRE = 'Los equipos están armados. Tu decisión ya es parte de la historia… El Campamento Vital apenas comienza.';
+
+// ── Secuencia del capítulo ────────────────────────────────────────
+const STEPS = [
+  { t:'narr',  text:INTRO },
+  { t:'scene', src:'bienvenida.html' },
+  { t:'narr',  text:T_CARPA },
+  { t:'scene', src:'carpa.html' },
+  { t:'narr',  text:T_ANFI },
+  { t:'scene', src:'anfiteatro.html' },
+  { t:'narr',  text:CIERRE },
+  { t:'end' },
+];
+
+const frame   = document.getElementById('frame');
+const narr     = document.getElementById('narr');
+const narrText = document.getElementById('narr-text');
+const narrTap  = document.getElementById('narr-tap');
+
+let idx = -1;
+let sceneActive = false;   // esperando a que la escena termine
+let sceneAdvanced = false; // guard: una sola avance por escena
+let typing = false, fullText = '', typeTimer = null;
+
+function next() { idx++; run(); }
+
+function run() {
+  const step = STEPS[idx];
+  if (!step) return;
+
+  if (step.t === 'narr') {
+    // Ocultar escena, mostrar narración.
+    frame.classList.remove('show');
+    setTimeout(() => { frame.removeAttribute('src'); }, 500);
+    sceneActive = false;
+    narr.classList.add('show');
+    typeNarr(step.text);
+  }
+  else if (step.t === 'scene') {
+    // Ocultar narración, cargar escena.
+    narr.classList.remove('show');
+    sceneActive = true; sceneAdvanced = false;
+    frame.src = step.src;
+    frame.onload = () => frame.classList.add('show');
+  }
+  else if (step.t === 'end') {
+    frame.classList.remove('show');
+    narr.classList.remove('show');
+    document.getElementById('end').classList.add('show');
+    // Avisar al mapa que el paso quedó completo.
+    if (window.parent !== window)
+      window.parent.postMessage({tipo:'resultado_juego',paso:1,puntos:0,completado:true,tiempo_segundos:0},'*');
+  }
+}
+
+// ── Narración: máquina de escribir ────────────────────────────────
+function typeNarr(text) {
+  clearTimeout(typeTimer);
+  typing = true; fullText = text; narrText.textContent = '';
+  narrTap.classList.remove('show');
+  let i = 0;
+  (function step(){
+    if (i < text.length) { narrText.textContent += text[i++]; typeTimer = setTimeout(step, 32); }
+    else { typing = false; narrTap.classList.add('show'); }
+  })();
+}
+
+narr.addEventListener('click', () => {
+  if (typing) { clearTimeout(typeTimer); typing = false; narrText.textContent = fullText; narrTap.classList.add('show'); return; }
+  next();
+});
+
+// ── Fin de escena → avanzar (skip del overlay "Hito", opción A) ───
+window.addEventListener('message', (e) => {
+  const d = e.data || {};
+  if (!sceneActive || sceneAdvanced) return;
+  if (d.tipo === 'resultado_juego' || d.tipo === 'cerrar_juego') {
+    sceneAdvanced = true;
+    next();
+  }
+});
+
+document.getElementById('end-btn').addEventListener('click', () => {
+  if (window.parent !== window) window.parent.postMessage({tipo:'cerrar_juego'},'*');
+  else location.reload();
+});
+
+// Arranque
+next();
+</script>
+</body>
+</html>

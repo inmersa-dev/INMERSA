@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>INMERSA — Bienvenida</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;overflow:hidden;background:#0A1628;
+    font-family:'Nunito',system-ui,sans-serif;color:#fff;
+    -webkit-tap-highlight-color:transparent;user-select:none}
+
+  /* Registro sobre la escena viva (nombre / personalidad) */
+  #reg{display:flex;flex-direction:column;gap:9px}
+  #reg input[type=text]{background:rgba(255,255,255,.08);
+    border:2px solid rgba(136,153,170,.35);border-radius:10px;color:#fff;
+    font-family:'Nunito',sans-serif;font-size:16px;font-weight:700;
+    padding:11px 14px;outline:none;transition:border-color .2s}
+  #reg input[type=text]:focus{border-color:#00D4FF}
+  #reg input[type=text]::placeholder{color:#8899AA;font-weight:400}
+  #reg .confirm{background:#00D4FF;color:#000;font-family:'Nunito',sans-serif;
+    font-size:15px;font-weight:800;padding:11px;border:none;border-radius:10px;cursor:pointer}
+  #reg .confirm:disabled{opacity:.38}
+
+  /* Cierre mínimo (verificación) */
+  #done{position:fixed;inset:0;z-index:60;background:rgba(10,22,40,.96);
+    display:none;flex-direction:column;align-items:center;justify-content:center;
+    gap:14px;padding:36px;text-align:center}
+  #done.show{display:flex}
+  #done .tick{font-size:52px}
+  #done h2{font-size:20px;font-weight:900;margin:0}
+  #done p{font-size:14px;color:#8899AA;max-width:300px;margin:0;line-height:1.6}
+  #done .k{color:#00D4FF;font-weight:800}
+</style>
+</head>
+<body>
+
+<div id="done">
+  <div class="tick">🏕️</div>
+  <h2>Bienvenida completada</h2>
+  <p id="done-desc"></p>
+  <p style="font-size:12px;color:#5b6b7e">(Aquí continuará el campamento: tipificación y grupos.)</p>
+</div>
+
+<audio id="bg-music" loop src="Audio/musica_paso1.mp3"></audio>
+
+<script type="module">
+import { initializeApp }              from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, updateDoc, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { createScene }                from "./juegos/scene-engine.js?v=2";
+
+const app = initializeApp({
+  apiKey:            "AIzaSyARclfJXsjDISiT2JRjzwkoUrmPpGqpho4",
+  authDomain:        "inmersa-mvp.firebaseapp.com",
+  projectId:         "inmersa-mvp",
+  storageBucket:     "inmersa-mvp.firebasestorage.app",
+  messagingSenderId: "554325663285",
+  appId:             "1:554325663285:web:332e863d1e39e49783db7c",
+  measurementId:     "G-RQPE6SVTDP"
+});
+const auth = getAuth(app);
+const db   = getFirestore(app);
+let uid = null;
+
+const S = { playerName:'', personalidad:'' };
+const p = () => S.playerName || 'scout';
+
+// Bypass de caché para los assets mientras iteramos.
+const V = '?v=1';
+const A = s => 'Imagenes/' + s + V;
+
+// ── Escena ───────────────────────────────────────────────────────
+const scene = createScene({
+  stage: A('campamento/fondo_campamento.png'),
+  moments: 0,
+  playerLabel: () => S.playerName || 'Tú',
+
+  cast: {
+    // MAX izquierda (humano de cuerpo completo)
+    max: {
+      name:'Max', color:'#E67E22',
+      x:0.33, bottom:0.06, height:0.62, width:0.20, headTop:0.32,
+      shadow:{ width:0.13, height:0.024, bottom:0.055 },
+      framing:{ scale:1.4, target:0.38, ty:0.05 },
+      expressions:{
+        neutral: A('max/max_neutral.png'),
+        feliz:   A('max/max_feliz.png'),
+      },
+    },
+    // GLOBO derecha (mascota redonda, ~38% en plano de grupo)
+    globo: {
+      name:'Globo', color:'#E74C3C',
+      x:0.63, bottom:0.06, height:0.38, width:0.18, headTop:0.56,
+      shadow:{ width:0.15, height:0.026, bottom:0.055 },
+      framing:{ scale:1.7, target:0.62, ty:0.02 },
+      expressions:{
+        feliz:   A('globo/globo_feliz.png'),   // base al inicio
+        neutral: A('globo/globo_neutral.png'),
+        espera:  A('globo/globo_espera.png'),
+        picaro:  A('globo/globo_picaro.png'),
+      },
+    },
+  },
+
+  script: [
+    // ── Intro (planos por hablante) ────────────────────────────
+    { who:'max',   exp:{max:'neutral'}, text:'¡Llegaste! Bienvenido al Campamento Vital.' },
+    { who:'max',   text:'Yo soy Max, estoy para ayudarte.' },
+    { who:'globo', exp:{globo:'feliz'}, text:'¡Y yo soy Globo, el guía favorito del campamento!' },
+
+    // ── Registro parte 1: NOMBRE (escena viva, ambos visibles) ─
+    { who:'globo', frame:'wide', text:'¿Cuál es tu nombre?' },
+    { frame:'wide', exp:{globo:'espera'}, act:'input_name' },
+
+    // ── Reacción al nombre ─────────────────────────────────────
+    { who:'max', exp:{max:'feliz', globo:'feliz'},
+      text:()=>`¡${p()}! Me gusta. Suena a scout de los buenos.` },
+
+    // ── Registro parte 2: PERSONALIDAD (escena viva) ───────────
+    { who:'max', frame:'wide', exp:{max:'neutral', globo:'espera'},
+      text:'¿Y qué tipo de persona eres?', act:'choice',
+      opts:[
+        { label:'Inteligente 🧠',  go:()=>{ S.personalidad='Inteligente';  scene.advance(); } },
+        { label:'Gracioso/a 😄',   go:()=>{ S.personalidad='Gracioso/a';   scene.advance(); } },
+        { label:'Bravo/a 💪',      go:()=>{ S.personalidad='Bravo/a';      scene.advance(); } },
+        { label:'Líder 👑',        go:()=>{ S.personalidad='Líder';        scene.advance(); } },
+        { label:'Tímido/a 🌸',     go:()=>{ S.personalidad='Tímido/a';     scene.advance(); } },
+        { label:'Misterioso/a 🌙', go:()=>{ S.personalidad='Misterioso/a'; scene.advance(); } },
+      ] },
+
+    // ── Cierre (Globo hace el giro a pícaro) ───────────────────
+    { who:'globo', exp:{globo:'picaro'},
+      text:()=>`¿${S.personalidad}? Uff, con ese ya vamos a hacer buen equipo.` },
+    { who:'max', exp:{max:'neutral', globo:'feliz'},
+      text:'Vamos, que te muestro el campamento.', act:'end' },
+  ],
+
+  // ── Overlay de registro: nombre, sobre la escena viva ────────
+  actions: {
+    input_name: (done) => {
+      const wrap = document.createElement('div');
+      wrap.id = 'reg';
+      wrap.innerHTML =
+        `<input type="text" maxlength="20" autocomplete="off" placeholder="Escribe tu nombre…" />` +
+        `<button class="confirm" disabled>Confirmar ✓</button>`;
+      scene.extra.appendChild(wrap);
+      // Los clics dentro del formulario no deben disparar el "toca para avanzar".
+      wrap.addEventListener('click', e => e.stopPropagation());
+      const inp = wrap.querySelector('input');
+      const btn = wrap.querySelector('button');
+      inp.addEventListener('input', () => { btn.disabled = inp.value.trim().length < 2; });
+      const submit = () => {
+        const n = inp.value.trim();
+        if (n.length < 2) return;
+        S.playerName = n;
+        wrap.remove();
+        done();
+      };
+      btn.onclick = submit;
+      inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !btn.disabled) submit(); });
+      setTimeout(() => inp.focus(), 80);
+    },
+  },
+
+  onEnd: finish,
+});
+
+// ── Cierre ───────────────────────────────────────────────────────
+async function finish() {
+  if (uid) {
+    try {
+      await updateDoc(doc(db,'estudiantes',uid), {
+        nombre: S.playerName,
+        personalidad: S.personalidad,
+        bienvenida_completada: true,
+        bienvenida_ts: serverTimestamp(),
+      });
+    } catch(e){ console.warn('Firebase save error:', e); }
+  }
+  window.parent.postMessage({tipo:'resultado_juego',paso:1,puntos:0,completado:false,tiempo_segundos:0},'*');
+
+  document.getElementById('done-desc').innerHTML =
+    `Participante: <span class="k">${S.playerName}</span> · Personalidad: <span class="k">${S.personalidad}</span>`;
+  document.getElementById('done').classList.add('show');
+}
+
+// ── Música ───────────────────────────────────────────────────────
+const music = document.getElementById('bg-music');
+music.volume = 0.3;
+document.addEventListener('click', () => music.play().catch(()=>{}), {once:true});
+
+// ── Init ─────────────────────────────────────────────────────────
+onAuthStateChanged(auth, user => {
+  uid = user ? user.uid : null;
+  scene.start();
+});
+</script>
+</body>
+</html>

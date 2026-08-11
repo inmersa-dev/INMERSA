@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>INMERSA — Conformación de Equipos</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;overflow:hidden;background:#0A1628;
+    font-family:'Nunito',system-ui,sans-serif;color:#fff;
+    -webkit-tap-highlight-color:transparent;user-select:none}
+  #result{position:fixed;inset:0;z-index:50;background:rgba(10,22,40,.97);
+    display:none;flex-direction:column;align-items:center;justify-content:center;
+    gap:16px;padding:36px;text-align:center}
+  #result.show{display:flex}
+  .hito-badge{font-size:60px;animation:pulse 2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{transform:scale(1);filter:drop-shadow(0 0 8px rgba(0,212,255,.4))}
+    50%{transform:scale(1.08);filter:drop-shadow(0 0 20px rgba(0,212,255,.8))}}
+  .hito-label{font-size:11px;font-weight:900;letter-spacing:.2em;text-transform:uppercase;color:#00D4FF}
+  #result h2{font-size:21px;font-weight:900;margin:0}
+  #result p{font-size:14px;color:#8899AA;line-height:1.6;max-width:320px;margin:0}
+  #result .k{color:#00D4FF;font-weight:800}
+  .btn{margin-top:8px;background:#00D4FF;color:#000;font-family:'Nunito',sans-serif;
+    font-size:16px;font-weight:800;padding:14px 36px;border:none;border-radius:12px;cursor:pointer}
+</style>
+</head>
+<body>
+
+<div id="result">
+  <div class="hito-badge">🏕️</div>
+  <div class="hito-label">✦ Hito Completado ✦</div>
+  <h2>Conformación de Equipos</h2>
+  <p id="result-desc"></p>
+  <button class="btn" id="finish-btn">Continuar →</button>
+</div>
+
+<audio id="bg-music" loop src="Audio/musica_paso1.mp3"></audio>
+
+<script type="module">
+import { initializeApp }              from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, updateDoc, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { createScene }                from "./juegos/scene-engine.js?v=6";
+
+const app = initializeApp({
+  apiKey:"AIzaSyARclfJXsjDISiT2JRjzwkoUrmPpGqpho4", authDomain:"inmersa-mvp.firebaseapp.com",
+  projectId:"inmersa-mvp", storageBucket:"inmersa-mvp.firebasestorage.app",
+  messagingSenderId:"554325663285", appId:"1:554325663285:web:332e863d1e39e49783db7c",
+  measurementId:"G-RQPE6SVTDP"
+});
+const auth = getAuth(app);
+const db   = getFirestore(app);
+let uid = null;
+
+const S = { playerName:'', decisionThomas:'' };
+const p = () => S.playerName || 'Tú';
+const accept = () => S.decisionThomas === 'aceptar';
+const reject = () => S.decisionThomas === 'rechazar';
+
+const V = '?v=4';
+const A = s => 'Imagenes/anfiteatro/' + s + V;
+
+// Capas cortadas de la escena COMPUESTA (cohesión: posados juntos, miradas
+// en Thomas). Las expresiones de beat son ediciones de esa misma base, así
+// que el swap calza sin salto. Geometría = transform del slicer sobre V2 3:2.
+const scene = createScene({
+  stage: A('fondo_anfiteatro_v2.png'),
+  moments: 0,
+  playerLabel: () => p(),
+
+  cast: {
+    raul: {
+      name:'Raúl', color:'#C97A2B',
+      x:0.107, bottom:0.272, height:0.485, width:0.095, headTop:0.243,
+      shadow:{ width:0.075, height:0.012, bottom:0.272 },
+      framing:{ scale:1.3, target:0.140, ty:0.103 },
+      expressions:{ base:A('base_raul.png'), smug:A('raul_smug.png') },
+    },
+    thomas: {
+      name:'Thomas', color:'#B7791F',
+      x:0.227, bottom:0.292, height:0.430, width:0.082, headTop:0.277,
+      shadow:{ width:0.065, height:0.011, bottom:0.292 },
+      framing:{ scale:1.3, target:0.295, ty:0.068 },
+      expressions:{ base:A('base_thomas.png'), sad:A('thomas_sad.png'), hopeful:A('thomas_hopeful.png'), grateful:A('thomas_grateful.png') },
+    },
+    max: {
+      name:'Max', color:'#E67E22',
+      x:0.345, bottom:0.287, height:0.493, width:0.122, headTop:0.220,
+      shadow:{ width:0.088, height:0.012, bottom:0.287 },
+      framing:{ scale:1.3, target:0.448, ty:0.115 },
+      expressions:{ base:A('base_max.png'), point:A('max_point.png') },
+    },
+    globo: {
+      name:'Globo', color:'#E74C3C',
+      x:0.450, bottom:0.298, height:0.277, width:0.118, headTop:0.425,
+      shadow:{ width:0.09, height:0.014, bottom:0.298 },
+      framing:{ scale:1.3, target:0.5, ty:-0.079 },
+      expressions:{ base:A('base_globo.png'), warm:A('globo_warm.png'), point:A('globo_point.png') },
+    },
+    valentina: {
+      name:'Valentina', color:'#A855F7',
+      x:0.555, bottom:0.260, height:0.432, width:0.078, headTop:0.308,
+      shadow:{ width:0.062, height:0.011, bottom:0.260 },
+      framing:{ scale:1.3, target:0.5, ty:0.039 },
+      expressions:{ base:A('base_valentina.png'), cold:A('valentina_cold.png') },
+    },
+  },
+
+  script: [
+    { who:'narrator', frame:'wide',
+      text:'En el anfiteatro se arman los equipos. Thomas todavía busca dónde entrar.' },
+    { who:'globo',
+      text:'A ver… ¿quién quiere a Thomas en su equipo?' },
+
+    // Fase de rechazo: mood frío (❄️) sostenido.
+    { who:'valentina', exp:{valentina:'cold'}, fx:'cold',
+      text:'Yo no. Prefiero guardar mi puesto para alguien más.' },
+    { who:'max', fx:'cold',
+      text:'¿Y tú, Raúl? ¿Te llevas a Thomas?' },
+    { who:'raul', exp:{raul:'smug', thomas:'sad'}, fx:'cold', symbol:'❌', shake:true,
+      text:'Mmm… paso. Yo quiero un equipo que aguante hasta el final.' },
+
+    // Decisión del jugador (se guarda en decision_thomas) — se limpia el tinte.
+    { who:'max', act:'choice', exp:{max:'point'},
+      text:()=>`¿Y tú, ${p()}? ¿Lo quieres en tu equipo?`,
+      opts:[
+        { label:'🤝 Sí, conmigo.', cls:'yes',
+          go:()=>{ S.decisionThomas='aceptar'; scene.advance(); } },
+        { label:'🚶 No.', cls:'no',
+          go:()=>{ S.decisionThomas='rechazar'; scene.advance(); } },
+      ] },
+
+    // — Aceptar — (cámara en Thomas para verlo iluminarse)
+    { who:'player', when:accept, frame:'thomas', exp:{thomas:'hopeful', max:'base'}, symbol:'✨',
+      text:'Ven, Thomas. Vas conmigo.' },
+    { who:'thomas', when:accept, exp:{thomas:'grateful'}, text:'¿…en serio? Gracias.' },
+    { who:'globo', when:accept, exp:{globo:'point'}, fx:'warm', symbol:'🤝', act:'end',
+      text:()=>`${p()}, tú eres de los míos.` },
+
+    // — Rechazar —
+    { who:'thomas', when:reject, exp:{thomas:'sad'}, fx:'cold',
+      text:'Está bien… ya me acostumbré.' },
+    { who:'max', when:reject, exp:{max:'point'}, act:'end',
+      text:()=>`Es tu decisión, ${p()}. Sigamos.` },
+  ],
+
+  onEnd: finish,
+});
+
+async function finish() {
+  if (uid) {
+    try {
+      await updateDoc(doc(db,'estudiantes',uid), {
+        decision_thomas: S.decisionThomas,
+        anfiteatro_completado: true, anfiteatro_ts: serverTimestamp(),
+      });
+    } catch(e){ console.warn('Firebase save error:', e); }
+  }
+  window.parent.postMessage({tipo:'resultado_juego',paso:3,puntos:0,completado:true,tiempo_segundos:0},'*');
+  document.getElementById('result-desc').innerHTML = accept()
+    ? `Invitaste a <span class="k">Thomas</span> a tu equipo. A veces una oportunidad lo cambia todo.`
+    : `No dijiste nada. La competencia continúa… pero Thomas no lo olvidará.`;
+  document.getElementById('result').classList.add('show');
+}
+
+document.getElementById('finish-btn').addEventListener('click', () => {
+  if (window.parent !== window) window.parent.postMessage({tipo:'cerrar_juego'},'*');
+  else window.history.back();
+});
+
+const music = document.getElementById('bg-music');
+music.volume = 0.3;
+document.addEventListener('click', () => music.play().catch(()=>{}), {once:true});
+
+onAuthStateChanged(auth, async user => {
+  uid = user ? user.uid : null;
+  if (uid) {
+    try {
+      const snap = await getDoc(doc(db,'estudiantes',uid));
+      if (snap.exists()) S.playerName = snap.data().nombre || '';
+    } catch(e){ console.warn('Firebase read error:', e); }
+  }
+  scene.start();
+});
+</script>
+</body>
+</html>

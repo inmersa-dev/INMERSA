@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>INMERSA — El Guía Presenta la Competencia</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;overflow:hidden;background:#0A1628;
+    font-family:'Nunito',system-ui,sans-serif;color:#fff;
+    -webkit-tap-highlight-color:transparent;user-select:none}
+  /* Swap duro: el cambio de pose de un reactor es casi instantáneo (no cross-fade),
+     así no hay fantasmeo entre variantes generadas por separado. Solo afecta a esta escena. */
+  .se-char img{transition:opacity .07s linear !important}
+  #result{position:fixed;inset:0;z-index:50;background:rgba(10,22,40,.97);
+    display:none;flex-direction:column;align-items:center;justify-content:center;
+    gap:16px;padding:36px;text-align:center}
+  #result.show{display:flex}
+  .hito-badge{font-size:60px;animation:pulse 2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{transform:scale(1);filter:drop-shadow(0 0 8px rgba(0,212,255,.4))}
+    50%{transform:scale(1.08);filter:drop-shadow(0 0 20px rgba(0,212,255,.8))}}
+  .hito-label{font-size:11px;font-weight:900;letter-spacing:.2em;text-transform:uppercase;color:#00D4FF}
+  #result h2{font-size:21px;font-weight:900;margin:0}
+  #result p{font-size:14px;color:#8899AA;line-height:1.6;max-width:320px;margin:0}
+  .btn{margin-top:8px;background:#00D4FF;color:#000;font-family:'Nunito',sans-serif;
+    font-size:16px;font-weight:800;padding:14px 36px;border:none;border-radius:12px;cursor:pointer}
+</style>
+</head>
+<body>
+
+<div id="result">
+  <div class="hito-badge">🏕️</div>
+  <div class="hito-label">✦ Hito Completado ✦</div>
+  <h2>El Guía Presenta la Competencia</h2>
+  <p>Ya conoces las reglas. ¡Que empiece la competencia!</p>
+  <button class="btn" id="finish-btn">Continuar →</button>
+</div>
+
+<audio id="bg-music" loop src="../Audio/musica_paso1.mp3"></audio>
+
+<script type="module">
+import { initializeApp }              from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, updateDoc, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { createScene }                from "./scene-engine.js?v=6";
+
+const app = initializeApp({
+  apiKey:"AIzaSyARclfJXsjDISiT2JRjzwkoUrmPpGqpho4", authDomain:"inmersa-mvp.firebaseapp.com",
+  projectId:"inmersa-mvp", storageBucket:"inmersa-mvp.firebasestorage.app",
+  messagingSenderId:"554325663285", appId:"1:554325663285:web:332e863d1e39e49783db7c",
+  measurementId:"G-RQPE6SVTDP"
+});
+const auth = getAuth(app);
+const db   = getFirestore(app);
+let uid = null;
+
+const S = { playerName:'', exact:false };
+const p = () => S.playerName || 'tú';
+
+const V = '?v=2';
+const A = s => '../Imagenes/orientacion/' + s + V;
+
+const scene = createScene({
+  stage: A('fondo.png'),
+  moments: 5,
+
+  cast: {
+    globo:  { name:'Globo', color:'#E74C3C', x:0.090, bottom:0.135, height:0.460, width:0.232, headTop:0.545, shadow:false,
+              framing:{scale:1.16,target:0.090,ty:0}, expressions:{ base:A('globo.png'), point:A('globo_point.png'), cheer:A('globo_cheer.png') } },
+    sina:   { name:'Sina', color:'#00A896', x:0.180, bottom:0.100, height:0.560, width:0.231, headTop:0.423, shadow:false,
+              framing:{scale:1.16,target:0.180,ty:0}, expressions:{ base:A('sina_base.png'), point:A('sina_point.png') } },
+    max:    { name:'Max', color:'#E67E22', x:0.420, bottom:0.095, height:0.717, width:0.281, headTop:0.205, shadow:false,
+              framing:{scale:1.16,target:0.430,ty:0}, expressions:{ base:A('max.png') } },
+    girl:   { name:'Estudiante', color:'#9B59B6', x:0.575, bottom:0.100, height:0.664, width:0.238, headTop:0.460, shadow:false,
+              framing:{scale:1.16,target:0.560,ty:0}, expressions:{ base:A('girl_base.png'), point:A('girl_point.png') } },
+    thomas: { name:'Thomas', color:'#64748B', x:0.680, bottom:0.100, height:0.466, width:0.117, headTop:0.450, shadow:false,
+              framing:{scale:1.16,target:0.660,ty:0}, expressions:{ base:A('thomas.png') } },
+    curly:  { name:'Bruno', color:'#8B5E3C', x:0.788, bottom:0.100, height:0.486, width:0.135, headTop:0.430, shadow:false,
+              framing:{scale:1.16,target:0.788,ty:0}, expressions:{ base:A('curly.png') } },
+  },
+
+  script: [
+    { who:'narrator', frame:'wide',
+      text:'El campamento arranca. Max reúne a todos para explicar cómo se compite.' },
+
+    // M0 — puntos
+    { m:0, who:'max',
+      text:'En este campamento todo funciona con puntos. Cada reto que completes suma — para ti y para tu equipo.' },
+
+    // M1 — learn per win + elección
+    { m:1, who:'sina', exp:{sina:'point'}, act:'choice',
+      text:'Hay una frase que lo define todo aquí: learn per win. ¿Qué les viene a la mente?',
+      opts:[
+        { label:'Que hay que practicar mucho.',              go:()=>{ S.exact=false; scene.advance(); } },
+        { label:'Que es muy difícil.',                       go:()=>{ S.exact=false; scene.advance(); } },
+        { label:'Que hay que aprender para poder ganar.',    go:()=>{ S.exact=true;  scene.advance(); } },
+      ] },
+    { m:1, who:'globo', exp:{sina:'base', globo:'point'}, symbol:'✨',
+      text:()=> S.exact ? '¡Exacto! El conocimiento es la clave para ganar.'
+                        : 'En otras palabras: el conocimiento es la clave para ganar.' },
+
+    // M2 — la estudiante pregunta
+    { m:2, who:'girl', exp:{girl:'point', globo:'base'},
+      text:'¿Y si no sé algo? ¿Podría aprender jugando?' },
+    { m:2, who:'sina', exp:{girl:'base'},
+      text:'¡Por supuesto! Cuando completas una actividad, aparece información importante que deberás recordar para los próximos juegos.' },
+
+    // M3 — tablas
+    { m:3, who:'max',
+      text:'Y para saber cómo van, hay dos tablas: una por equipos, para ver qué grupo lidera, y una individual, con los mejores competidores del campamento.' },
+
+    // M4 — Thomas se emociona
+    { m:4, who:'thomas', fx:'warm', symbol:'🔬',
+      text:'¡Al fin una competencia sobre lo que me gusta… la ciencia!' },
+    { m:4, who:'narrator', fx:'warm',
+      text:'*Thomas no puede ocultar su alegría.*' },
+    { m:4, who:'globo', exp:{globo:'cheer'}, fx:'warm', symbol:'⭐', act:'end',
+      text:'¡Con esa energía, vas a llegar lejos, Thomas!' },
+  ],
+
+  onEnd: finish,
+});
+
+async function finish() {
+  if (uid) {
+    try {
+      await updateDoc(doc(db,'estudiantes',uid), {
+        paso2_completado:true, paso2_ts:serverTimestamp(),
+      });
+    } catch(e){ console.warn('Firebase save error:', e); }
+  }
+  window.parent.postMessage({tipo:'resultado_juego',paso:2,puntos:0,completado:true,tiempo_segundos:0},'*');
+  document.getElementById('result').classList.add('show');
+}
+
+document.getElementById('finish-btn').addEventListener('click', () => {
+  if (window.parent !== window) window.parent.postMessage({tipo:'cerrar_juego'},'*');
+  else window.history.back();
+});
+
+const music = document.getElementById('bg-music');
+music.volume = 0.3;
+document.addEventListener('click', () => music.play().catch(()=>{}), {once:true});
+
+onAuthStateChanged(auth, async user => {
+  uid = user ? user.uid : null;
+  if (uid) {
+    try {
+      const snap = await getDoc(doc(db,'estudiantes',uid));
+      if (snap.exists()) S.playerName = snap.data().nombre || '';
+    } catch(e){ console.warn('Firebase read error:', e); }
+  }
+  scene.start();
+});
+</script>
+</body>
+</html>
