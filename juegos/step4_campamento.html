@@ -445,7 +445,7 @@ let uid = null;
 
 // ── State ──────────────────────────────────────────────────────
 const S = {
-  playerName:'Estudiante', decisionThomas:'', reviewAnswer:'',
+  playerName:'Estudiante', decisionThomas:'', reviewAnswer:'', puntosTotales:0,
   typing:false, awaitingChoice:false, awaitingScoreboard:false,
   typeTimeout:null, typeEl:null, tapEl:null, typeOnDone:null,
   moment:0,
@@ -606,13 +606,23 @@ function buildScoreboard() {
     teamsBox.appendChild(row);
   });
 
+  // Tabla individual: los puntos del jugador son los REALES (puntos_totales) y
+  // los rivales se recolocan alrededor, conservando la forma del guion
+  // (dos por encima, dos por debajo) para que siempre haya a quién alcanzar.
+  const P = Math.max(0, Math.round(S.puntosTotales) || 0);
+  const g = Math.max(4, Math.round(P * 0.07));   // separación entre puestos
   const individual = [
-    { pos:1, name:'Alicia',        pts:95 },
-    { pos:2, name:'Valentina',     pts:80 },
-    { pos:3, name:S.playerName,    pts:75, you:true },
-    { pos:4, name:'Mateo',         pts:70 },
-    { pos:5, name:'Beto',          pts:55 },
+    { name:'Alicia',      pts: P + g * 3 },
+    { name:'Valentina',   pts: P + g },
+    { name:S.playerName,  pts: P, you:true },
+    { name:'Mateo',       pts: Math.max(0, P - g) },
+    { name:'Beto',        pts: Math.max(0, P - g * 3) },
   ];
+  // Orden por puntos (estable: ante empate se respeta el orden anterior, así
+  // el jugador nunca cae por debajo de quien tenga su mismo puntaje).
+  individual.sort((a, b) => b.pts - a.pts);
+  individual.forEach((p, i) => p.pos = i + 1);
+
   const indBox = document.getElementById('score-individual');
   indBox.innerHTML = '';
   individual.forEach(p => {
@@ -773,6 +783,7 @@ onAuthStateChanged(auth, async user => {
         const d = snap.data();
         S.playerName     = d.nombre || 'Estudiante';
         S.decisionThomas = d.decision_thomas || '';
+        S.puntosTotales  = Number(d.puntos_totales) || 0;
       }
     } catch(e){ console.warn('Firebase read error:',e); }
   }
