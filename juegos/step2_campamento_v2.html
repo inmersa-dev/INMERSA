@@ -44,7 +44,7 @@ import { initializeApp }              from "https://www.gstatic.com/firebasejs/1
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { createScene }                from "./scene-engine.js?v=6";
+import { createScene }                from "./scene-engine.js?v=10";
 
 const app = initializeApp({
   apiKey:"AIzaSyARclfJXsjDISiT2JRjzwkoUrmPpGqpho4", authDomain:"inmersa-mvp.firebaseapp.com",
@@ -59,26 +59,40 @@ let uid = null;
 const S = { playerName:'', exact:false };
 const p = () => S.playerName || 'tú';
 
-const V = '?v=2';
-const A = s => '../Imagenes/orientacion/' + s + V;
+const V = '?v=6';
+const A = s => '../Imagenes/reglas/' + s + V;
 
 const scene = createScene({
+  // Escena reorientada: cámara por encima del hombro de los campistas, que se
+  // sientan de espaldas en el escalón. El fondo es el boceto aprobado con los
+  // cinco personajes borrados.
   stage: A('fondo.png'),
+  // La geometría del reparto está medida sobre la imagen de fondo, así que el
+  // motor debe aplicarle el mismo recorte que al escenario. Sin esto, en 16:9
+  // el fondo se recorta un 25% y los personajes flotan 70px sobre el suelo.
+  anchorToStage: true,
+  // El fondo es casi 4:3 y las pantallas no: con recorte se perdía el banner en
+  // portátil y, en móvil vertical, Sina y la pizarra entera. Se muestra completo
+  // y las franjas se rellenan con una copia borrosa del propio fondo.
+  fitStage: true,
   moments: 5,
 
   cast: {
-    globo:  { name:'Globo', color:'#E74C3C', x:0.090, bottom:0.135, height:0.460, width:0.232, headTop:0.545, shadow:false,
-              framing:{scale:1.16,target:0.090,ty:0}, expressions:{ base:A('globo.png'), point:A('globo_point.png'), cheer:A('globo_cheer.png') } },
-    sina:   { name:'Sina', color:'#00A896', x:0.180, bottom:0.100, height:0.560, width:0.231, headTop:0.423, shadow:false,
-              framing:{scale:1.16,target:0.180,ty:0}, expressions:{ base:A('sina_base.png'), point:A('sina_point.png') } },
-    max:    { name:'Max', color:'#E67E22', x:0.420, bottom:0.095, height:0.717, width:0.281, headTop:0.205, shadow:false,
-              framing:{scale:1.16,target:0.430,ty:0}, expressions:{ base:A('max.png') } },
-    girl:   { name:'Estudiante', color:'#9B59B6', x:0.575, bottom:0.100, height:0.664, width:0.238, headTop:0.460, shadow:false,
-              framing:{scale:1.16,target:0.560,ty:0}, expressions:{ base:A('girl_base.png'), point:A('girl_point.png') } },
-    thomas: { name:'Thomas', color:'#64748B', x:0.680, bottom:0.100, height:0.466, width:0.117, headTop:0.450, shadow:false,
-              framing:{scale:1.16,target:0.660,ty:0}, expressions:{ base:A('thomas.png') } },
-    curly:  { name:'Bruno', color:'#8B5E3C', x:0.788, bottom:0.100, height:0.486, width:0.135, headTop:0.430, shadow:false,
-              framing:{scale:1.16,target:0.788,ty:0}, expressions:{ base:A('curly.png') } },
+    // Toda la geometría sale de medir los recortes sobre el boceto aprobado
+    // (1451x1084): los personajes se generaron en las mismas coordenadas que el
+    // fondo, así que cada capa vuelve exactamente a su sitio.
+    // El orden es orden de dibujo: `max` va antes que `girl` porque ella está
+    // delante y le tapa las piernas.
+    globo:  { name:'Globo', color:'#E74C3C', x:0.113, bottom:0.201, height:0.391, width:0.192, headTop:0.408, shadow:false,
+              framing:{scale:1.16,target:0.113,ty:0}, expressions:{ base:A('globo.png'), front:A('globo_front.png') } },
+    thomas: { name:'Thomas', color:'#64748B', x:0.314, bottom:0.166, height:0.364, width:0.161, headTop:0.470, shadow:false,
+              framing:{scale:1.16,target:0.314,ty:0}, expressions:{ base:A('thomas.png') } },
+    max:    { name:'Max', color:'#E67E22', x:0.574, bottom:0.486, height:0.244, width:0.174, headTop:0.270, shadow:false,
+              framing:{scale:1.16,target:0.574,ty:0}, expressions:{ base:A('max.png') } },
+    girl:   { name:'Estudiante', color:'#9B59B6', x:0.527, bottom:0.097, height:0.535, width:0.216, headTop:0.515, shadow:false,
+              framing:{scale:1.16,target:0.527,ty:0}, expressions:{ base:A('girl.png'), point:A('girl_point.png') } },
+    sina:   { name:'Sina', color:'#00A896', x:0.856, bottom:0.238, height:0.389, width:0.138, headTop:0.373, shadow:false,
+              framing:{scale:1.16,target:0.856,ty:0}, expressions:{ base:A('sina.png') } },
   },
 
   script: [
@@ -90,14 +104,16 @@ const scene = createScene({
       text:'En este campamento todo funciona con puntos. Cada reto que completes suma — para ti y para tu equipo.' },
 
     // M1 — learn per win + elección
-    { m:1, who:'sina', exp:{sina:'point'}, act:'choice',
+    // Sina pregunta desde su pose fija: el texto sobre ella basta.
+    { m:1, who:'sina', act:'choice',
       text:'Hay una frase que lo define todo aquí: learn per win. ¿Qué les viene a la mente?',
       opts:[
         { label:'Que hay que practicar mucho.',              go:()=>{ S.exact=false; scene.advance(); } },
         { label:'Que es muy difícil.',                       go:()=>{ S.exact=false; scene.advance(); } },
         { label:'Que hay que aprender para poder ganar.',    go:()=>{ S.exact=true;  scene.advance(); } },
       ] },
-    { m:1, who:'globo', exp:{sina:'base', globo:'point'}, symbol:'✨',
+    // Globo se gira a cámara: le está respondiendo al jugador, no a la escena.
+    { m:1, who:'globo', exp:{globo:'front'}, symbol:'✨',
       text:()=> S.exact ? '¡Exacto! El conocimiento es la clave para ganar.'
                         : 'En otras palabras: el conocimiento es la clave para ganar.' },
 
@@ -111,13 +127,12 @@ const scene = createScene({
     { m:3, who:'max',
       text:'Y para saber cómo van, hay dos tablas: una por equipos, para ver qué grupo lidera, y una individual, con los mejores competidores del campamento.' },
 
-    // M4 — Thomas se emociona
+    // M4 — Thomas cierra la escena. Está de espaldas, así que su alegría no se
+    // ve: la cuenta el narrador, que además hace de remate.
     { m:4, who:'thomas', fx:'warm', symbol:'🔬',
       text:'¡Al fin una competencia sobre lo que me gusta… la ciencia!' },
-    { m:4, who:'narrator', fx:'warm',
+    { m:4, who:'narrator', fx:'warm', act:'end',
       text:'*Thomas no puede ocultar su alegría.*' },
-    { m:4, who:'globo', exp:{globo:'cheer'}, fx:'warm', symbol:'⭐', act:'end',
-      text:'¡Con esa energía, vas a llegar lejos, Thomas!' },
   ],
 
   onEnd: finish,

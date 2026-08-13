@@ -39,6 +39,14 @@ const CSS = `
   transition:transform 1.1s cubic-bezier(.4,0,.2,1);will-change:transform}
 .se-stage{position:absolute;inset:0;width:100%;height:100%;
   object-fit:cover;object-position:center center;transition:opacity .5s ease}
+/* Modo fitStage: el escenario se ve ENTERO (contain) en vez de recortarse
+   para llenar la pantalla. Las franjas que sobran se rellenan con una copia
+   borrosa y oscurecida del mismo fondo, para que no se lean como hueco. */
+.se-root.se-fit .se-stage{object-fit:contain}
+.se-backdrop{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  filter:blur(28px) brightness(.45);transform:scale(1.08);
+  transition:opacity .5s ease;display:none}
+.se-root.se-fit .se-backdrop{display:block}
 
 .se-char{position:absolute;transform:translateX(-50%)}
 .se-char img{position:absolute;bottom:0;left:50%;transform:translateX(-50%);
@@ -169,10 +177,18 @@ export function createScene(config) {
   const camera = document.createElement('div');
   camera.className = 'se-camera';
 
+  // Copia borrosa que rellena las franjas cuando el escenario se ve entero.
+  const backdrop = document.createElement('img');
+  backdrop.className = 'se-backdrop';
+  backdrop.alt = '';
+  backdrop.src = config.stage;
+  camera.appendChild(backdrop);
+
   const stageImg = document.createElement('img');
   stageImg.className = 'se-stage';
   stageImg.src = config.stage;
   camera.appendChild(stageImg);
+  if (config.fitStage) root.classList.add('se-fit');
 
   // Shadows first, then characters, so figures sit on top of them.
   // Cast order = draw order: list the ones standing further back first.
@@ -193,10 +209,8 @@ export function createScene(config) {
     const slot = document.createElement('div');
     slot.className = 'se-char';
     slot.id = 'se-char-' + id;
-    slot.style.left   = pct(a.x);
-    slot.style.bottom = pct(a.bottom);
-    slot.style.height = pct(a.height);
-    slot.style.width  = pct(a.width ?? 0.2);
+    // La geometría la fija layout(), que puede reinterpretarla en coordenadas
+    // del fondo (ver anchorToStage).
     // La primera expresión listada queda activa por defecto, para que
     // un personaje de una sola cara funcione sin que el guion la nombre.
     let first = true;
@@ -287,16 +301,74 @@ export function createScene(config) {
     return { x: (ox + bx * rw) / vw, y: (oy + by * rh) / vh };
   }
 
+  // ── Layout del reparto ─────────────────────────────────────────
+  // Con `anchorToStage`, la geometría del reparto se lee en coordenadas de la
+  // IMAGEN de fondo y se traduce a pantalla aplicando el mismo recorte que el
+  // escenario (object-fit:cover). Sin esto, en un viewport con otra proporción
+  // el fondo se recorta pero los personajes no, y acaban despegados del suelo
+  // (en 16:9 con un fondo 4:3 el desfase pasa de 70px).
+  // Sin la opción, los valores se usan tal cual: comportamiento de siempre.
+  function layout() {
+    const vw = root.clientWidth  || window.innerWidth;
+    const vh = root.clientHeight || window.innerHeight;
+    const bw = stageImg.naturalWidth, bh = stageImg.naturalHeight;
+    const on = !!config.anchorToStage && bw && bh && vw && vh;
+    // `fitStage` muestra el escenario entero (contain): encaja por el lado que
+    // sobra, en vez de recortar. La geometría tiene que usar la misma cuenta.
+    const s  = on ? (config.fitStage ? Math.min(vw / bw, vh / bh)
+                                     : Math.max(vw / bw, vh / bh)) : 1;
+    const rw = bw * s, rh = bh * s;
+    const ox = (vw - rw) / 2, oy = (vh - rh) / 2;
+    const mapX = bx => on ? (ox + bx * rw) / vw : bx;
+    const mapY = by => on ? (oy + by * rh) / vh : by;
+    const kx   = on ? rw / vw : 1;
+    const ky   = on ? rh / vh : 1;
+
+    for (const [id, a] of Object.entries(cast)) {
+      a._x       = mapX(a.x);
+      a._bottom  = 1 - mapY(1 - a.bottom);
+      a._height  = a.height * ky;
+      a._headTop = mapY(a.headTop);
+      const f    = a.framing || WIDE;
+      a._framing = { scale: f.scale, target: mapX(f.target), ty: f.ty * ky };
+
+      const slot = document.getElementById('se-char-' + id);
+      if (slot) {
+        slot.style.left   = pct(a._x);
+        slot.style.bottom = pct(a._bottom);
+        slot.style.height = pct(a._height);
+        slot.style.width  = pct((a.width ?? 0.2) * kx);
+      }
+      const sh = camera.querySelector(`.se-shadow[data-for="${id}"]`);
+      if (sh) {
+        const c = a.shadow || {};
+        sh.style.left   = pct(a._x);
+        sh.style.bottom = pct(1 - mapY(1 - (c.bottom ?? a.bottom - 0.006)));
+        sh.style.width  = pct((c.width  ?? 0.13)  * kx);
+        sh.style.height = pct((c.height ?? 0.026) * ky);
+      }
+    }
+  }
+  layout();
+  stageImg.addEventListener('load', layout);
+  window.addEventListener('resize', layout);
+  // ResizeObserver además del evento: el de window no llega en todos los casos
+  // (emuladores de viewport, cambios de tamaño del contenedor), y si no se
+  // recalcula, los personajes se quedan con la geometría del tamaño anterior.
+  if (typeof ResizeObserver === 'function') new ResizeObserver(layout).observe(root);
+
   // ── Camera ─────────────────────────────────────────────────────
   // Places scene-point p at screen-point t under scale s:
   //   tx = (t - 0.5)/s - (p - 0.5)
+  // Se usan siempre los valores ya traducidos por layout() (_framing, _x,
+  // _headTop): con anchorToStage difieren de los autorados.
   function framingFor(who) {
     if (!who || who === 'wide' || !cast[who]) return WIDE;
-    return cast[who].framing || WIDE;
+    return cast[who]._framing || cast[who].framing || WIDE;
   }
   function setCamera(who) {
     const f = framingFor(who);
-    const p = (!who || who === 'wide' || !cast[who]) ? 0.5 : cast[who].x;
+    const p = (!who || who === 'wide' || !cast[who]) ? 0.5 : cast[who]._x;
     const tx = ((f.target - 0.5) / f.scale) - (p - 0.5);
     camera.style.transform =
       `scale(${f.scale}) translate(${(tx*100).toFixed(2)}%, ${(f.ty*100).toFixed(2)}%)`;
@@ -305,7 +377,7 @@ export function createScene(config) {
   function headScreenY(who) {
     const f = framingFor(who);
     if (!who || who === 'wide' || !cast[who]) return 0.34;
-    return f.scale * (cast[who].headTop - 0.5) + f.scale * f.ty + 0.5;
+    return f.scale * (cast[who]._headTop - 0.5) + f.scale * f.ty + 0.5;
   }
 
   // Screen position of a speaker's head under a GIVEN camera framing.
@@ -314,13 +386,13 @@ export function createScene(config) {
   function anchorOf(speaker, framedActor) {
     const f = framingFor(framedActor);
     const p = (!framedActor || framedActor === 'wide' || !cast[framedActor])
-      ? 0.5 : cast[framedActor].x;
+      ? 0.5 : cast[framedActor]._x;
     const tx = ((f.target - 0.5) / f.scale) - (p - 0.5);
     const S = cast[speaker];
     if (!S) return { x: f.target, y: headScreenY(framedActor) };
     return {
-      x: 0.5 + f.scale * (S.x + tx - 0.5),
-      y: 0.5 + f.scale * (S.headTop + f.ty - 0.5),
+      x: 0.5 + f.scale * (S._x + tx - 0.5),
+      y: 0.5 + f.scale * (S._headTop + f.ty - 0.5),
     };
   }
 
@@ -459,6 +531,9 @@ export function createScene(config) {
   }
 
   async function render(line) {
+    // Recalcular aquí es barato (unos pocos estilos) y garantiza la geometría
+    // correcta aunque no haya llegado ningún evento de resize.
+    layout();
     hideAll();
     if (typeof line.m === 'number') updateDots(line.m);
 
@@ -534,7 +609,7 @@ export function createScene(config) {
         // cámara que se aplica a la escena, para que el cuadro viaje pegado
         // a su elemento (letrero, pizarra…) cuando la cámara enfoca.
         const f  = framingFor(framed);
-        const pc = (!framed || framed === 'wide' || !cast[framed]) ? 0.5 : cast[framed].x;
+        const pc = (!framed || framed === 'wide' || !cast[framed]) ? 0.5 : cast[framed]._x;
         const cx = ((f.target - 0.5) / f.scale) - (pc - 0.5);
         const b  = bgToScreen(line.box.bx, line.box.by);
         bubble.style.left   = pct(0.5 + f.scale * ((b.x - 0.5) + cx));
