@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>INMERSA — Conversación de Equipo</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  :root{ --accent:#00D4FF; --teal:#00C9A7; }
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;overflow:hidden;background:#0A1628;
+    font-family:'Nunito',system-ui,sans-serif;color:#fff;
+    -webkit-tap-highlight-color:transparent;user-select:none}
+
+  /* Swap duro: cada variante de pose se generó por separado, así que un
+     cross-fade deja fantasmeo entre las dos. Casi instantáneo, solo aquí. */
+  .se-char img{transition:opacity .07s linear !important}
+
+  /* ── Tabla de posiciones ──────────────────────────────────────── */
+  #scoreboard-overlay{position:fixed;inset:0;z-index:45;
+    background:rgba(10,22,40,.94);display:none;align-items:center;
+    justify-content:center;padding:24px;backdrop-filter:blur(4px)}
+  #scoreboard-overlay.show{display:flex}
+  .score-panel{width:100%;max-width:380px;background:rgba(12,24,42,.96);
+    border:1.5px solid rgba(0,212,255,.28);border-radius:18px;
+    padding:20px 18px 18px;box-shadow:0 12px 40px rgba(0,0,0,.5);
+    max-height:92vh;overflow-y:auto}
+  .score-title{text-align:center;font-size:17px;font-weight:900;color:#fff;margin-bottom:4px}
+  .score-sub{text-align:center;font-size:11px;font-weight:700;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--accent);margin-bottom:16px}
+  .score-section{margin-bottom:16px}
+  .score-head{font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
+    color:#8899AA;margin-bottom:8px;padding-left:2px}
+  .score-row{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:10px;
+    background:rgba(255,255,255,.04);margin-bottom:5px}
+  .score-row.you{background:rgba(0,201,167,.14);border:1.5px solid rgba(0,201,167,.5)}
+  .score-pos{font-size:13px;font-weight:900;color:#8899AA;width:22px;text-align:center;flex-shrink:0}
+  .score-row.you .score-pos{color:var(--teal)}
+  .score-name{flex:1;font-size:14px;font-weight:800;color:#E8EEF5;display:flex;
+    align-items:center;gap:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .score-badge-you{font-size:9px;font-weight:900;letter-spacing:.08em;background:var(--teal);
+    color:#04231C;padding:2px 6px;border-radius:5px;flex-shrink:0}
+  .score-pts{font-size:14px;font-weight:900;color:#fff;flex-shrink:0}
+  .score-pts span{font-size:10px;color:#8899AA;font-weight:700}
+
+  /* ── Cierre ───────────────────────────────────────────────────── */
+  #result{position:fixed;inset:0;z-index:50;background:rgba(10,22,40,.97);
+    display:none;flex-direction:column;align-items:center;justify-content:center;
+    gap:16px;padding:36px;text-align:center}
+  #result.show{display:flex}
+  .hito-badge{font-size:60px;animation:pulse 2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{transform:scale(1);filter:drop-shadow(0 0 8px rgba(0,212,255,.4))}
+    50%{transform:scale(1.08);filter:drop-shadow(0 0 20px rgba(0,212,255,.8))}}
+  .hito-label{font-size:11px;font-weight:900;letter-spacing:.2em;text-transform:uppercase;color:var(--accent)}
+  #result h2{font-size:21px;font-weight:900;margin:0}
+  #result p{font-size:14px;color:#8899AA;line-height:1.6;max-width:320px;margin:0}
+  .btn{margin-top:8px;background:var(--accent);color:#000;font-family:'Nunito',sans-serif;
+    font-size:16px;font-weight:800;padding:14px 36px;border:none;border-radius:12px;cursor:pointer}
+  #score-continue{width:100%;margin-top:6px}
+</style>
+</head>
+<body>
+
+<div id="scoreboard-overlay">
+  <div class="score-panel">
+    <div class="score-title">📊 Tabla de Posiciones</div>
+    <div class="score-sub">Campamento Vital</div>
+    <div class="score-section">
+      <div class="score-head">Por equipos</div>
+      <div id="score-teams"></div>
+    </div>
+    <div class="score-section">
+      <div class="score-head">Individual</div>
+      <div id="score-individual"></div>
+    </div>
+    <button class="btn" id="score-continue">Continuar →</button>
+  </div>
+</div>
+
+<div id="result">
+  <div class="hito-badge">🧩</div>
+  <div class="hito-label">✦ Hito Completado ✦</div>
+  <h2>Conversación de Equipo</h2>
+  <p>Ya sabes cómo va la competencia. Toca seguir sumando.</p>
+  <button class="btn" id="finish-btn">Continuar →</button>
+</div>
+
+<audio id="bg-music" loop src="../Audio/musica_paso1.mp3"></audio>
+
+<script type="module">
+import { initializeApp }               from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { createScene }                 from "./scene-engine.js?v=10";
+
+const app = initializeApp({
+  apiKey:"AIzaSyARclfJXsjDISiT2JRjzwkoUrmPpGqpho4", authDomain:"inmersa-mvp.firebaseapp.com",
+  projectId:"inmersa-mvp", storageBucket:"inmersa-mvp.firebasestorage.app",
+  messagingSenderId:"554325663285", appId:"1:554325663285:web:332e863d1e39e49783db7c",
+  measurementId:"G-RQPE6SVTDP"
+});
+const auth = getAuth(app);
+const db   = getFirestore(app);
+let uid = null;
+
+const S = {
+  playerName:'Estudiante', decisionThomas:'', reviewAnswer:'',
+  puntosTotales:0, posEquipo:3,
+};
+
+const V = '?v=1';
+const A = s => '../Imagenes/challenge_zone/' + s + V;
+
+// ─────────────────────────────────────────────────────────────────
+//  Tabla de posiciones
+//
+//  Modelo de "liga": el campamento avanza por su cuenta. Cada personaje
+//  rinde un % FIJO del máximo disponible hasta este punto, y el jugador
+//  entra con sus puntos REALES. Se puede subir al primer puesto y también
+//  caer al último.
+// ─────────────────────────────────────────────────────────────────
+
+// Máximo que otorga cada nodo — debe coincidir con los `reward` de mapa.html.
+const MAX_POR_NODO = { 1:400, 2:150, 3:400 };
+const PASO_ACTUAL  = 4;
+
+const RENDIMIENTO = {
+  thomas:93, valentina:90, raul:89, alicia:88,
+  mateo:78, sofia:74, beto:68,
+  relleno:75,          // compañeros sin nombre que completan cada equipo
+};
+
+// Equipos según el guion (Globo los lee en voz alta en el nodo 1):
+// Verde = TÚ, Alicia y Beto · Rojo = Valentina y Mateo · Azul = Sofía ·
+// Amarillo = Raúl. Thomas entra en TU equipo si lo aceptaste, y en el Azul
+// si lo rechazaste, así que esa decisión mueve la tabla de verdad.
+function plantillas(conThomas) {
+  return [
+    { name:'Equipo Verde',    dot:'🟢', you:true,
+      miembros:['alicia','beto', conThomas ? 'thomas' : 'relleno'] },
+    { name:'Equipo Rojo',     dot:'🔴',
+      miembros:['valentina','mateo','relleno','relleno'] },
+    { name:'Equipo Amarillo', dot:'🟡',
+      miembros:['raul','relleno','relleno','relleno'] },
+    { name:'Equipo Azul',     dot:'🔵',
+      miembros:['sofia','relleno','relleno', conThomas ? 'relleno' : 'thomas'] },
+  ];
+}
+
+function buildScoreboard() {
+  let MAX = 0;
+  for (let n = 1; n < PASO_ACTUAL; n++) MAX += MAX_POR_NODO[n] || 0;
+
+  const pts  = clave => Math.round(RENDIMIENTO[clave] * MAX / 100);
+  const P    = Math.max(0, Math.round(S.puntosTotales) || 0);
+  const conThomas = S.decisionThomas === 'aceptar';
+
+  const TEAMS = plantillas(conThomas);
+  TEAMS.forEach(t => {
+    t.pts = t.miembros.reduce((suma, k) => suma + pts(k), 0) + (t.you ? P : 0);
+  });
+  TEAMS.sort((a, b) => b.pts - a.pts);
+  TEAMS.forEach((t, i) => t.pos = i + 1);
+  S.posEquipo = (TEAMS.find(t => t.you) || {}).pos || 0;
+
+  const teamsBox = document.getElementById('score-teams');
+  teamsBox.innerHTML = '';
+  TEAMS.forEach(t => {
+    const row = document.createElement('div');
+    row.className = 'score-row' + (t.you ? ' you' : '');
+    row.innerHTML =
+      `<div class="score-pos">${t.pos}</div>` +
+      `<div class="score-name">${t.dot} ${t.name}` +
+        (t.you ? ` <span class="score-badge-you">TU EQUIPO</span>` : ``) + `</div>` +
+      `<div class="score-pts">${t.pts}<span> pts</span></div>`;
+    teamsBox.appendChild(row);
+  });
+
+  // Individual: cada rival con su rendimiento fijo, el jugador con sus puntos
+  // reales. Para ser primero hay que superar a Thomas (93%).
+  const individual = [
+    { name:'Thomas',      pts: pts('thomas') },
+    { name:'Valentina',   pts: pts('valentina') },
+    { name:'Raúl',        pts: pts('raul') },
+    { name:'Alicia',      pts: pts('alicia') },
+    { name:'Mateo',       pts: pts('mateo') },
+    { name:'Sofía',       pts: pts('sofia') },
+    { name:'Beto',        pts: pts('beto') },
+    { name:S.playerName,  pts: P, you:true },
+  ];
+  // Orden estable: ante empate se respeta el orden anterior, así el jugador
+  // nunca cae por debajo de quien tenga su mismo puntaje.
+  individual.sort((a, b) => b.pts - a.pts);
+  individual.forEach((p, i) => p.pos = i + 1);
+
+  // Los 5 primeros y, si el jugador quedó fuera, su fila al final.
+  const visibles = individual.slice(0, 5);
+  if (!visibles.some(p => p.you)) visibles.push(individual.find(p => p.you));
+
+  const indBox = document.getElementById('score-individual');
+  indBox.innerHTML = '';
+  visibles.forEach(p => {
+    const row = document.createElement('div');
+    row.className = 'score-row' + (p.you ? ' you' : '');
+    row.innerHTML =
+      `<div class="score-pos">${p.pos}</div>` +
+      `<div class="score-name">${p.name}` +
+        (p.you ? ` <span class="score-badge-you">TÚ</span>` : ``) + `</div>` +
+      `<div class="score-pts">${p.pts}<span> pts</span></div>`;
+    indBox.appendChild(row);
+  });
+}
+
+const $scoreboard = document.getElementById('scoreboard-overlay');
+function showScoreboard(done) {
+  buildScoreboard();
+  $scoreboard.classList.add('show');
+  document.getElementById('score-continue').onclick = (e) => {
+    e.stopPropagation();
+    $scoreboard.classList.remove('show');
+    done();
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────
+//  Escena
+// ─────────────────────────────────────────────────────────────────
+const scene = createScene({
+  // Zona de retos del campamento. Escenario nuevo: el anfiteatro ya cerraba el
+  // capítulo 1 y repetirlo aquí no aportaba nada.
+  stage: A('stage_challenge_zone.png'),
+  // La geometría del reparto está medida sobre la imagen de fondo (1536x1024),
+  // así que el motor debe aplicarle el mismo recorte que al escenario.
+  anchorToStage: true,
+  // El fondo es 3:2 y las pantallas no: sin esto, en móvil vertical se pierde
+  // la pizarra entera por la derecha.
+  fitStage: true,
+  moments: 3,
+
+  cast: {
+    // Sombras a false: van horneadas en el escenario. Los dos ocupan siempre la
+    // misma posición, así que la sombra es estática y se generó desde su
+    // silueta real, no desde la elipse genérica del motor.
+    beto: {
+      name:'Beto', color:'#E8912D', shadow:false,
+      x:0.4463, bottom:0.0459, height:0.5439, width:0.1940, headTop:0.4102,
+      framing:{ scale:1.16, target:0.4463, ty:0 },
+      expressions:{
+        confused: A('beto_confused.png'),
+        trying:   A('beto_trying.png'),
+        grateful: A('beto_grateful.png'),
+      },
+    },
+    alicia: {
+      name:'Alicia', color:'#00A896', shadow:false,
+      x:0.6725, bottom:0.1729, height:0.5459, width:0.1556, headTop:0.2812,
+      framing:{ scale:1.16, target:0.6725, ty:0 },
+      expressions:{
+        neutral:  A('alicia_neutral.png'),
+        explains: A('alicia_explains.png'),
+        pleased:  A('alicia_pleased.png'),
+      },
+    },
+  },
+
+  actions: {
+    scoreboard: (done) => showScoreboard(done),
+  },
+
+  script: [
+    { who:'narrator', frame:'wide',
+      text:'Terminado el rompecabezas, el grupo se reparte por la zona de retos. Beto se sienta en el tronco de equilibrio, todavía dándole vueltas.' },
+
+    // ── M0: Beto no se acuerda de nada ────────────────────────────
+    { m:0, who:'beto', exp:{ beto:'confused', alicia:'neutral' }, act:'choice',
+      text:'Tantas horas haciendo eso y ni me acuerdo si era mitrocito, asma o borbojito.',
+      opts:[
+        { label:'Eran dos: eritrocito y plasma.',
+          go:()=>{ S.reviewAnswer='correcto'; scene.advance(); } },
+        { label:'No recuerdo cuántas eran, pero sé que una era eritrocito y otra plasma.',
+          go:()=>{ S.reviewAnswer='parcial';  scene.advance(); } },
+        { label:'La verdad, no me acuerdo de nada.',
+          go:()=>{ S.reviewAnswer='nada';     scene.advance(); } },
+      ] },
+
+    { m:0, who:'beto', exp:{ beto:'trying' },
+      text:'Yo sé que hay una que es roja y lleva oxígeno, y la otra parte es como un líquido.' },
+
+    // ── M1: Alicia lo aclara ──────────────────────────────────────
+    { m:1, who:'alicia', exp:{ alicia:'explains', beto:'confused' },
+      text:()=>{
+        const intro = S.reviewAnswer==='correcto' ? 'Correcto, prestaste atención.'
+                    : S.reviewAnswer==='parcial'  ? 'Casi. Al menos recuerdas los nombres.'
+                    :                               '¿En serio? Para eso salieron las tarjetas.';
+        return intro + ' Eran dos: glóbulo rojo y eritrocito son la misma cosa — la parte roja que lleva el oxígeno. Y el plasma es la parte líquida, donde viaja todo lo demás.';
+      } },
+
+    { m:1, who:'beto', exp:{ beto:'grateful', alicia:'pleased' }, symbol:'✨',
+      text:'Por eso hay que tener amigas inteligentes.' },
+
+    { m:1, who:'player',
+      text:'Deberías dejar de fallar tanto en los juegos para que no sigamos perdiendo puntos… Mira la pizarra.' },
+
+    // ── M2: la pizarra ────────────────────────────────────────────
+    { m:2, act:'scoreboard', frame:'wide' },
+
+    // Beto reacciona al puesto real del equipo. Dos líneas en vez de una para
+    // poder cambiarle también la cara: si van últimos no puede sonreír.
+    { m:2, who:'beto', exp:{ beto:'grateful', alicia:'neutral' },
+      when:()=> S.posEquipo !== 4,
+      text:()=>{
+        const n = S.posEquipo;
+        if (n === 1) return '¿Primeros? ¡Con Alicia de nuestro lado no nos alcanza nadie!';
+        return `¿${n === 2 ? 'Segundo' : 'Tercer'} lugar? ¡Con Alicia de nuestro lado, subimos rápido!`;
+      } },
+    { m:2, who:'beto', exp:{ beto:'confused', alicia:'neutral' },
+      when:()=> S.posEquipo === 4,
+      text:'Últimos… pero con Alicia de nuestro lado remontamos, ya verás.' },
+
+    // Thomas no está en cuadro, pero la decisión del nodo 1 sigue teniendo eco:
+    // Alicia lo nombra al leer la tabla, y lo que dice cambia según dónde acabó.
+    { m:2, who:'alicia', exp:{ alicia:'pleased' }, act:'end',
+      when:()=> S.decisionThomas === 'aceptar',
+      text:'Y Thomas va primero de todos, por cierto. Menos mal que lo tenemos con nosotros.' },
+    { m:2, who:'alicia', exp:{ alicia:'neutral' }, act:'end',
+      when:()=> S.decisionThomas !== 'aceptar',
+      text:'Y Thomas va primero de todos. En el Azul, donde lo dejamos ir.' },
+  ],
+
+  onEnd: finish,
+});
+
+// `act:'end'` programa finish() a los 1400ms, pero el motor sigue aceptando
+// toques durante esa espera: un toque más agota el guion y vuelve a llamarla.
+// Sin este guardia se envían dos postMessage idénticos.
+let finished = false;
+async function finish() {
+  if (finished) return;
+  finished = true;
+  if (uid) {
+    try {
+      // setDoc+merge: updateDoc falla con not-found si el doc no existe.
+      await setDoc(doc(db,'estudiantes',uid), {
+        paso4_completado:true, paso4_ts:serverTimestamp(),
+      }, { merge:true });
+    } catch(e){ console.warn('Firebase save error:', e); }
+  }
+  // PUNTOS debe coincidir con el "reward" del mapa (+200, escalón
+  // "narrativa con decisión").
+  window.parent.postMessage({tipo:'resultado_juego',paso:4,puntos:200,completado:true,tiempo_segundos:0},'*');
+  document.getElementById('result').classList.add('show');
+}
+
+document.getElementById('finish-btn').addEventListener('click', () => {
+  if (window.parent !== window) window.parent.postMessage({tipo:'cerrar_juego'},'*');
+  else window.history.back();
+});
+
+const music = document.getElementById('bg-music');
+music.volume = 0.3;
+document.addEventListener('click', () => music.play().catch(()=>{}), {once:true});
+
+onAuthStateChanged(auth, async user => {
+  uid = user ? user.uid : null;
+  if (uid) {
+    try {
+      const snap = await getDoc(doc(db,'estudiantes',uid));
+      if (snap.exists()) {
+        const d = snap.data();
+        S.playerName     = d.nombre || 'Estudiante';
+        S.decisionThomas = d.decision_thomas || '';
+        S.puntosTotales  = Number(d.puntos_totales) || 0;
+      }
+    } catch(e){ console.warn('Firebase read error:', e); }
+  }
+  scene.start();
+});
+</script>
+</body>
+</html>
