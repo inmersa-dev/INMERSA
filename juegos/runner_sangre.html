@@ -42,6 +42,8 @@ canvas{display:block}
 var c=document.getElementById('c');
 var ctx=c.getContext('2d');
 var W,H,LANE,DPR=1;
+/* escala de personajes: ambulancia y patógenos crecen con la pantalla (legibles en proyector y celular) */
+var SPR=1.3;
 /* Trucos de desarrollo (1/2/3 = jefes, H = vidas) solo con ?dev=1 en la URL */
 var DEV=/[?&]dev=1\b/.test(location.search);
 
@@ -54,6 +56,7 @@ function resize(){
   c.style.width=W+'px';c.style.height=H+'px';
   ctx.setTransform(DPR,0,0,DPR,0,0);
   LANE=[H*0.42, H*0.66]; /* 0=upper lane, 1=lower lane */
+  SPR=Math.max(1.3,Math.min(1.8,H/480));
   /* reubicar al jugador si la ventana cambia de tamaño a mitad de partida */
   if(typeof player!=='undefined'&&player){
     player.x=W*0.22;
@@ -203,15 +206,58 @@ var endoTileW=60; /* tile repeat width */
 /* Light streaks */
 var streaks=[];
 
+/* Glóbulo rojo pre-renderizado (disco bicóncavo) — se dibuja una vez y se reutiliza cada cuadro */
+var rbcSprite=null;
+function makeRBCSprite(){
+  var S=128;
+  rbcSprite=document.createElement('canvas');
+  rbcSprite.width=S;rbcSprite.height=S;
+  var g=rbcSprite.getContext('2d'),r=S*0.46;
+  /* cuerpo */
+  var body=g.createRadialGradient(S/2,S/2,r*0.15,S/2,S/2,r);
+  body.addColorStop(0,'#7a0f1a');
+  body.addColorStop(0.45,'#b3202c');
+  body.addColorStop(0.82,'#d8343e');
+  body.addColorStop(1,'#8a1420');
+  g.fillStyle=body;g.beginPath();g.arc(S/2,S/2,r,0,Math.PI*2);g.fill();
+  /* hendidura central */
+  var dimple=g.createRadialGradient(S/2,S/2,0,S/2,S/2,r*0.5);
+  dimple.addColorStop(0,'rgba(60,5,12,0.75)');
+  dimple.addColorStop(1,'rgba(60,5,12,0)');
+  g.fillStyle=dimple;g.beginPath();g.arc(S/2,S/2,r*0.5,0,Math.PI*2);g.fill();
+  /* brillo del borde */
+  g.strokeStyle='rgba(255,140,140,0.35)';g.lineWidth=3;
+  g.beginPath();g.arc(S/2-2,S/2-2,r*0.88,Math.PI*1.05,Math.PI*1.65);g.stroke();
+}
+makeRBCSprite();
+
+/* Líneas de velocidad: se alargan y aclaran a medida que el juego acelera */
+var speedLines=[];
+
 function initParticles(){
   rbcLayer=[];
-  for(var i=0;i<12;i++){
+  /* tres profundidades: lejos (pequeños, lentos, tenues) → cerca (grandes, rápidos) */
+  for(var i=0;i<20;i++){
+    var depth=Math.random();               /* 0 = fondo, 1 = cerca */
     rbcLayer.push({
-      x:Math.random()*W,
-      y:LANE[0]+20+Math.random()*(LANE[1]-LANE[0]-40),
-      r:14+Math.random()*22,
-      a:0.04+Math.random()*0.06,
-      tilt:Math.random()*Math.PI
+      x:Math.random()*(W+200),
+      y:H*0.17+Math.random()*H*0.66,
+      r:(10+depth*26)*(H/700),
+      a:0.10+depth*0.22,
+      k:0.12+depth*0.45,                   /* factor de desplazamiento (paralaje) */
+      squash:0.45+Math.random()*0.5,       /* inclinación: de canto a de frente */
+      tilt:(Math.random()-0.5)*0.8,
+      spin:(Math.random()-0.5)*0.6
+    });
+  }
+  rbcLayer.sort(function(a,b){return a.k-b.k;}); /* los lejanos se pintan primero */
+  speedLines=[];
+  for(var i=0;i<26;i++){
+    speedLines.push({
+      x:Math.random()*(W+400),
+      y:H*0.16+Math.random()*H*0.68,
+      k:1.3+Math.random()*1.1,
+      w:0.8+Math.random()*1.6
     });
   }
   fibrinLayer=[];
@@ -1277,7 +1323,8 @@ function update(dt){
       var o=obstacles[i];
       var oy=LANE[o.lane];
       var dx=player.x-o.x,dy=player.y-oy;
-      if(player.transitionTimer<=0&&Math.sqrt(dx*dx+dy*dy)<28){
+      /* distancia de choque proporcional al nuevo tamaño (antes 28 px fijos para sprites de escala 1) */
+      if(player.transitionTimer<=0&&Math.sqrt(dx*dx+dy*dy)<28*SPR){
         obstacles.splice(i,1);
         loseLife();
         break;
@@ -1452,41 +1499,68 @@ function drawPaused(){
 }
 
 /* ── BACKGROUND ── */
-function drawBG(){
-  /* base */
-  ctx.fillStyle='#090e18';
-  ctx.fillRect(0,0,W,H);
-
-  /* ── LAYER 1: endothelial wall tiles (1x speed) ── */
-  var wallH=H*0.14;
-  var tileW=endoTileW;
-  var offset1=bgScroll%tileW;
-  ctx.save();
-  /* top wall */
-  for(var tx=-tileW+offset1%tileW;tx<W+tileW;tx+=tileW){
-    ctx.fillStyle='rgba(90,15,15,0.55)';
-    ctx.beginPath();
-    ctx.ellipse(tx,wallH*0.5,tileW*0.52,wallH*0.48,0,0,Math.PI*2);
-    ctx.fill();
-    ctx.strokeStyle='rgba(140,30,30,0.3)';ctx.lineWidth=1;ctx.stroke();
-  }
-  /* bottom wall */
-  for(var tx=-tileW+offset1%tileW;tx<W+tileW;tx+=tileW){
-    ctx.fillStyle='rgba(90,15,15,0.55)';
-    ctx.beginPath();
-    ctx.ellipse(tx,H-wallH*0.5,tileW*0.52,wallH*0.48,0,0,Math.PI*2);
-    ctx.fill();
-    ctx.strokeStyle='rgba(140,30,30,0.3)';ctx.lineWidth=1;ctx.stroke();
+/* borde interno ondulado de la pared del vaso (se desplaza con el avance) */
+function _wallEdge(x,base,dir){
+  var u=x+bgScroll;
+  return base+dir*(Math.sin(u*0.011)*7+Math.sin(u*0.029+1.7)*3.5);
+}
+function _drawVesselWall(top){
+  var wallH=H*0.15,dir=top?1:-1,base=top?wallH:H-wallH,edgeY=top?0:H;
+  /* cuerpo de la pared */
+  ctx.beginPath();ctx.moveTo(0,edgeY);ctx.lineTo(W,edgeY);
+  for(var x=W;x>=-16;x-=16)ctx.lineTo(x,_wallEdge(x,base,dir));
+  ctx.closePath();
+  var g=ctx.createLinearGradient(0,edgeY,0,base);
+  g.addColorStop(0,'#1e0307');g.addColorStop(0.55,'#4a0a12');g.addColorStop(1,'#7c1620');
+  ctx.fillStyle=g;ctx.fill();
+  /* células endoteliales alargadas que recubren la pared */
+  ctx.save();ctx.clip();
+  var tileW=endoTileW*1.4,off=bgScroll%tileW;
+  for(var tx=-tileW-off;tx<W+tileW;tx+=tileW){
+    var cy=top?base-wallH*0.32:base+wallH*0.32;
+    ctx.fillStyle='rgba(150,34,46,0.38)';
+    ctx.beginPath();ctx.ellipse(tx,cy,tileW*0.46,wallH*0.2,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(70,8,18,0.55)';
+    ctx.beginPath();ctx.ellipse(tx+tileW*0.08,cy,tileW*0.1,wallH*0.07,0,0,Math.PI*2);ctx.fill();
   }
   ctx.restore();
+  /* brillo húmedo del borde interno */
+  ctx.save();
+  ctx.beginPath();
+  for(var x=-16;x<=W+16;x+=16){var y=_wallEdge(x,base,dir);x===-16?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+  ctx.strokeStyle='rgba(255,120,130,0.45)';ctx.lineWidth=2;
+  ctx.shadowColor='rgba(255,60,80,0.8)';ctx.shadowBlur=10;ctx.stroke();
+  ctx.restore();
+}
 
-  /* dark interior gradient over walls */
-  var wg=ctx.createLinearGradient(0,0,0,H);
-  wg.addColorStop(0,'rgba(6,8,14,0.6)');
-  wg.addColorStop(0.18,'rgba(0,0,0,0)');
-  wg.addColorStop(0.82,'rgba(0,0,0,0)');
-  wg.addColorStop(1,'rgba(6,8,14,0.6)');
-  ctx.fillStyle=wg;ctx.fillRect(0,0,W,H);
+function drawBG(){
+  /* ── luz (interior del vaso): plasma rojo oscuro, más claro en el centro → efecto de tubo ── */
+  var lg=ctx.createLinearGradient(0,0,0,H);
+  lg.addColorStop(0,'#14040a');
+  lg.addColorStop(0.5,'#2a0b14');
+  lg.addColorStop(1,'#14040a');
+  ctx.fillStyle=lg;ctx.fillRect(0,0,W,H);
+
+  /* ── glóbulos rojos flotando en 3 profundidades (paralaje) ── */
+  if(rbcSprite){
+    rbcLayer.forEach(function(p){
+      var span=W+p.r*4;
+      var rx=((p.x-bgScroll*p.k)%span+span)%span-p.r*2;
+      var wob=Math.sin(elapsed*0.8+p.x)*4;
+      ctx.save();
+      ctx.globalAlpha=p.a;
+      ctx.translate(rx,p.y+wob);
+      ctx.rotate(p.tilt+elapsed*p.spin*0.2);
+      ctx.scale(1,p.squash);
+      ctx.drawImage(rbcSprite,-p.r,-p.r,p.r*2,p.r*2);
+      ctx.restore();
+    });
+    ctx.globalAlpha=1;
+  }
+
+  /* ── paredes del vaso sanguíneo ── */
+  _drawVesselWall(true);
+  _drawVesselWall(false);
 
   /* ── LAYER 2: fibrin filaments (0.5x speed) ── */
   var offset2=(bgScroll*0.5);
@@ -1506,81 +1580,59 @@ function drawBG(){
   ctx.globalAlpha=1;
   ctx.restore();
 
-  /* ── LAYER 3: large RBC silhouettes (0.2x speed) ── */
-  var offset3=(bgScroll*0.2);
-  ctx.save();
-  rbcLayer.forEach(function(p){
-    var rx=((p.x-offset3)%(W+60)+W+60)%(W+60);
-    ctx.globalAlpha=p.a;
-    ctx.save();ctx.translate(rx,p.y);ctx.rotate(p.tilt);
-    /* biconcave disc outline */
-    ctx.strokeStyle='#7a1010';ctx.lineWidth=1.5;
-    ctx.beginPath();ctx.ellipse(0,0,p.r,p.r*0.55,0,0,Math.PI*2);ctx.stroke();
-    /* inner dimple ring */
-    ctx.globalAlpha=p.a*0.5;
-    ctx.beginPath();ctx.ellipse(0,0,p.r*0.45,p.r*0.22,0,0,Math.PI*2);ctx.stroke();
+  /* ── pista: banda más oscura donde ocurre el juego, para que los patógenos resalten ── */
+  var tTop=LANE[0]-50,tBot=LANE[1]+50;
+  var tg=ctx.createLinearGradient(0,tTop,0,tBot);
+  tg.addColorStop(0,'rgba(6,2,8,0.55)');tg.addColorStop(0.5,'rgba(10,3,10,0.38)');tg.addColorStop(1,'rgba(6,2,8,0.55)');
+  ctx.fillStyle=tg;ctx.fillRect(0,tTop,W,tBot-tTop);
+
+  /* ── líneas de velocidad: más largas, densas y brillantes cuanto más rápido vas ── */
+  var spdK=Math.max(0,Math.min(1,(gameSpeed-240)/460)); /* 0 al arrancar → 1 a velocidad máxima */
+  if(state!=='start'){
+    ctx.save();ctx.lineCap='round';
+    var nLines=Math.round(8+spdK*18);
+    for(var i=0;i<nLines&&i<speedLines.length;i++){
+      var sl=speedLines[i];
+      var len=(18+spdK*120)*sl.k;
+      var span=W+len+40;
+      var sx=((sl.x-bgScroll*sl.k)%span+span)%span-len;
+      var a=(0.06+spdK*0.26)*(sl.w/2.4);
+      var lgr=ctx.createLinearGradient(sx,0,sx+len,0);
+      lgr.addColorStop(0,'rgba(255,200,210,0)');lgr.addColorStop(1,'rgba(255,225,230,'+a.toFixed(3)+')');
+      ctx.strokeStyle=lgr;ctx.lineWidth=sl.w;
+      ctx.beginPath();ctx.moveTo(sx,sl.y);ctx.lineTo(sx+len,sl.y);ctx.stroke();
+    }
     ctx.restore();
-  });
-  ctx.globalAlpha=1;
-  ctx.restore();
+  }
 
-  /* ── light streaks ── */
-  streaks.forEach(function(s){
-    if(s.a>0){
-      ctx.save();
-      ctx.globalAlpha=s.a*0.18;
-      var sx=((s.x-bgScroll*0.8)%(W+200)+W+200)%(W+200);
-      ctx.strokeStyle='#ffddcc';ctx.lineWidth=2;ctx.lineCap='round';
-      ctx.beginPath();ctx.moveTo(sx,s.y);ctx.lineTo(sx+s.len,s.y-s.len*0.15);ctx.stroke();
-      ctx.restore();
-    }
-    /* animate alpha */
-    s.timer+=0.016;
-    if(s.timer>s.interval){
-      s.timer=0;s.interval=3+Math.random()*4;
-      s.x=Math.random()*W;s.y=H*0.15+Math.random()*H*0.7;
-      s.len=40+Math.random()*80;
-    }
-    s.a=Math.sin(Math.min(s.timer/s.interval,1)*Math.PI);
-  });
-
-  /* ── highway lane markings ── */
+  /* ── marcas de carril ── */
   var laneCenter=(LANE[0]+LANE[1])/2;
-  var dashLen=30,dashGap=20,dashTotal=dashLen+dashGap;
-  /* dashed center line — scrolls with bgScroll */
+  var dashLen=30+spdK*26,dashGap=20,dashTotal=dashLen+dashGap; /* las rayas se estiran con la velocidad */
   ctx.save();
-  ctx.strokeStyle='rgba(255,255,255,0.52)';
+  ctx.strokeStyle='rgba(255,235,240,0.55)';
   ctx.lineWidth=2.5;
   ctx.setLineDash([dashLen,dashGap]);
   ctx.lineDashOffset=-(bgScroll%dashTotal);
   ctx.beginPath();ctx.moveTo(0,laneCenter);ctx.lineTo(W,laneCenter);ctx.stroke();
   ctx.setLineDash([]);ctx.lineDashOffset=0;
+  /* bordes de la pista con brillo */
+  ctx.strokeStyle='rgba(255,170,185,0.42)';ctx.lineWidth=1.6;
+  ctx.shadowColor='rgba(255,70,100,0.7)';ctx.shadowBlur=8;
+  ctx.beginPath();ctx.moveTo(0,tTop);ctx.lineTo(W,tTop);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(0,tBot);ctx.lineTo(W,tBot);ctx.stroke();
   ctx.restore();
-  /* upper lane border */
-  ctx.strokeStyle='rgba(255,255,255,0.28)';ctx.lineWidth=1.5;
-  ctx.beginPath();ctx.moveTo(0,LANE[0]-50);ctx.lineTo(W,LANE[0]-50);ctx.stroke();
-  /* lower lane border */
-  ctx.beginPath();ctx.moveTo(0,LANE[1]+50);ctx.lineTo(W,LANE[1]+50);ctx.stroke();
 
-  /* ── speed lines at high speed ── */
-  if(gameSpeed>400){
-    var alpha=Math.min(0.14,(gameSpeed-400)/200);
-    for(var i=0;i<6;i++){
-      var sy=H*0.2+i*(H*0.12);
-      var sl=30+Math.random()*70;
-      var slx=((bgScroll*1.4+i*137)%W);
-      ctx.strokeStyle='rgba(200,120,120,'+alpha+')';
-      ctx.lineWidth=1;
-      ctx.beginPath();ctx.moveTo(slx,sy);ctx.lineTo(slx+sl,sy);ctx.stroke();
-    }
-  }
+  /* ── viñeta: oscurece las esquinas y centra la mirada ── */
+  var vg=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.35,W/2,H/2,Math.max(W,H)*0.72);
+  vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,0.45)');
+  ctx.fillStyle=vg;ctx.fillRect(0,0,W,H);
 }
 
 /* ── HOVERCRAFT MÉDICO ── */
 function drawAstronaut(){
   var x=player.x,y=player.y;
   var hit=player.hitTimer>0;
-  var s=1.28;
+  var s=Math.min(2.2,1.28*SPR*1.05); /* ~35-70% más grande que antes según la pantalla */
   /* hover bob sutil cuando está en el suelo */
   var bob=player.transitionTimer<=0?Math.sin(Date.now()*0.004)*1.5:0;
 
@@ -1621,6 +1673,29 @@ function drawAstronaut(){
     ctx.moveTo(-22,-2.5);ctx.lineTo(-36,0);ctx.lineTo(-22,2.5);
     ctx.closePath();ctx.fill();
   }
+
+  /* ── TURBO: llama trasera que crece con la velocidad ── */
+  var tk=Math.max(0,Math.min(1,(gameSpeed-240)/460));
+  var fl=10+tk*30+Math.random()*4*(0.5+tk);
+  var fh=4.5+tk*2.5;
+  var fcol=hit?'255,120,120':'110,210,255';
+  var fg=ctx.createLinearGradient(-22-fl,0,-21,0);
+  fg.addColorStop(0,'rgba('+fcol+',0)');
+  fg.addColorStop(0.6,'rgba('+fcol+','+(0.45+tk*0.3).toFixed(2)+')');
+  fg.addColorStop(1,'rgba(235,250,255,0.95)');
+  ctx.save();
+  ctx.shadowColor='rgba('+fcol+',0.9)';ctx.shadowBlur=10+tk*10;
+  ctx.fillStyle=fg;
+  ctx.beginPath();
+  ctx.moveTo(-21,-fh);
+  ctx.quadraticCurveTo(-22-fl*0.55,-fh*0.9,-22-fl,0);
+  ctx.quadraticCurveTo(-22-fl*0.55,fh*0.9,-21,fh);
+  ctx.closePath();ctx.fill();
+  /* núcleo blanco */
+  ctx.shadowBlur=0;
+  ctx.fillStyle='rgba(255,255,255,'+(0.55+tk*0.35).toFixed(2)+')';
+  ctx.beginPath();ctx.ellipse(-23-fl*0.18,0,fl*0.22,fh*0.38,0,0,Math.PI*2);ctx.fill();
+  ctx.restore();
 
   /* resplandor pulsante de toberas (levitación) */
   var np=0.5+0.5*Math.sin(Date.now()*0.009);
@@ -1701,9 +1776,15 @@ function drawAstronaut(){
 }
 
 /* ── OBSTACLES ── */
+/* color propio de cada patógeno (el mismo de la leyenda de la portada) */
+var PATHO_GLOW={virus:'rgba(255,90,100,0.85)',bacteria:'rgba(80,230,110,0.85)',fungus:'rgba(190,110,255,0.85)',parasite:'rgba(240,225,70,0.85)'};
 function drawObstacles(){
   obstacles.forEach(function(o){
     ctx.save();ctx.translate(o.x,LANE[o.lane]);
+    ctx.scale(SPR,SPR); /* patógenos más grandes, proporcionales a la pantalla */
+    /* sombra en el suelo de la pista: da peso y ayuda a ver en qué carril está */
+    ctx.fillStyle='rgba(0,0,0,0.35)';
+    ctx.beginPath();ctx.ellipse(0,20,20,4,0,0,Math.PI*2);ctx.fill();
 
     /* ── cue visual de velocidad ── */
     if(o.behavior==='fast'){
@@ -1741,6 +1822,9 @@ function drawObstacles(){
       }
     }
 
+    /* halo luminoso del color del patógeno (si su comportamiento no puso uno propio) */
+    if(o.behavior==='normal'){ctx.shadowColor=PATHO_GLOW[o.type]||PATHO_GLOW.virus;ctx.shadowBlur=14;}
+
     if(o.type==='virus')dVirus();
     else if(o.type==='bacteria')dBacteria();
     else if(o.type==='fungus')dFungus();
@@ -1751,46 +1835,64 @@ function drawObstacles(){
   });
 }
 
+/* Patógenos: cada uno con el color de la leyenda de la portada y contorno claro,
+   para distinguirlos sobre el fondo rojo del vaso sanguíneo */
 function dVirus(){
-  var sp=8,r1=13,r2=21;
-  ctx.fillStyle='#bb2020';
+  var sp=8,r1=13,r2=21,rot=elapsed*1.2;
+  ctx.fillStyle='#e8343f';
   ctx.beginPath();
   for(var i=0;i<sp*2;i++){
-    var a=i*Math.PI/sp-Math.PI/2,r=i%2===0?r1:r2;
+    var a=i*Math.PI/sp-Math.PI/2+rot,r=i%2===0?r1:r2;
     i===0?ctx.moveTo(Math.cos(a)*r,Math.sin(a)*r):ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r);
   }
   ctx.closePath();ctx.fill();
-  ctx.fillStyle='#ee4444';ctx.beginPath();ctx.arc(0,0,9,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='rgba(255,200,200,0.5)';
+  ctx.shadowBlur=0;
+  ctx.strokeStyle='rgba(255,215,215,0.85)';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.fillStyle='#ff6b72';ctx.beginPath();ctx.arc(0,0,9,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(255,235,235,0.7)';
   [[-2,-1],[3,-2],[0,3]].forEach(function(p){ctx.beginPath();ctx.arc(p[0],p[1],2,0,Math.PI*2);ctx.fill();});
 }
 
 function dBacteria(){
-  ctx.fillStyle='#aa2020';rr(-20,-9,40,18,9);ctx.fill();
-  ctx.strokeStyle='#cc3333';ctx.lineWidth=2;
-  ctx.beginPath();ctx.moveTo(20,0);ctx.bezierCurveTo(27,-7,32,-1,38,5);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(-20,0);ctx.bezierCurveTo(-27,7,-32,1,-38,-5);ctx.stroke();
-  ctx.fillStyle='rgba(255,150,150,0.4)';
+  ctx.fillStyle='#2fa84a';rr(-20,-9,40,18,9);ctx.fill();
+  ctx.shadowBlur=0;
+  ctx.strokeStyle='rgba(200,255,210,0.85)';ctx.lineWidth=1.5;rr(-20,-9,40,18,9);ctx.stroke();
+  /* flagelos ondulantes */
+  var w=Math.sin(elapsed*8)*3;
+  ctx.strokeStyle='#5fe07a';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(20,0);ctx.bezierCurveTo(27,-7+w,32,-1-w,38,5+w);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(-20,0);ctx.bezierCurveTo(-27,7-w,-32,1+w,-38,-5-w);ctx.stroke();
+  ctx.fillStyle='rgba(210,255,220,0.55)';
   [[-10,0],[0,0],[10,0]].forEach(function(p){ctx.beginPath();ctx.arc(p[0],p[1],4,0,Math.PI*2);ctx.fill();});
 }
 
 function dFungus(){
-  ctx.fillStyle='#991818';
+  ctx.fillStyle='#9a4ee0';
   ctx.beginPath();ctx.ellipse(0,-10,16,10,0,Math.PI,0);ctx.fill();
   ctx.beginPath();ctx.ellipse(0,-14,12,6,0,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#cc2a2a';rr(-5,-8,10,18,3);ctx.fill();
-  ctx.fillStyle='rgba(255,200,200,0.35)';
+  ctx.shadowBlur=0;
+  ctx.strokeStyle='rgba(235,210,255,0.85)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.ellipse(0,-10,16,10,0,Math.PI,0);ctx.stroke();
+  ctx.fillStyle='#c189ff';rr(-5,-8,10,18,3);ctx.fill();
+  ctx.strokeStyle='rgba(235,210,255,0.7)';rr(-5,-8,10,18,3);ctx.stroke();
+  ctx.fillStyle='rgba(250,235,255,0.6)';
   [[-6,-13],[2,-11],[5,-16]].forEach(function(p){ctx.beginPath();ctx.arc(p[0],p[1],2.5,0,Math.PI*2);ctx.fill();});
 }
 
 function dParasite(ox){
   var t=elapsed*2.5+ox*0.01;
-  ctx.strokeStyle='#bb2020';ctx.lineWidth=7;ctx.lineCap='round';
+  ctx.lineCap='round';
+  /* contorno claro debajo del cuerpo */
+  ctx.strokeStyle='rgba(255,250,200,0.8)';ctx.lineWidth=9.5;
+  ctx.beginPath();ctx.moveTo(-22,Math.sin(t)*5);
+  ctx.bezierCurveTo(-10,Math.sin(t+1)*8,10,Math.sin(t+2)*8,22,Math.sin(t+3)*5);ctx.stroke();
+  ctx.shadowBlur=0;
+  ctx.strokeStyle='#d4c22a';ctx.lineWidth=7;
   ctx.beginPath();ctx.moveTo(-22,Math.sin(t)*5);
   ctx.bezierCurveTo(-10,Math.sin(t+1)*8,10,Math.sin(t+2)*8,22,Math.sin(t+3)*5);ctx.stroke();
   var hy=Math.sin(t+3)*5;
-  ctx.fillStyle='#dd3333';ctx.beginPath();ctx.arc(22,hy,7,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#550000';ctx.beginPath();ctx.arc(25,hy-2,2,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#f0e04a';ctx.beginPath();ctx.arc(22,hy,7,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#3a2a00';ctx.beginPath();ctx.arc(25,hy-2,2,0,Math.PI*2);ctx.fill();
 }
 
 /* ── PILLS ── */
@@ -2928,9 +3030,12 @@ function _drawTumorFrag(x,y,rX,rY){
   /* highlight carnoso */
   ctx.fillStyle='rgba(160,65,65,0.30)';
   ctx.beginPath();ctx.ellipse(-rX*0.18,-rY*0.28,rX*0.20,rY*0.14,0,0,Math.PI*2);ctx.fill();
-  /* contorno */
-  ctx.strokeStyle='rgba(80,15,15,0.45)';ctx.lineWidth=1.5;
-  ctx.beginPath();ctx.ellipse(0,0,rX,rY,0,0,Math.PI*2);ctx.stroke();
+  /* contorno de peligro: anillo ámbar pulsante para no confundirlo con los glóbulos rojos del fondo */
+  var dp=0.6+0.4*Math.sin(Date.now()*0.012);
+  ctx.strokeStyle='rgba(255,190,60,'+(0.65+0.3*dp).toFixed(2)+')';ctx.lineWidth=2.2;
+  ctx.shadowColor='rgba(255,150,30,0.9)';ctx.shadowBlur=8+6*dp;
+  ctx.beginPath();ctx.ellipse(0,0,rX+2,rY+2,0,0,Math.PI*2);ctx.stroke();
+  ctx.shadowBlur=0;
   ctx.restore();
 }
 
